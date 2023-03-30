@@ -1,6 +1,6 @@
 <?php
 
-namespace Anil\ApiCrud\Providers;
+namespace Anil\FastApiCrud\Providers;
 
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
@@ -105,6 +105,5 @@ class ApiCrudServiceProvider extends ServiceProvider
 
     public function register()
     {
-
     }
 }

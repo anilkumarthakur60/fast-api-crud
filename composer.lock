@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "77aa00ea1ca1c6e48cb14a49920ca4ea",
+    "content-hash": "7ad961e2dc0d46ba96d768244ee5149d",
     "packages": [
         {
             "name": "brick/math",
@@ -1923,12 +1923,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-permission.git",
-                "reference": "e7f35ea9d2f55850f6c86da17d435de9cc0e1e28"
+                "reference": "5048454c8e3e255bf1034bc247fc7426cb58964c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/e7f35ea9d2f55850f6c86da17d435de9cc0e1e28",
-                "reference": "e7f35ea9d2f55850f6c86da17d435de9cc0e1e28",
+                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/5048454c8e3e255bf1034bc247fc7426cb58964c",
+                "reference": "5048454c8e3e255bf1034bc247fc7426cb58964c",
                 "shasum": ""
             },
             "require": {
@@ -1998,7 +1998,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-03-30T00:54:07+00:00"
+            "time": "2023-03-30T18:47:04+00:00"
         },
         {
             "name": "symfony/console",

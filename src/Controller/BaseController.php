@@ -1,6 +1,6 @@
 <?php
 
-namespace Anil\ApiCrud\Controller;
+namespace Anil\FastApiCrud\Controller;
 
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -23,8 +23,8 @@ class BaseController extends Controller
 
 
 
-    public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource) {
-
+    public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource)
+    {
     }
 
 
@@ -73,8 +73,7 @@ class BaseController extends Controller
         $message = 'Something went wrong',
         $data = [],
         $code = Response::HTTP_INTERNAL_SERVER_ERROR,
-    )
-    {
+    ) {
         return response()->json([
             'message' => $message,
             'data' => $data,
@@ -164,12 +163,10 @@ class BaseController extends Controller
         $message = 'Data fetched successfully',
         $data = [],
         $code = Response::HTTP_OK,
-    )
-    {
+    ) {
         return response()->json([
             'message' => $message,
             'data' => $data,
         ], $code);
     }
-
 }

@@ -1,28 +1,39 @@
 {
-    "name": "anil/api-crud",
-    "description": "Laravel API CRUD with extended controller",
-    "type": "library",
-    "require": {
-        "spatie/laravel-permission": "6.x-dev"
-    },
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Anil\\ApiCrud\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "Anil Kumar Thakur",
-            "email": "anilkumarthakur60@gmail.com"
-        }
-    ],
-    "minimum-stability": "dev",
-    "extra": {
-        "api-crud": {
-            "providers": [
-                "Anil\\ApiCrud\\ApiCrudServiceProvider\\"
-            ]
-        }
+  "name": "anil/fast-api-crud",
+  "description": "Laravel API CRUD with extended controller",
+  "keywords": [
+    "anil",
+    "laravel",
+    "api",
+    "crud",
+    "controller",
+    "fast",
+    "api-crud",
+    "api-crud-controller",
+    "fast-api-crud"
+  ],
+  "type": "library",
+  "require": {
+    "spatie/laravel-permission": "6.x-dev"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Anil\\FastApiCrud\\": "src/"
     }
+  },
+  "authors": [
+    {
+      "name": "Anil Kumar Thakur",
+      "email": "anilkumarthakur60@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "extra": {
+    "fast-api-crud": {
+      "providers": [
+        "Anil\\FastApiCrud\\providers\\ApiCrudServiceProvider\\"
+      ]
+    }
+  }
 }

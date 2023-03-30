@@ -1,6 +1,6 @@
 <?php
 
-namespace Anil\ApiCrud\Trait;
+namespace Anil\FastApiCrud\Traits;
 
 trait Crud
 {
@@ -12,11 +12,11 @@ trait Crud
         if (method_exists(static::class, 'initializeModel')) {
             $model = static::initializeModel();
         } else {
-            $model = static::where((new  static())->getTable().'.id', '>', 0);
+            $model = static::where((new  static())->getTable() . '.id', '>', 0);
         }
 
         foreach (collect($filters) as $filter => $value) {
-            if (isset($value) && method_exists(static::class, 'scope'.ucfirst($filter))) {
+            if (isset($value) && method_exists(static::class, 'scope' . ucfirst($filter))) {
                 $model->$filter($value);
             }
         }

@@ -117,7 +117,7 @@ class ComposerStaticInit33aa1d9ebbe155622daa94a46d058dd7
         ),
         'A' => 
         array (
-            'Anil\\ApiCrud\\' => 13,
+            'Anil\\FastApiCrud\\' => 17,
         ),
     );
 
@@ -329,7 +329,7 @@ class ComposerStaticInit33aa1d9ebbe155622daa94a46d058dd7
         array (
             0 => __DIR__ . '/..' . '/brick/math/src',
         ),
-        'Anil\\ApiCrud\\' => 
+        'Anil\\FastApiCrud\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
