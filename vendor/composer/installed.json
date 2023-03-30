@@ -2008,12 +2008,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-permission.git",
-                "reference": "5048454c8e3e255bf1034bc247fc7426cb58964c"
+                "reference": "f893ff06490a8d1f6fdaa0316cbfb6c86848d91f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/5048454c8e3e255bf1034bc247fc7426cb58964c",
-                "reference": "5048454c8e3e255bf1034bc247fc7426cb58964c",
+                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/f893ff06490a8d1f6fdaa0316cbfb6c86848d91f",
+                "reference": "f893ff06490a8d1f6fdaa0316cbfb6c86848d91f",
                 "shasum": ""
             },
             "require": {
@@ -2028,7 +2028,7 @@
                 "phpunit/phpunit": "^9.4",
                 "predis/predis": "^1.1"
             },
-            "time": "2023-03-30T18:47:04+00:00",
+            "time": "2023-03-30T19:30:33+00:00",
             "default-branch": true,
             "type": "library",
             "extra": {
