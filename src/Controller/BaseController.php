@@ -5,7 +5,7 @@ namespace Anil\FastApiCrud\Controller;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\{Response, JsonResponse};
+use Illuminate\Http\Response;
 
 class BaseController extends Controller
 {
@@ -69,17 +69,6 @@ class BaseController extends Controller
     }
 
 
-    public function error(
-        $message = 'Something went wrong',
-        $data = [],
-        $code = Response::HTTP_INTERNAL_SERVER_ERROR,
-    ) {
-        return response()->json([
-            'message' => $message,
-            'data' => $data,
-        ], $code);
-    }
-
 
     public function update($id)
     {
@@ -126,7 +115,7 @@ class BaseController extends Controller
     }
 
 
-    public function destroy($id): JsonResponse
+    public function destroy($id)
     {
         $model = $this->model::findOrFail($id);
         if (method_exists(new $this->model(), 'afterDeleteProcess')) {
@@ -158,6 +147,17 @@ class BaseController extends Controller
         return $this->success(message: 'Data deleted successfully');
     }
 
+
+    public function error(
+        $message = 'Something went wrong',
+        $data = [],
+        $code = Response::HTTP_INTERNAL_SERVER_ERROR,
+    ) {
+        return response()->json([
+            'message' => $message,
+            'data' => $data,
+        ], $code);
+    }
 
     public function success(
         $message = 'Data fetched successfully',
