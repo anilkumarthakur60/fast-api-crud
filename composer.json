@@ -1,0 +1,28 @@
+{
+    "name": "anil/api-crud",
+    "description": "Laravel API CRUD with extended controller",
+    "type": "library",
+    "require": {
+        "spatie/laravel-permission": "6.x-dev"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Anil\\ApiCrud\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Anil Kumar Thakur",
+            "email": "anilkumarthakur60@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "extra": {
+        "api-crud": {
+            "providers": [
+                "Anil\\ApiCrud\\ApiCrudServiceProvider\\"
+            ]
+        }
+    }
+}
