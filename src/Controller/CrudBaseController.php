@@ -243,7 +243,7 @@ class CrudBaseController extends Controller
 
     public function changeStatus($id)
     {
-        $model = $this->model::findOrFail($id);
+        $model = $this->model::initializer()->findOrFail($id);
         try {
             DB::beginTransaction();
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
@@ -270,7 +270,7 @@ class CrudBaseController extends Controller
 
     public function restore($id)
     {
-        $model = $this->model::onlyTrashed()->findOrFail($id);
+        $model = $this->model::initializer()->onlyTrashed()->findOrFail($id);
 
         try {
             DB::beginTransaction();
