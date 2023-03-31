@@ -14,14 +14,14 @@ class CrudBaseController extends Controller
     public array $scopeWithValue = [];
     public array $loadScopes = [];
     public array $loadScopeWithValue = [];
-    protected array $withAll = [];
-    protected array $withCount = [];
-    protected array $withAggregate = [];
-    protected array $loadAll = [];
-    protected array $loadCount = [];
-    protected array $loadAggregate = [];
-    protected bool $isApi = TRUE;
-    protected bool $forceDelete = FALSE;
+    public array $withAll = [];
+    public array $withCount = [];
+    public array $withAggregate = [];
+    public array $loadAll = [];
+    public array $loadCount = [];
+    public array $loadAggregate = [];
+    public bool $isApi = TRUE;
+    public bool $forceDelete = FALSE;
 
 
     public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource) {}
@@ -192,7 +192,7 @@ class CrudBaseController extends Controller
     }
 
 
-    private function checkFillable($model, $columns): bool
+    protected function checkFillable($model, $columns): bool
     {
         $fillableColumns = $this->fillableColumn($model);
 
@@ -226,13 +226,13 @@ class CrudBaseController extends Controller
     }
 
 
-    private function fillableColumn($model): array
+    protected function fillableColumn($model): array
     {
         return Schema::getColumnListing($this->tableName($model));
     }
 
 
-    private function tableName($model): string
+    protected function tableName($model): string
     {
         return $model->getTable();
     }
