@@ -14,7 +14,7 @@
   ],
   "type": "library",
   "require": {
-    "spatie/laravel-permission": "6.x-dev"
+    "spatie/laravel-permission": "6.x-dev|5.*|4.*|3.*"
   },
   "license": "MIT",
   "autoload": {

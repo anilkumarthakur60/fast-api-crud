@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => 'cad13f80abe4db97c6d59abc61419984b88c1395',
+        'reference' => '3bc8c08cb0ad80d8e999c2b867559790f1a3a663',
         'name' => 'anil/fast-api-crud',
         'dev' => true,
     ),
@@ -16,7 +16,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => 'cad13f80abe4db97c6d59abc61419984b88c1395',
+            'reference' => '3bc8c08cb0ad80d8e999c2b867559790f1a3a663',
             'dev_requirement' => false,
         ),
         'brick/math' => array(
@@ -83,7 +83,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../illuminate/collections',
             'aliases' => array(),
-            'reference' => 'c763df1dbcf7116e844ba546eb3576dba75d6cec',
+            'reference' => '93bbd01e3746bc8a5c02cb5440bb9fe3386ad01e',
             'dev_requirement' => false,
         ),
         'illuminate/conditionable' => array(
@@ -191,7 +191,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../illuminate/session',
             'aliases' => array(),
-            'reference' => 'eabc70d193360b114257bc8641928b1667a35240',
+            'reference' => 'f909a716aaee3fa06b281d10d61040aa4fecc956',
             'dev_requirement' => false,
         ),
         'illuminate/support' => array(
@@ -337,7 +337,7 @@
             'aliases' => array(
                 0 => '6.x-dev',
             ),
-            'reference' => 'f893ff06490a8d1f6fdaa0316cbfb6c86848d91f',
+            'reference' => 'f85eb66a79251c8582a28a40f0f7b959f6460582',
             'dev_requirement' => false,
         ),
         'symfony/console' => array(
@@ -554,7 +554,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/translation',
             'aliases' => array(),
-            'reference' => 'e3f8968f83e02e13913f46c97ec079a8ae0e47fa',
+            'reference' => 'ae58728630949fa443d94c394198bbf3d7bc7716',
             'dev_requirement' => false,
         ),
         'symfony/translation-contracts' => array(

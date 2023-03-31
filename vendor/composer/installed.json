@@ -439,12 +439,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/collections.git",
-                "reference": "c763df1dbcf7116e844ba546eb3576dba75d6cec"
+                "reference": "93bbd01e3746bc8a5c02cb5440bb9fe3386ad01e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/collections/zipball/c763df1dbcf7116e844ba546eb3576dba75d6cec",
-                "reference": "c763df1dbcf7116e844ba546eb3576dba75d6cec",
+                "url": "https://api.github.com/repos/illuminate/collections/zipball/93bbd01e3746bc8a5c02cb5440bb9fe3386ad01e",
+                "reference": "93bbd01e3746bc8a5c02cb5440bb9fe3386ad01e",
                 "shasum": ""
             },
             "require": {
@@ -456,7 +456,7 @@
             "suggest": {
                 "symfony/var-dumper": "Required to use the dump method (^6.2)."
             },
-            "time": "2023-03-01T20:03:31+00:00",
+            "time": "2023-03-31T12:30:11+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -1148,12 +1148,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/session.git",
-                "reference": "eabc70d193360b114257bc8641928b1667a35240"
+                "reference": "f909a716aaee3fa06b281d10d61040aa4fecc956"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/session/zipball/eabc70d193360b114257bc8641928b1667a35240",
-                "reference": "eabc70d193360b114257bc8641928b1667a35240",
+                "url": "https://api.github.com/repos/illuminate/session/zipball/f909a716aaee3fa06b281d10d61040aa4fecc956",
+                "reference": "f909a716aaee3fa06b281d10d61040aa4fecc956",
                 "shasum": ""
             },
             "require": {
@@ -1170,7 +1170,7 @@
             "suggest": {
                 "illuminate/console": "Required to use the session:table command (^10.0)."
             },
-            "time": "2023-02-23T18:43:10+00:00",
+            "time": "2023-03-31T12:47:04+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -2008,12 +2008,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-permission.git",
-                "reference": "f893ff06490a8d1f6fdaa0316cbfb6c86848d91f"
+                "reference": "f85eb66a79251c8582a28a40f0f7b959f6460582"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/f893ff06490a8d1f6fdaa0316cbfb6c86848d91f",
-                "reference": "f893ff06490a8d1f6fdaa0316cbfb6c86848d91f",
+                "url": "https://api.github.com/repos/spatie/laravel-permission/zipball/f85eb66a79251c8582a28a40f0f7b959f6460582",
+                "reference": "f85eb66a79251c8582a28a40f0f7b959f6460582",
                 "shasum": ""
             },
             "require": {
@@ -2028,7 +2028,7 @@
                 "phpunit/phpunit": "^9.4",
                 "predis/predis": "^1.1"
             },
-            "time": "2023-03-30T19:30:33+00:00",
+            "time": "2023-03-31T02:48:16+00:00",
             "default-branch": true,
             "type": "library",
             "extra": {
@@ -3791,12 +3791,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation.git",
-                "reference": "e3f8968f83e02e13913f46c97ec079a8ae0e47fa"
+                "reference": "ae58728630949fa443d94c394198bbf3d7bc7716"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation/zipball/e3f8968f83e02e13913f46c97ec079a8ae0e47fa",
-                "reference": "e3f8968f83e02e13913f46c97ec079a8ae0e47fa",
+                "url": "https://api.github.com/repos/symfony/translation/zipball/ae58728630949fa443d94c394198bbf3d7bc7716",
+                "reference": "ae58728630949fa443d94c394198bbf3d7bc7716",
                 "shasum": ""
             },
             "require": {
@@ -3838,7 +3838,7 @@
                 "symfony/config": "",
                 "symfony/yaml": ""
             },
-            "time": "2023-03-24T10:29:03+00:00",
+            "time": "2023-03-31T09:18:46+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
