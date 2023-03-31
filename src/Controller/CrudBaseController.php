@@ -124,7 +124,7 @@ class CrudBaseController extends Controller
 
     public function destroy($id)
     {
-        $model = $this->model::findOrFail($id);
+        $model = $this->model::initializer()->findOrFail($id);
         if (method_exists(new $this->model(), 'afterDeleteProcess')) {
             $model->afterDeleteProcess();
         }
@@ -142,7 +142,7 @@ class CrudBaseController extends Controller
         ]);
 
         foreach ((array) request()->input('delete_rows') as $item) {
-            $model = $this->model::find($item);
+            $model = $this->model::initializer()->find($item);
             if (method_exists(new $this->model(), 'afterDeleteProcess') && $model) {
                 $model->afterDeleteProcess();
             }
@@ -170,7 +170,7 @@ class CrudBaseController extends Controller
 
     public function changeStatusOtherColumn($id, $column)
     {
-        $model = $this->model::findOrFail($id);
+        $model = $this->model::initializer()->findOrFail($id);
         try {
             DB::beginTransaction();
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
@@ -206,10 +206,13 @@ class CrudBaseController extends Controller
     {
         $data = resolve($this->updateRequest)->safe()->only((new $this->model())->getFillable());
 
-        $model = $this->model::findOrFail($id);
+        $model = $this->model::initializer()->findOrFail($id);
 
         try {
             DB::beginTransaction();
+            if (method_exists(new $this->model(), 'beforeUpdateProcess')) {
+                $model->beforeUpdateProcess();
+            }
             $model->update($data);
             if (method_exists(new $this->model(), 'afterUpdateProcess')) {
                 $model->afterUpdateProcess();
@@ -251,6 +254,9 @@ class CrudBaseController extends Controller
                 throw new Exception('Status column not found in fillable');
             }
             $model->update(['status' => $model->status === 1 ? 0 : 1]);
+            if (method_exists(new $this->model(), 'afterChangeStatusProcess')) {
+                $model->afterChangeStatusProcess();
+            }
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
