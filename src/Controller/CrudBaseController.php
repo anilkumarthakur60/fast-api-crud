@@ -144,10 +144,14 @@ class CrudBaseController extends Controller
     public function destroy($id)
     {
         $model = $this->model::initializer()->findOrFail($id);
+        if (method_exists(new $this->model(), 'beforeDeleteProcess')) {
+            $model->beforeDeleteProcess();
+        }
+
+        $this->forceDelete === TRUE ? $model->forceDelete() : $model->delete();
         if (method_exists(new $this->model(), 'afterDeleteProcess')) {
             $model->afterDeleteProcess();
         }
-        $this->forceDelete === TRUE ? $model->forceDelete() : $model->delete();
 
         return $this->success(message: 'Data deleted successfully');
     }
@@ -162,11 +166,14 @@ class CrudBaseController extends Controller
 
         foreach ((array) request()->input('delete_rows') as $item) {
             $model = $this->model::initializer()->find($item);
-            if (method_exists(new $this->model(), 'afterDeleteProcess') && $model) {
-                $model->afterDeleteProcess();
+            if (method_exists(new $this->model(), 'beforeDeleteProcess') && $model) {
+                $model->beforeDeleteProcess();
             }
             if ($model) {
                 $this->forceDelete === TRUE ? $model->forceDelete() : $model->delete();
+            }
+            if (method_exists(new $this->model(), 'afterDeleteProcess') && $model) {
+                $model->afterDeleteProcess();
             }
         }
 
