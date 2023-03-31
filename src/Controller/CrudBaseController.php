@@ -168,7 +168,7 @@ class CrudBaseController extends Controller
     }
 
 
-    public function changeStatus($id)
+    public function changeStatusOtherColumn($id, $column)
     {
         $model = $this->model::findOrFail($id);
         try {
@@ -176,11 +176,11 @@ class CrudBaseController extends Controller
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (!$this->checkFillable($model, ['status'])) {
+            if (!$this->checkFillable($model, [$column])) {
                 DB::rollBack();
-                throw new Exception('Status column not found in fillable');
+                throw new Exception("$column column not found in fillable");
             }
-            $model->update(['status' => $model->status === 1 ? 0 : 1]);
+            $model->update([$column => $model->$column === 1 ? 0 : 1]);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -235,6 +235,58 @@ class CrudBaseController extends Controller
     protected function tableName($model): string
     {
         return $model->getTable();
+    }
+
+
+    public function changeStatus($id)
+    {
+        $model = $this->model::findOrFail($id);
+        try {
+            DB::beginTransaction();
+            if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
+                $model->beforeChangeStatusProcess();
+            }
+            if (!$this->checkFillable($model, ['status'])) {
+                DB::rollBack();
+                throw new Exception('Status column not found in fillable');
+            }
+            $model->update(['status' => $model->status === 1 ? 0 : 1]);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return $this->error($e->getMessage());
+        }
+
+        return $this->resource::make($model);
+    }
+
+
+    public function restore($id)
+    {
+        $model = $this->model::onlyTrashed()->findOrFail($id);
+
+        try {
+            DB::beginTransaction();
+
+            if (method_exists(new $this->model(), 'beforeRestoreProcess')) {
+                $model->beforeRestoreProcess();
+            }
+
+            $model->restore();
+
+            if (method_exists(new $this->model(), 'afterRestoreProcess')) {
+                $model->afterRestoreProcess();
+            }
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return $this->error($e->getMessage());
+        }
+
+        return $this->resource::make($model);
     }
 
 }
