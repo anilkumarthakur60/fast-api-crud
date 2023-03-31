@@ -23,6 +23,7 @@ class CrudBaseController extends Controller
     public array $loadAggregate = [];
     public bool $isApi = TRUE;
     public bool $forceDelete = FALSE;
+    public bool $applyPermission = TRUE;
 
 
     public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource)
@@ -34,7 +35,7 @@ class CrudBaseController extends Controller
         } catch (Exception $e) {
             $permissionSlug = NULL;
         }
-        if ($permissionSlug) {
+        if ($permissionSlug && $this->applyPermission) {
             $this->middleware('permission:view-' . $this->model::permissionSlug)
                 ->only(['index', 'show']);
             $this->middleware('permission:alter-' . $this->model::permissionSlug)
