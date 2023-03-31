@@ -2,20 +2,20 @@
 
 namespace Anil\FastApiCrud\Providers;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Database\Eloquent\Builder;
 
 class ApiCrudServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/fastApiCrud.php', 'fastApiCrud');
+        $this->mergeConfigFrom(__DIR__.'/../config/fastApiCrud.php', 'fastApiCrud');
         $this->publishes([
-            __DIR__ . '/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
+            __DIR__.'/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
         ]);
 
-        Builder::macro('likeWhere', function (array $attributes, string $searchTerm = NULL) {
+        Builder::macro('likeWhere', function (array $attributes, string $searchTerm = null) {
             $this->where(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach ($attributes as $attribute) {
                     $query->when(
@@ -36,7 +36,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             return $this;
         });
 
-        Builder::macro('likeEqual', function (array $attributes, string $searchTerm = NULL) {
+        Builder::macro('likeEqual', function (array $attributes, string $searchTerm = null) {
             $this->where(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach ($attributes as $attribute) {
                     $query->when(
@@ -57,14 +57,14 @@ class ApiCrudServiceProvider extends ServiceProvider
             return $this;
         });
 
-        Builder::macro('paginates', function (int $perPage = NULL, $columns = ['*'], $pageName = 'page', int $page = NULL) {
+        Builder::macro('paginates', function (int $perPage = null, $columns = ['*'], $pageName = 'page', int $page = null) {
             request()->validate(['rowsPerPage' => 'nullable|numeric|gte:0|lte:1000000000000000000']);
 
             $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
             $total = $this->toBase()->getCountForPagination();
 
-            if ($perPage === NULL) {
+            if ($perPage === null) {
                 $rows = (int) request()->query('rowsPerPage', 20);
                 if ($rows === 0) {
                     $perPage = $total;
@@ -81,11 +81,11 @@ class ApiCrudServiceProvider extends ServiceProvider
                 'pageName' => $pageName,
             ]);
         });
-        Builder::macro('simplePaginates', function (int $perPage = NULL, $columns = ['*'], $pageName = 'page', $page = NULL) {
+        Builder::macro('simplePaginates', function (int $perPage = null, $columns = ['*'], $pageName = 'page', $page = null) {
             request()->validate(['rowsPerPage' => 'nullable|numeric|gte:0|lte:1000000000000000000']);
             $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-            if ($perPage === NULL) {
+            if ($perPage === null) {
                 $rows = (int) request()->query('rowsPerPage', 20);
                 if ($rows === 0) {
                     $perPage = $this->count();
