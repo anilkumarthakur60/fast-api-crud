@@ -282,11 +282,11 @@ class CrudBaseController extends Controller
         $data = resolve($this->updateRequest)->safe()->only((new $this->model())->getFillable());
 
         $model = $this->model::initializer()
-              ->when(property_exists($this, 'updateScopes') && count($this->updateScopes), function ($query) {
-                  foreach ($this->updateScopes as $value) {
-                      $query->$value();
-                  }
-              })
+            ->when(property_exists($this, 'updateScopes') && count($this->updateScopes), function ($query) {
+                foreach ($this->updateScopes as $value) {
+                    $query->$value();
+                }
+            })
             ->when(property_exists($this, 'updateScopeWithValue') && count($this->updateScopeWithValue), function ($query) {
                 foreach ($this->updateScopeWithValue as $key => $value) {
                     $query->$key($value);
