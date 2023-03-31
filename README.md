@@ -39,5 +39,7 @@ composer require anil/fast-api-crud
 * ```destroy($id)```: Deletes a single record with the specified ID.
 * ```delete()```: Deletes multiple records at once.
 * ```restore()```: Restores trashed records.
+* ```changeStatus()```: Changes the status of multiple records at once.
+* ```changeStatusOtherColumn()```: Changes the status of records with column name other than status at once.
 
 #### There are also two helper methods, ```error()``` and ```success()```, that return a JSON response with a message and data. These are used to standardize error and success responses across the controller. ####

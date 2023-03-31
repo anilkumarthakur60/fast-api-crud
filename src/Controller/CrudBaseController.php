@@ -3,6 +3,7 @@
 namespace Anil\FastApiCrud\Controller;
 
 use Exception;
+use ReflectionClass;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
@@ -24,7 +25,24 @@ class CrudBaseController extends Controller
     public bool $forceDelete = FALSE;
 
 
-    public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource) {}
+    public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource)
+    {
+
+        $constants = new ReflectionClass($this->model);
+        try {
+            $permissionSlug = $constants->getConstant('permissionSlug');
+        } catch (Exception $e) {
+            $permissionSlug = NULL;
+        }
+        if ($permissionSlug) {
+            $this->middleware('permission:view-' . $this->model::permissionSlug)
+                ->only(['index', 'show']);
+            $this->middleware('permission:alter-' . $this->model::permissionSlug)
+                ->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
+            $this->middleware('permission:delete-' . $this->model::permissionSlug)
+                ->only(['delete']);
+        }
+    }
 
 
     public function index()
