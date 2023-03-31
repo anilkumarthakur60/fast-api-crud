@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Response;
 
-class BaseController extends Controller
+class CrudBaseController extends Controller
 {
     protected array $withAll = [];
     protected array $withCount = [];
