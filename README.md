@@ -15,6 +15,16 @@ composer require anil/fast-api-crud
 * $updateRequest: The name of the request class to use when updating data.
 * $resource: The name of the resource class to use when returning data.
 
+### Register Provider in config/app.php###
+
+```
+
+    'providers' => [
+        ...
+        \Anil\FastApiCrud\Providers\ApiCrudServiceProvider::class
+    ]
+```
+
 ### Eample ###
 
 ```apacheconf
