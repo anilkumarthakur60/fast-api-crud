@@ -35,7 +35,7 @@ class CrudBaseController extends Controller
 
     public bool $forceDelete = false;
 
-    public bool $applyPermission = FALSE;
+    public bool $applyPermission = false;
 
     public array $deleteScopes = [];
 
@@ -62,11 +62,11 @@ class CrudBaseController extends Controller
             $permissionSlug = null;
         }
         if ($permissionSlug && $this->applyPermission) {
-            $this->middleware('permission:view-' . $this->model::permissionSlug)
+            $this->middleware('permission:view-'.$this->model::permissionSlug)
                 ->only(['index', 'show']);
-            $this->middleware('permission:alter-' . $this->model::permissionSlug)
+            $this->middleware('permission:alter-'.$this->model::permissionSlug)
                 ->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
-            $this->middleware('permission:delete-' . $this->model::permissionSlug)
+            $this->middleware('permission:delete-'.$this->model::permissionSlug)
                 ->only(['delete']);
         }
     }
@@ -190,7 +190,7 @@ class CrudBaseController extends Controller
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:' . (new  $this->model())->getTable() . ',id'],
+            'delete_rows.*' => ['required', 'exists:'.(new $this->model())->getTable().',id'],
         ]);
 
         try {
@@ -209,7 +209,7 @@ class CrudBaseController extends Controller
                     })
                     ->find($item);
 
-                if (!$model) {
+                if (! $model) {
                     continue;
                 }
 
@@ -226,6 +226,7 @@ class CrudBaseController extends Controller
         } catch (\Exception $e) {
 
             DB::rollBack();
+
             return $this->error($e->getMessage());
         }
 
@@ -262,7 +263,7 @@ class CrudBaseController extends Controller
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (!$this->checkFillable($model, [$column])) {
+            if (! $this->checkFillable($model, [$column])) {
                 DB::rollBack();
                 throw new Exception("$column column not found in fillable");
             }
@@ -352,7 +353,7 @@ class CrudBaseController extends Controller
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (!$this->checkFillable($model, ['status'])) {
+            if (! $this->checkFillable($model, ['status'])) {
                 DB::rollBack();
                 throw new Exception('Status column not found in fillable');
             }
