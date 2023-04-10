@@ -28,12 +28,13 @@
       "email": "anilkumarthakur60@gmail.com"
     }
   ],
-  "minimum-stability": "dev",
   "extra": {
     "fast-api-crud": {
       "providers": [
         "Anil\\FastApiCrud\\providers\\ApiCrudServiceProvider\\"
       ]
     }
-  }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
 }
