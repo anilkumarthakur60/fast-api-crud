@@ -35,7 +35,7 @@ class CrudBaseController extends Controller
 
     public bool $forceDelete = false;
 
-    public bool $applyPermission = true;
+    public bool $applyPermission = FALSE;
 
     public array $deleteScopes = [];
 
@@ -62,11 +62,11 @@ class CrudBaseController extends Controller
             $permissionSlug = null;
         }
         if ($permissionSlug && $this->applyPermission) {
-            $this->middleware('permission:view-'.$this->model::permissionSlug)
+            $this->middleware('permission:view-' . $this->model::permissionSlug)
                 ->only(['index', 'show']);
-            $this->middleware('permission:alter-'.$this->model::permissionSlug)
+            $this->middleware('permission:alter-' . $this->model::permissionSlug)
                 ->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
-            $this->middleware('permission:delete-'.$this->model::permissionSlug)
+            $this->middleware('permission:delete-' . $this->model::permissionSlug)
                 ->only(['delete']);
         }
     }
@@ -190,34 +190,43 @@ class CrudBaseController extends Controller
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:'.(new  $this->model())->getTable().',id'],
+            'delete_rows.*' => ['required', 'exists:' . (new  $this->model())->getTable() . ',id'],
         ]);
 
-        foreach ((array) request()->input('delete_rows') as $item) {
-            $model = $this->model::initializer()
-                ->when(property_exists($this, 'deleteScopes') && count($this->deleteScopes), function ($query) {
-                    foreach ($this->deleteScopes as $value) {
-                        $query->$value();
-                    }
-                })
-                ->when(property_exists($this, 'deleteScopeWithValue') && count($this->deleteScopeWithValue), function ($query) {
-                    foreach ($this->deleteScopeWithValue as $key => $value) {
-                        $query->$key($value);
-                    }
-                })
-                ->find($item);
+        try {
+            DB::beginTransaction();
+            foreach ((array) request()->input('delete_rows') as $item) {
+                $model = $this->model::initializer()
+                    ->when(property_exists($this, 'deleteScopes') && count($this->deleteScopes), function ($query) {
+                        foreach ($this->deleteScopes as $value) {
+                            $query->$value();
+                        }
+                    })
+                    ->when(property_exists($this, 'deleteScopeWithValue') && count($this->deleteScopeWithValue), function ($query) {
+                        foreach ($this->deleteScopeWithValue as $key => $value) {
+                            $query->$key($value);
+                        }
+                    })
+                    ->find($item);
 
-            if (! $model) {
-                continue;
+                if (!$model) {
+                    continue;
+                }
+
+                if (method_exists(new $this->model(), 'beforeDeleteProcess')) {
+                    $model->beforeDeleteProcess();
+                }
+                $this->forceDelete === true ? $model->forceDelete() : $model->delete();
+                if (method_exists(new $this->model(), 'afterDeleteProcess')) {
+                    $model->afterDeleteProcess();
+                }
             }
 
-            if (method_exists(new $this->model(), 'beforeDeleteProcess')) {
-                $model->beforeDeleteProcess();
-            }
-            $this->forceDelete === true ? $model->forceDelete() : $model->delete();
-            if (method_exists(new $this->model(), 'afterDeleteProcess')) {
-                $model->afterDeleteProcess();
-            }
+            DB::commit();
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+            return $this->error($e->getMessage());
         }
 
         return $this->success(message: 'Data deleted successfully');
@@ -253,7 +262,7 @@ class CrudBaseController extends Controller
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (! $this->checkFillable($model, [$column])) {
+            if (!$this->checkFillable($model, [$column])) {
                 DB::rollBack();
                 throw new Exception("$column column not found in fillable");
             }
@@ -343,7 +352,7 @@ class CrudBaseController extends Controller
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (! $this->checkFillable($model, ['status'])) {
+            if (!$this->checkFillable($model, ['status'])) {
                 DB::rollBack();
                 throw new Exception('Status column not found in fillable');
             }
