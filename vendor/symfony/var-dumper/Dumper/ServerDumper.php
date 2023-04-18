@@ -41,9 +41,6 @@ class ServerDumper implements DataDumperInterface
         return $this->connection->getContextProviders();
     }
 
-    /**
-     * @return void
-     */
     public function dump(Data $data)
     {
         if (!$this->connection->write($data) && $this->wrappedDumper) {

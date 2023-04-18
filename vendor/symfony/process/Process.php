@@ -1255,7 +1255,9 @@ class Process implements \IteratorAggregate
     protected function buildCallback(callable $callback = null): \Closure
     {
         if ($this->outputDisabled) {
-            return fn ($type, $data): bool => null !== $callback && $callback($type, $data);
+            return function ($type, $data) use ($callback): bool {
+                return null !== $callback && $callback($type, $data);
+            };
         }
 
         $out = self::OUT;
@@ -1480,6 +1482,8 @@ class Process implements \IteratorAggregate
     private function prepareWindowsCommandLine(string $cmd, array &$env): string
     {
         $uid = uniqid('', true);
+        $varCount = 0;
+        $varCache = [];
         $cmd = preg_replace_callback(
             '/"(?:(
                 [^"%!^]*+
@@ -1488,9 +1492,7 @@ class Process implements \IteratorAggregate
                     [^"%!^]*+
                 )++
             ) | [^"]*+ )"/x',
-            function ($m) use (&$env, $uid) {
-                static $varCount = 0;
-                static $varCache = [];
+            function ($m) use (&$env, &$varCache, &$varCount, $uid) {
                 if (!isset($m[1])) {
                     return $m[0];
                 }
@@ -1569,7 +1571,7 @@ class Process implements \IteratorAggregate
         return '"'.str_replace(['"', '^', '%', '!', "\n"], ['""', '"^^"', '"^%"', '"^!"', '!LF!'], $argument).'"';
     }
 
-    private function replacePlaceholders(string $commandline, array $env): string
+    private function replacePlaceholders(string $commandline, array $env)
     {
         return preg_replace_callback('/"\$\{:([_a-zA-Z]++[_a-zA-Z0-9]*+)\}"/', function ($matches) use ($commandline, $env) {
             if (!isset($env[$matches[1]]) || false === $env[$matches[1]]) {

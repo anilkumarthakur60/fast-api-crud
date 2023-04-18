@@ -63,7 +63,7 @@ final class ControllerArgumentsEvent extends KernelEvent
         return $this->arguments;
     }
 
-    public function setArguments(array $arguments): void
+    public function setArguments(array $arguments)
     {
         $this->arguments = $arguments;
         unset($this->namedArguments);

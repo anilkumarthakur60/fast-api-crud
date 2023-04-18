@@ -492,16 +492,14 @@ class Email extends Message
         $otherParts = $relatedParts = [];
         foreach ($this->attachments as $part) {
             foreach ($names as $name) {
-                if ($name !== $part->getName() && (!$part->hasContentId() || $name !== $part->getContentId())) {
+                if ($name !== $part->getName()) {
                     continue;
                 }
                 if (isset($relatedParts[$name])) {
                     continue 2;
                 }
 
-                if ($name !== $part->getContentId()) {
-                    $html = str_replace('cid:'.$name, 'cid:'.$part->getContentId(), $html, $count);
-                }
+                $html = str_replace('cid:'.$name, 'cid:'.$part->getContentId(), $html, $count);
                 $relatedParts[$name] = $part;
                 $part->setName($part->getContentId())->asInline();
 
@@ -527,10 +525,7 @@ class Email extends Message
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    private function addListAddressHeaderBody(string $name, array $addresses): static
+    private function addListAddressHeaderBody(string $name, array $addresses)
     {
         if (!$header = $this->getHeaders()->get($name)) {
             return $this->setListAddressHeaderBody($name, $addresses);

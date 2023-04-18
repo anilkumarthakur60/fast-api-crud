@@ -3,33 +3,28 @@
 namespace Spatie\Permission\Middlewares;
 
 use Closure;
-use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class PermissionMiddleware
 {
     public function handle($request, Closure $next, $permission, $guard = null)
     {
-        $authGuard = Auth::guard($guard);
+        $authGuard = app('auth')->guard($guard);
 
         if ($authGuard->guest()) {
             throw UnauthorizedException::notLoggedIn();
-        }
-
-        $user = $authGuard->user();
-
-        if (! method_exists($user, 'hasAnyPermission')) {
-            throw UnauthorizedException::missingTraitHasRoles($user);
         }
 
         $permissions = is_array($permission)
             ? $permission
             : explode('|', $permission);
 
-        if (! $user->canAny($permissions)) {
-            throw UnauthorizedException::forPermissions($permissions);
+        foreach ($permissions as $permission) {
+            if ($authGuard->user()->can($permission)) {
+                return $next($request);
+            }
         }
 
-        return $next($request);
+        throw UnauthorizedException::forPermissions($permissions);
     }
 }

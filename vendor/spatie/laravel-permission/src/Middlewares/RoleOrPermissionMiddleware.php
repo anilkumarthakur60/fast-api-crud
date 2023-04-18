@@ -15,17 +15,11 @@ class RoleOrPermissionMiddleware
             throw UnauthorizedException::notLoggedIn();
         }
 
-        $user = $authGuard->user();
-
-        if (! method_exists($user, 'hasAnyRole') || ! method_exists($user, 'hasAnyPermission')) {
-            throw UnauthorizedException::missingTraitHasRoles($user);
-        }
-
         $rolesOrPermissions = is_array($roleOrPermission)
             ? $roleOrPermission
             : explode('|', $roleOrPermission);
 
-        if (! $user->canAny($rolesOrPermissions) && ! $user->hasAnyRole($rolesOrPermissions)) {
+        if (! $authGuard->user()->hasAnyRole($rolesOrPermissions) && ! $authGuard->user()->hasAnyPermission($rolesOrPermissions)) {
             throw UnauthorizedException::forRolesOrPermissions($rolesOrPermissions);
         }
 

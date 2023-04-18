@@ -89,14 +89,14 @@ abstract class DataCollector implements DataCollectorInterface
     /**
      * @internal to prevent implementing \Serializable
      */
-    final protected function serialize(): void
+    final protected function serialize()
     {
     }
 
     /**
      * @internal to prevent implementing \Serializable
      */
-    final protected function unserialize(string $data): void
+    final protected function unserialize(string $data)
     {
     }
 }

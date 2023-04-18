@@ -24,19 +24,16 @@ trait HasRoles
                 return;
             }
 
-            $teams = app(PermissionRegistrar::class)->teams;
-            app(PermissionRegistrar::class)->teams = false;
+            $teams = PermissionRegistrar::$teams;
+            PermissionRegistrar::$teams = false;
             $model->roles()->detach();
-            if (is_a($model, Permission::class)) {
-                $model->users()->detach();
-            }
-            app(PermissionRegistrar::class)->teams = $teams;
+            PermissionRegistrar::$teams = $teams;
         });
     }
 
-    public function getRoleClass(): string
+    public function getRoleClass()
     {
-        if (! $this->roleClass) {
+        if (! isset($this->roleClass)) {
             $this->roleClass = app(PermissionRegistrar::class)->getRoleClass();
         }
 
@@ -53,16 +50,16 @@ trait HasRoles
             'model',
             config('permission.table_names.model_has_roles'),
             config('permission.column_names.model_morph_key'),
-            app(PermissionRegistrar::class)->pivotRole
+            PermissionRegistrar::$pivotRole
         );
 
-        if (! app(PermissionRegistrar::class)->teams) {
+        if (! PermissionRegistrar::$teams) {
             return $relation;
         }
 
-        return $relation->wherePivot(app(PermissionRegistrar::class)->teamsKey, getPermissionsTeamId())
+        return $relation->wherePivot(PermissionRegistrar::$teamsKey, getPermissionsTeamId())
             ->where(function ($q) {
-                $teamField = config('permission.table_names.roles').'.'.app(PermissionRegistrar::class)->teamsKey;
+                $teamField = config('permission.table_names.roles').'.'.PermissionRegistrar::$teamsKey;
                 $q->whereNull($teamField)->orWhere($teamField, getPermissionsTeamId());
             });
     }
@@ -70,7 +67,7 @@ trait HasRoles
     /**
      * Scope the model query to certain roles only.
      *
-     * @param  string|int|array|Role|Collection  $roles
+     * @param  string|int|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection  $roles
      * @param  string  $guard
      */
     public function scopeRole(Builder $query, $roles, $guard = null): Builder
@@ -84,9 +81,9 @@ trait HasRoles
                 return $role;
             }
 
-            $method = is_numeric($role) || PermissionRegistrar::isUid($role) ? 'findById' : 'findByName';
+            $method = is_numeric($role) ? 'findById' : 'findByName';
 
-            return $this->getRoleClass()::{$method}($role, $guard ?: $this->getDefaultGuardName());
+            return $this->getRoleClass()->{$method}($role, $guard ?: $this->getDefaultGuardName());
         }, Arr::wrap($roles));
 
         return $query->whereHas('roles', function (Builder $subQuery) use ($roles) {
@@ -97,13 +94,14 @@ trait HasRoles
     }
 
     /**
-     * Returns roles ids as array keys
+     * Assign the given role to the model.
      *
-     * @param  array|string|int|Role|Collection  $roles
+     * @param  array|string|int|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection  ...$roles
+     * @return $this
      */
-    private function collectRoles(...$roles): array
+    public function assignRole(...$roles)
     {
-        return collect($roles)
+        $roles = collect($roles)
             ->flatten()
             ->reduce(function ($array, $role) {
                 if (empty($role)) {
@@ -117,22 +115,11 @@ trait HasRoles
 
                 $this->ensureModelSharesGuard($role);
 
-                $array[$role->getKey()] = app(PermissionRegistrar::class)->teams && ! is_a($this, Permission::class) ?
-                    [app(PermissionRegistrar::class)->teamsKey => getPermissionsTeamId()] : [];
+                $array[$role->getKey()] = PermissionRegistrar::$teams && ! is_a($this, Permission::class) ?
+                    [PermissionRegistrar::$teamsKey => getPermissionsTeamId()] : [];
 
                 return $array;
             }, []);
-    }
-
-    /**
-     * Assign the given role to the model.
-     *
-     * @param  array|string|int|Role|Collection  ...$roles
-     * @return $this
-     */
-    public function assignRole(...$roles)
-    {
-        $roles = $this->collectRoles($roles);
 
         $model = $this->getModel();
 
@@ -153,7 +140,7 @@ trait HasRoles
             );
         }
 
-        if (is_a($this, Permission::class)) {
+        if (is_a($this, get_class($this->getPermissionClass()))) {
             $this->forgetCachedPermissions();
         }
 
@@ -163,7 +150,7 @@ trait HasRoles
     /**
      * Revoke the given role from the model.
      *
-     * @param  string|int|Role  $role
+     * @param  string|int|\Spatie\Permission\Contracts\Role  $role
      */
     public function removeRole($role)
     {
@@ -171,7 +158,7 @@ trait HasRoles
 
         $this->load('roles');
 
-        if (is_a($this, Permission::class)) {
+        if (is_a($this, get_class($this->getPermissionClass()))) {
             $this->forgetCachedPermissions();
         }
 
@@ -181,13 +168,11 @@ trait HasRoles
     /**
      * Remove all current roles and set the given ones.
      *
-     * @param  array|Role|Collection|string|int  ...$roles
+     * @param  array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection|string|int  ...$roles
      * @return $this
      */
     public function syncRoles(...$roles)
     {
-        $this->collectRoles($roles);
-
         $this->roles()->detach();
 
         return $this->assignRole($roles);
@@ -196,7 +181,7 @@ trait HasRoles
     /**
      * Determine if the model has (one of) the given role(s).
      *
-     * @param  string|int|array|Role|Collection  $roles
+     * @param  string|int|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection  $roles
      */
     public function hasRole($roles, string $guard = null): bool
     {
@@ -206,13 +191,13 @@ trait HasRoles
             $roles = $this->convertPipeToArray($roles);
         }
 
-        if (is_string($roles) && ! PermissionRegistrar::isUid($roles)) {
+        if (is_string($roles)) {
             return $guard
                 ? $this->roles->where('guard_name', $guard)->contains('name', $roles)
                 : $this->roles->contains('name', $roles);
         }
 
-        if (is_int($roles) || is_string($roles)) {
+        if (is_int($roles)) {
             $roleClass = $this->getRoleClass();
             $key = (new $roleClass())->getKeyName();
 
@@ -243,7 +228,7 @@ trait HasRoles
      *
      * Alias to hasRole() but without Guard controls
      *
-     * @param  string|int|array|Role|Collection  $roles
+     * @param  string|int|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection  $roles
      */
     public function hasAnyRole(...$roles): bool
     {
@@ -253,7 +238,7 @@ trait HasRoles
     /**
      * Determine if the model has all of the given role(s).
      *
-     * @param  string|array|Role|Collection  $roles
+     * @param  string|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection  $roles
      */
     public function hasAllRoles($roles, string $guard = null): bool
     {
@@ -287,7 +272,7 @@ trait HasRoles
     /**
      * Determine if the model has exactly all of the given role(s).
      *
-     * @param  string|array|Role|Collection  $roles
+     * @param  string|array|\Spatie\Permission\Contracts\Role|\Illuminate\Support\Collection  $roles
      */
     public function hasExactRoles($roles, string $guard = null): bool
     {
@@ -329,12 +314,14 @@ trait HasRoles
 
     protected function getStoredRole($role): Role
     {
-        if (is_numeric($role) || PermissionRegistrar::isUid($role)) {
-            return $this->getRoleClass()::findById($role, $this->getDefaultGuardName());
+        $roleClass = $this->getRoleClass();
+
+        if (is_numeric($role)) {
+            return $roleClass->findById($role, $this->getDefaultGuardName());
         }
 
         if (is_string($role)) {
-            return $this->getRoleClass()::findByName($role, $this->getDefaultGuardName());
+            return $roleClass->findByName($role, $this->getDefaultGuardName());
         }
 
         return $role;

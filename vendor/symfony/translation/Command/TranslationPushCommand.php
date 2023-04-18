@@ -73,7 +73,7 @@ final class TranslationPushCommand extends Command
         }
     }
 
-    protected function configure(): void
+    protected function configure()
     {
         $keys = $this->providers->keys();
         $defaultProvider = 1 === \count($keys) ? $keys[0] : null;

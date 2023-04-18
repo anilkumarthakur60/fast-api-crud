@@ -19,7 +19,6 @@ use Carbon\Exceptions\InvalidFormatException;
 use Carbon\Exceptions\OutOfRangeException;
 use Carbon\Translator;
 use Closure;
-use DateMalformedStringException;
 use DateTimeInterface;
 use DateTimeZone;
 use Exception;
@@ -185,13 +184,7 @@ trait Creator
         try {
             return new static($time, $tz);
         } catch (Exception $exception) {
-            // @codeCoverageIgnoreStart
-            try {
-                $date = @static::now($tz)->change($time);
-            } catch (DateMalformedStringException $ignoredException) {
-                $date = null;
-            }
-            // @codeCoverageIgnoreEnd
+            $date = @static::now($tz)->change($time);
 
             if (!$date) {
                 throw new InvalidFormatException("Could not parse '$time': ".$exception->getMessage(), 0, $exception);
@@ -639,10 +632,6 @@ trait Creator
         ) {
             $format = preg_replace('/^(.*)(?<!\\\\)((?:\\\\{2})*)(a|A)(.*)$/U', '$1$2$4 $3', $format);
             $time = preg_replace('/^(.*)(am|pm|AM|PM)(.*)$/U', '$1$3 $2', $time);
-        }
-
-        if ($tz === false) {
-            $tz = null;
         }
 
         // First attempt to create an instance, so that error messages are based on the unmodified format.

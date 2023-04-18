@@ -11,9 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Controller;
 
-use Psr\Container\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Attribute\ValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestAttributeValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestValueResolver;
@@ -22,8 +20,6 @@ use Symfony\Component\HttpKernel\Controller\ArgumentResolver\TraceableValueResol
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\VariadicValueResolver;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactory;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactoryInterface;
-use Symfony\Component\HttpKernel\Exception\ResolverNotFoundException;
-use Symfony\Contracts\Service\ServiceProviderInterface;
 
 /**
  * Responsible for resolving the arguments passed to an action.
@@ -34,16 +30,14 @@ final class ArgumentResolver implements ArgumentResolverInterface
 {
     private ArgumentMetadataFactoryInterface $argumentMetadataFactory;
     private iterable $argumentValueResolvers;
-    private ?ContainerInterface $namedResolvers;
 
     /**
      * @param iterable<mixed, ArgumentValueResolverInterface|ValueResolverInterface> $argumentValueResolvers
      */
-    public function __construct(ArgumentMetadataFactoryInterface $argumentMetadataFactory = null, iterable $argumentValueResolvers = [], ContainerInterface $namedResolvers = null)
+    public function __construct(ArgumentMetadataFactoryInterface $argumentMetadataFactory = null, iterable $argumentValueResolvers = [])
     {
         $this->argumentMetadataFactory = $argumentMetadataFactory ?? new ArgumentMetadataFactory();
         $this->argumentValueResolvers = $argumentValueResolvers ?: self::getDefaultArgumentValueResolvers();
-        $this->namedResolvers = $namedResolvers;
     }
 
     public function getArguments(Request $request, callable $controller, \ReflectionFunctionAbstract $reflector = null): array
@@ -51,35 +45,8 @@ final class ArgumentResolver implements ArgumentResolverInterface
         $arguments = [];
 
         foreach ($this->argumentMetadataFactory->createArgumentMetadata($controller, $reflector) as $metadata) {
-            $argumentValueResolvers = $this->argumentValueResolvers;
-            $disabledResolvers = [];
-
-            if ($this->namedResolvers && $attributes = $metadata->getAttributesOfType(ValueResolver::class, $metadata::IS_INSTANCEOF)) {
-                $resolverName = null;
-                foreach ($attributes as $attribute) {
-                    if ($attribute->disabled) {
-                        $disabledResolvers[$attribute->resolver] = true;
-                    } elseif ($resolverName) {
-                        throw new \LogicException(sprintf('You can only pin one resolver per argument, but argument "$%s" of "%s()" has more.', $metadata->getName(), $this->getPrettyName($controller)));
-                    } else {
-                        $resolverName = $attribute->resolver;
-                    }
-                }
-
-                if ($resolverName) {
-                    if (!$this->namedResolvers->has($resolverName)) {
-                        throw new ResolverNotFoundException($resolverName, $this->namedResolvers instanceof ServiceProviderInterface ? array_keys($this->namedResolvers->getProvidedServices()) : []);
-                    }
-
-                    $argumentValueResolvers = [$this->namedResolvers->get($resolverName)];
-                }
-            }
-
-            foreach ($argumentValueResolvers as $name => $resolver) {
+            foreach ($this->argumentValueResolvers as $resolver) {
                 if ((!$resolver instanceof ValueResolverInterface || $resolver instanceof TraceableValueResolver) && !$resolver->supports($request, $metadata)) {
-                    continue;
-                }
-                if (isset($disabledResolvers[\is_int($name) ? $resolver::class : $name])) {
                     continue;
                 }
 
@@ -103,7 +70,15 @@ final class ArgumentResolver implements ArgumentResolverInterface
                 }
             }
 
-            throw new \RuntimeException(sprintf('Controller "%s" requires that you provide a value for the "$%s" argument. Either the argument is nullable and no null value has been provided, no default value has been provided or because there is a non optional argument after this one.', $this->getPrettyName($controller), $metadata->getName()));
+            $representative = $controller;
+
+            if (\is_array($representative)) {
+                $representative = sprintf('%s::%s()', \get_class($representative[0]), $representative[1]);
+            } elseif (\is_object($representative)) {
+                $representative = get_debug_type($representative);
+            }
+
+            throw new \RuntimeException(sprintf('Controller "%s" requires that you provide a value for the "$%s" argument. Either the argument is nullable and no null value has been provided, no default value has been provided or because there is a non optional argument after this one.', $representative, $metadata->getName()));
         }
 
         return $arguments;
@@ -121,18 +96,5 @@ final class ArgumentResolver implements ArgumentResolverInterface
             new DefaultValueResolver(),
             new VariadicValueResolver(),
         ];
-    }
-
-    private function getPrettyName($controller): string
-    {
-        if (\is_array($controller)) {
-            return $controller[0]::class.'::'.$controller[1];
-        }
-
-        if (\is_object($controller)) {
-            return get_debug_type($controller);
-        }
-
-        return $controller;
     }
 }

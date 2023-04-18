@@ -31,16 +31,10 @@ abstract class Bundle implements BundleInterface
     protected $path;
     private string $namespace;
 
-    /**
-     * @return void
-     */
     public function boot()
     {
     }
 
-    /**
-     * @return void
-     */
     public function shutdown()
     {
     }
@@ -48,8 +42,6 @@ abstract class Bundle implements BundleInterface
     /**
      * This method can be overridden to register compilation passes,
      * other extensions, ...
-     *
-     * @return void
      */
     public function build(ContainerBuilder $container)
     {
@@ -118,9 +110,6 @@ abstract class Bundle implements BundleInterface
         return $this->name;
     }
 
-    /**
-     * @return void
-     */
     public function registerCommands(Application $application)
     {
     }
@@ -143,7 +132,7 @@ abstract class Bundle implements BundleInterface
         return class_exists($class = $this->getContainerExtensionClass()) ? new $class() : null;
     }
 
-    private function parseClassName(): void
+    private function parseClassName()
     {
         $pos = strrpos(static::class, '\\');
         $this->namespace = false === $pos ? '' : substr(static::class, 0, $pos);

@@ -57,7 +57,7 @@ abstract class AbstractSessionListener implements EventSubscriberInterface, Rese
         $this->sessionOptions = $sessionOptions;
     }
 
-    public function onKernelRequest(RequestEvent $event): void
+    public function onKernelRequest(RequestEvent $event)
     {
         if (!$event->isMainRequest()) {
             return;
@@ -65,10 +65,9 @@ abstract class AbstractSessionListener implements EventSubscriberInterface, Rese
 
         $request = $event->getRequest();
         if (!$request->hasSession()) {
-            $request->setSessionFactory(function () use ($request) {
-                // Prevent calling `$this->getSession()` twice in case the Request (and the below factory) is cloned
-                static $sess;
-
+            // This variable prevents calling `$this->getSession()` twice in case the Request (and the below factory) is cloned
+            $sess = null;
+            $request->setSessionFactory(function () use (&$sess, $request) {
                 if (!$sess) {
                     $sess = $this->getSession();
                     $request->setSession($sess);
@@ -90,7 +89,7 @@ abstract class AbstractSessionListener implements EventSubscriberInterface, Rese
         }
     }
 
-    public function onKernelResponse(ResponseEvent $event): void
+    public function onKernelResponse(ResponseEvent $event)
     {
         if (!$event->isMainRequest() || (!$this->container->has('initialized_session') && !$event->getRequest()->hasSession())) {
             return;

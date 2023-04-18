@@ -63,7 +63,7 @@ class ProfilerListener implements EventSubscriberInterface
     /**
      * Handles the onKernelException event.
      */
-    public function onKernelException(ExceptionEvent $event): void
+    public function onKernelException(ExceptionEvent $event)
     {
         if ($this->onlyMainRequests && !$event->isMainRequest()) {
             return;
@@ -75,7 +75,7 @@ class ProfilerListener implements EventSubscriberInterface
     /**
      * Handles the onKernelResponse event.
      */
-    public function onKernelResponse(ResponseEvent $event): void
+    public function onKernelResponse(ResponseEvent $event)
     {
         if ($this->onlyMainRequests && !$event->isMainRequest()) {
             return;
@@ -119,7 +119,7 @@ class ProfilerListener implements EventSubscriberInterface
         $this->parents[$request] = $this->requestStack->getParentRequest();
     }
 
-    public function onKernelTerminate(TerminateEvent $event): void
+    public function onKernelTerminate(TerminateEvent $event)
     {
         // attach children to parents
         foreach ($this->profiles as $request) {

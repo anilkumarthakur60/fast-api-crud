@@ -59,9 +59,6 @@ class PdoCaster
         ],
     ];
 
-    /**
-     * @return array
-     */
     public static function castPdo(\PDO $c, array $a, Stub $stub, bool $isNested)
     {
         $attr = [];
@@ -111,9 +108,6 @@ class PdoCaster
         return $a;
     }
 
-    /**
-     * @return array
-     */
     public static function castPdoStatement(\PDOStatement $c, array $a, Stub $stub, bool $isNested)
     {
         $prefix = Caster::PREFIX_VIRTUAL;

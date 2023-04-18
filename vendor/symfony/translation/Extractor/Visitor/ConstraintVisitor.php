@@ -21,6 +21,8 @@ use PhpParser\NodeVisitor;
  */
 final class ConstraintVisitor extends AbstractVisitor implements NodeVisitor
 {
+    private const CONSTRAINT_VALIDATION_MESSAGE_PATTERN = '/[a-zA-Z]*message/i';
+
     public function __construct(
         private readonly array $constraintClassNames = []
     ) {
@@ -63,7 +65,7 @@ final class ConstraintVisitor extends AbstractVisitor implements NodeVisitor
         }
 
         if ($this->hasNodeNamedArguments($node)) {
-            $messages = $this->getStringArguments($node, '/message/i', true);
+            $messages = $this->getStringArguments($node, self::CONSTRAINT_VALIDATION_MESSAGE_PATTERN, true);
         } else {
             if (!$arg->value instanceof Node\Expr\Array_) {
                 // There is no way to guess which argument is a message to be translated.
@@ -79,7 +81,7 @@ final class ConstraintVisitor extends AbstractVisitor implements NodeVisitor
                     continue;
                 }
 
-                if (false === stripos($item->key->value ?? '', 'message')) {
+                if (!preg_match(self::CONSTRAINT_VALIDATION_MESSAGE_PATTERN, $item->key->value ?? '')) {
                     continue;
                 }
 

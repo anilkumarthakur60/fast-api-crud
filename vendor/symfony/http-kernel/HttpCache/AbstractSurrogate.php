@@ -55,9 +55,6 @@ abstract class AbstractSurrogate implements SurrogateInterface
         return str_contains($value, sprintf('%s/1.0', strtoupper($this->getName())));
     }
 
-    /**
-     * @return void
-     */
     public function addSurrogateCapability(Request $request)
     {
         $current = $request->headers->get('Surrogate-Capability');
@@ -104,8 +101,6 @@ abstract class AbstractSurrogate implements SurrogateInterface
 
     /**
      * Remove the Surrogate from the Surrogate-Control header.
-     *
-     * @return void
      */
     protected function removeFromControl(Response $response)
     {

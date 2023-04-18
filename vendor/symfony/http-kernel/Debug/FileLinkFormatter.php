@@ -37,9 +37,8 @@ class FileLinkFormatter
     {
         $fileLinkFormat ??= $_ENV['SYMFONY_IDE'] ?? $_SERVER['SYMFONY_IDE'] ?? '';
 
-        if (!\is_array($f = $fileLinkFormat)) {
-            $f = (ErrorRendererInterface::IDE_LINK_FORMATS[$f] ?? $f) ?: \ini_get('xdebug.file_link_format') ?: get_cfg_var('xdebug.file_link_format') ?: 'file://%f#L%l';
-            $i = strpos($f, '&', max(strrpos($f, '%f'), strrpos($f, '%l'))) ?: \strlen($f);
+        if (!\is_array($fileLinkFormat) && $fileLinkFormat = (ErrorRendererInterface::IDE_LINK_FORMATS[$fileLinkFormat] ?? $fileLinkFormat) ?: \ini_get('xdebug.file_link_format') ?: get_cfg_var('xdebug.file_link_format') ?: false) {
+            $i = strpos($f = $fileLinkFormat, '&', max(strrpos($f, '%f'), strrpos($f, '%l'))) ?: \strlen($f);
             $fileLinkFormat = [substr($f, 0, $i)] + preg_split('/&([^>]++)>/', substr($f, $i), -1, \PREG_SPLIT_DELIM_CAPTURE);
         }
 
@@ -49,10 +48,7 @@ class FileLinkFormatter
         $this->urlFormat = $urlFormat;
     }
 
-    /**
-     * @return string|false
-     */
-    public function format(string $file, int $line): string|bool
+    public function format(string $file, int $line)
     {
         if ($fmt = $this->getFileLinkFormat()) {
             for ($i = 1; isset($fmt[$i]); ++$i) {

@@ -1,11 +1,6 @@
 CHANGELOG
 =========
 
-6.3
----
-
- * Display exception properties in the HTML error page
-
 6.1
 ---
 

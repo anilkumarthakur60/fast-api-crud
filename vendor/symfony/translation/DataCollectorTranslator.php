@@ -48,9 +48,6 @@ class DataCollectorTranslator implements TranslatorInterface, TranslatorBagInter
         return $trans;
     }
 
-    /**
-     * @return void
-     */
     public function setLocale(string $locale)
     {
         $this->translator->setLocale($locale);
@@ -108,7 +105,7 @@ class DataCollectorTranslator implements TranslatorInterface, TranslatorBagInter
         return $this->messages;
     }
 
-    private function collectMessage(?string $locale, ?string $domain, string $id, string $translation, ?array $parameters = []): void
+    private function collectMessage(?string $locale, ?string $domain, string $id, string $translation, ?array $parameters = [])
     {
         $domain ??= 'messages';
 

@@ -37,17 +37,13 @@ class VarDumper
      */
     private static $handler;
 
-    /**
-     * @param string|null $label
-     */
-    public static function dump(mixed $var/* , string $label = null */)
+    public static function dump(mixed $var)
     {
-        $label = 2 <= \func_num_args() ? func_get_arg(1) : null;
         if (null === self::$handler) {
             self::register();
         }
 
-        return (self::$handler)($var, $label);
+        return (self::$handler)($var);
     }
 
     public static function setHandler(callable $callable = null): ?callable
@@ -94,14 +90,8 @@ class VarDumper
             $dumper = new ContextualizedDumper($dumper, [new SourceContextProvider()]);
         }
 
-        self::$handler = function ($var, string $label = null) use ($cloner, $dumper) {
-            $var = $cloner->cloneVar($var);
-
-            if (null !== $label) {
-                $var = $var->withContext(['label' => $label]);
-            }
-
-            $dumper->dump($var);
+        self::$handler = function ($var) use ($cloner, $dumper) {
+            $dumper->dump($cloner->cloneVar($var));
         };
     }
 

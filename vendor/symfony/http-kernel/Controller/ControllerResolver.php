@@ -197,6 +197,8 @@ class ControllerResolver implements ControllerResolverInterface
     {
         $methods = get_class_methods($classOrObject);
 
-        return array_filter($methods, fn (string $method) => 0 !== strncmp($method, '__', 2));
+        return array_filter($methods, function (string $method) {
+            return 0 !== strncmp($method, '__', 2);
+        });
     }
 }

@@ -29,8 +29,6 @@ class UnstructuredHeader extends AbstractHeader
 
     /**
      * @param string $body
-     *
-     * @return void
      */
     public function setBody(mixed $body)
     {
@@ -52,8 +50,6 @@ class UnstructuredHeader extends AbstractHeader
 
     /**
      * Set the (unencoded) value of this header.
-     *
-     * @return void
      */
     public function setValue(string $value)
     {

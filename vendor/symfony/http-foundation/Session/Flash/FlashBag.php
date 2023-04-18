@@ -35,25 +35,16 @@ class FlashBag implements FlashBagInterface
         return $this->name;
     }
 
-    /**
-     * @return void
-     */
     public function setName(string $name)
     {
         $this->name = $name;
     }
 
-    /**
-     * @return void
-     */
     public function initialize(array &$flashes)
     {
         $this->flashes = &$flashes;
     }
 
-    /**
-     * @return void
-     */
     public function add(string $type, mixed $message)
     {
         $this->flashes[$type][] = $message;
@@ -90,17 +81,11 @@ class FlashBag implements FlashBagInterface
         return $return;
     }
 
-    /**
-     * @return void
-     */
     public function set(string $type, string|array $messages)
     {
         $this->flashes[$type] = (array) $messages;
     }
 
-    /**
-     * @return void
-     */
     public function setAll(array $messages)
     {
         $this->flashes = $messages;

@@ -43,9 +43,6 @@ class XmlReaderCaster
         \XMLReader::XML_DECLARATION => 'XML_DECLARATION',
     ];
 
-    /**
-     * @return array
-     */
     public static function castXmlReader(\XMLReader $reader, array $a, Stub $stub, bool $isNested)
     {
         try {

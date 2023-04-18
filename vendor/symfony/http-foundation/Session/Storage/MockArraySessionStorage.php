@@ -68,9 +68,6 @@ class MockArraySessionStorage implements SessionStorageInterface
         $this->setMetadataBag($metaBag);
     }
 
-    /**
-     * @return void
-     */
     public function setSessionData(array $array)
     {
         $this->data = $array;
@@ -108,9 +105,6 @@ class MockArraySessionStorage implements SessionStorageInterface
         return $this->id;
     }
 
-    /**
-     * @return void
-     */
     public function setId(string $id)
     {
         if ($this->started) {
@@ -125,17 +119,11 @@ class MockArraySessionStorage implements SessionStorageInterface
         return $this->name;
     }
 
-    /**
-     * @return void
-     */
     public function setName(string $name)
     {
         $this->name = $name;
     }
 
-    /**
-     * @return void
-     */
     public function save()
     {
         if (!$this->started || $this->closed) {
@@ -146,9 +134,6 @@ class MockArraySessionStorage implements SessionStorageInterface
         $this->started = false;
     }
 
-    /**
-     * @return void
-     */
     public function clear()
     {
         // clear out the bags
@@ -163,9 +148,6 @@ class MockArraySessionStorage implements SessionStorageInterface
         $this->loadSession();
     }
 
-    /**
-     * @return void
-     */
     public function registerBag(SessionBagInterface $bag)
     {
         $this->bags[$bag->getName()] = $bag;
@@ -189,9 +171,6 @@ class MockArraySessionStorage implements SessionStorageInterface
         return $this->started;
     }
 
-    /**
-     * @return void
-     */
     public function setMetadataBag(MetadataBag $bag = null)
     {
         if (1 > \func_num_args()) {
@@ -219,9 +198,6 @@ class MockArraySessionStorage implements SessionStorageInterface
         return hash('sha256', uniqid('ss_mock_', true));
     }
 
-    /**
-     * @return void
-     */
     protected function loadSession()
     {
         $bags = array_merge($this->bags, [$this->metadataBag]);

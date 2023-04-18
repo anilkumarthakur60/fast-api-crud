@@ -41,7 +41,7 @@ abstract class AbstractPipes implements PipesInterface
         }
     }
 
-    public function close(): void
+    public function close()
     {
         foreach ($this->pipes as $pipe) {
             if (\is_resource($pipe)) {
@@ -66,7 +66,7 @@ abstract class AbstractPipes implements PipesInterface
     /**
      * Unblocks streams.
      */
-    protected function unblock(): void
+    protected function unblock()
     {
         if (!$this->blocked) {
             return;
@@ -170,7 +170,7 @@ abstract class AbstractPipes implements PipesInterface
     /**
      * @internal
      */
-    public function handleError(int $type, string $msg): void
+    public function handleError(int $type, string $msg)
     {
         $this->lastError = $msg;
     }

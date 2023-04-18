@@ -34,8 +34,6 @@ interface SessionInterface
 
     /**
      * Sets the session ID.
-     *
-     * @return void
      */
     public function setId(string $id);
 
@@ -46,8 +44,6 @@ interface SessionInterface
 
     /**
      * Sets the session name.
-     *
-     * @return void
      */
     public function setName(string $name);
 
@@ -82,8 +78,6 @@ interface SessionInterface
      * This method is generally not required for real sessions as
      * the session will be automatically saved at the end of
      * code execution.
-     *
-     * @return void
      */
     public function save();
 
@@ -99,8 +93,6 @@ interface SessionInterface
 
     /**
      * Sets an attribute.
-     *
-     * @return void
      */
     public function set(string $name, mixed $value);
 
@@ -111,8 +103,6 @@ interface SessionInterface
 
     /**
      * Sets attributes.
-     *
-     * @return void
      */
     public function replace(array $attributes);
 
@@ -125,8 +115,6 @@ interface SessionInterface
 
     /**
      * Clears all attributes.
-     *
-     * @return void
      */
     public function clear();
 
@@ -137,8 +125,6 @@ interface SessionInterface
 
     /**
      * Registers a SessionBagInterface with the session.
-     *
-     * @return void
      */
     public function registerBag(SessionBagInterface $bag);
 

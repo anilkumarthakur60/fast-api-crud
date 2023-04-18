@@ -64,6 +64,7 @@ class QtFileLoader implements LoaderInterface
                         $domain
                     );
                 }
+                $translation = $translation->nextSibling;
             }
 
             if (class_exists(FileResource::class)) {

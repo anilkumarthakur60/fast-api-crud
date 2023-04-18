@@ -2,8 +2,6 @@
 
 namespace Spatie\Permission;
 
-use Illuminate\Contracts\Auth\Access\Gate;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Arr;
@@ -15,7 +13,7 @@ use Spatie\Permission\Contracts\Role as RoleContract;
 
 class PermissionServiceProvider extends ServiceProvider
 {
-    public function boot()
+    public function boot(PermissionRegistrar $permissionLoader)
     {
         $this->offerPublishing();
 
@@ -25,16 +23,14 @@ class PermissionServiceProvider extends ServiceProvider
 
         $this->registerModelBindings();
 
-        $this->callAfterResolving(Gate::class, function (Gate $gate, Application $app) {
-            if ($this->app['config']->get('permission.register_permission_check_method')) {
-                /** @var PermissionRegistrar $permissionLoader */
-                $permissionLoader = $app->get(PermissionRegistrar::class);
-                $permissionLoader->clearPermissionsCollection();
-                $permissionLoader->registerPermissions($gate);
-            }
-        });
+        if ($this->app->config['permission.register_permission_check_method']) {
+            $permissionLoader->clearClassPermissions();
+            $permissionLoader->registerPermissions();
+        }
 
-        $this->app->singleton(PermissionRegistrar::class);
+        $this->app->singleton(PermissionRegistrar::class, function ($app) use ($permissionLoader) {
+            return $permissionLoader;
+        });
     }
 
     public function register()
@@ -51,10 +47,6 @@ class PermissionServiceProvider extends ServiceProvider
 
     protected function offerPublishing()
     {
-        if (! $this->app->runningInConsole()) {
-            return;
-        }
-
         if (! function_exists('config_path')) {
             // function not available and 'publish' not relevant in Lumen
             return;
@@ -82,16 +74,14 @@ class PermissionServiceProvider extends ServiceProvider
 
     protected function registerModelBindings()
     {
-        $this->app->bind(PermissionContract::class, function ($app) {
-            $config = $app->config['permission.models'];
+        $config = $this->app->config['permission.models'];
 
-            return $app->make($config['permission']);
-        });
-        $this->app->bind(RoleContract::class, function ($app) {
-            $config = $app->config['permission.models'];
+        if (! $config) {
+            return;
+        }
 
-            return $app->make($config['role']);
-        });
+        $this->app->bind(PermissionContract::class, $config['permission']);
+        $this->app->bind(RoleContract::class, $config['role']);
     }
 
     public static function bladeMethodWrapper($method, $role, $guard = null)
@@ -156,7 +146,6 @@ class PermissionServiceProvider extends ServiceProvider
         Route::macro('role', function ($roles = []) {
             $roles = implode('|', Arr::wrap($roles));
 
-            /** @var Route $this */
             $this->middleware("role:$roles");
 
             return $this;
@@ -165,7 +154,6 @@ class PermissionServiceProvider extends ServiceProvider
         Route::macro('permission', function ($permissions = []) {
             $permissions = implode('|', Arr::wrap($permissions));
 
-            /** @var Route $this */
             $this->middleware("permission:$permissions");
 
             return $this;
@@ -175,13 +163,13 @@ class PermissionServiceProvider extends ServiceProvider
     /**
      * Returns existing migration file if found, else uses the current timestamp.
      */
-    protected function getMigrationFileName(string $migrationFileName): string
+    protected function getMigrationFileName($migrationFileName): string
     {
         $timestamp = date('Y_m_d_His');
 
         $filesystem = $this->app->make(Filesystem::class);
 
-        return Collection::make([$this->app->databasePath().DIRECTORY_SEPARATOR.'migrations'.DIRECTORY_SEPARATOR])
+        return Collection::make($this->app->databasePath().DIRECTORY_SEPARATOR.'migrations'.DIRECTORY_SEPARATOR)
             ->flatMap(function ($path) use ($filesystem, $migrationFileName) {
                 return $filesystem->glob($path.'*_'.$migrationFileName);
             })

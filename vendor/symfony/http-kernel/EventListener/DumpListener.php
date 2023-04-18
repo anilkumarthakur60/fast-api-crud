@@ -36,9 +36,6 @@ class DumpListener implements EventSubscriberInterface
         $this->connection = $connection;
     }
 
-    /**
-     * @return void
-     */
     public function configure()
     {
         $cloner = $this->cloner;

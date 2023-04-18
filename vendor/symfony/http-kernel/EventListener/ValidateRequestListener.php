@@ -27,7 +27,7 @@ class ValidateRequestListener implements EventSubscriberInterface
     /**
      * Performs the validation.
      */
-    public function onKernelRequest(RequestEvent $event): void
+    public function onKernelRequest(RequestEvent $event)
     {
         if (!$event->isMainRequest()) {
             return;

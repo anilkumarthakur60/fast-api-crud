@@ -1,11 +1,6 @@
 CHANGELOG
 =========
 
-6.3
----
-
- * Support detection of related parts if `Content-Id` is used instead of the name
-
 6.2
 ---
 

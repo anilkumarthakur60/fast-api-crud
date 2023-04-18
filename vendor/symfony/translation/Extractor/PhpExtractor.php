@@ -197,7 +197,7 @@ class PhpExtractor extends AbstractFileExtractor implements ExtractorInterface
      * Extracts the message from the iterator while the tokens
      * match allowed message tokens.
      */
-    private function getValue(\Iterator $tokenIterator): string
+    private function getValue(\Iterator $tokenIterator)
     {
         $message = '';
         $docToken = '';

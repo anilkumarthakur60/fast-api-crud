@@ -1,6 +1,6 @@
 {
     "name": "spatie/laravel-permission",
-    "description": "Permission handling for Laravel 8.0 and up",
+    "description": "Permission handling for Laravel 6.0 and up",
     "license": "MIT",
     "keywords": [
         "spatie",
@@ -23,13 +23,13 @@
     "homepage": "https://github.com/spatie/laravel-permission",
     "require": {
         "php": "^7.3|^8.0",
-        "illuminate/auth": "^8.0|^9.0|^10.0",
-        "illuminate/container": "^8.0|^9.0|^10.0",
-        "illuminate/contracts": "^8.0|^9.0|^10.0",
-        "illuminate/database": "^8.0|^9.0|^10.0"
+        "illuminate/auth": "^7.0|^8.0|^9.0|^10.0",
+        "illuminate/container": "^7.0|^8.0|^9.0|^10.0",
+        "illuminate/contracts": "^7.0|^8.0|^9.0|^10.0",
+        "illuminate/database": "^7.0|^8.0|^9.0|^10.0"
     },
     "require-dev": {
-        "orchestra/testbench": "^6.0|^7.0|^8.0",
+        "orchestra/testbench": "^5.0|^6.0|^7.0|^8.0",
         "phpunit/phpunit": "^9.4",
         "predis/predis": "^1.1"
     },
@@ -45,7 +45,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Spatie\\Permission\\Tests\\": "tests"
+            "Spatie\\Permission\\Test\\": "tests"
         }
     },
     "config": {
@@ -53,8 +53,8 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "6.x-dev",
-            "dev-master": "6.x-dev"
+            "dev-main": "5.x-dev",
+            "dev-master": "5.x-dev"
         },
         "laravel": {
             "providers": [
@@ -63,8 +63,6 @@
         }
     },
     "scripts": {
-        "test": "phpunit",
-        "format": "php-cs-fixer fix --allow-risky=yes",
-        "analyse": "phpstan analyse"
+        "test": "phpunit"
     }
 }

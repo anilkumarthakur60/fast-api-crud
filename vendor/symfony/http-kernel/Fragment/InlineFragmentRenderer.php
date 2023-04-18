@@ -103,9 +103,6 @@ class InlineFragmentRenderer extends RoutableFragmentRenderer
         }
     }
 
-    /**
-     * @return Request
-     */
     protected function createSubRequest(string $uri, Request $request)
     {
         $cookies = $request->cookies->all();

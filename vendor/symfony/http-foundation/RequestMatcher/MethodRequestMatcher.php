@@ -32,7 +32,9 @@ class MethodRequestMatcher implements RequestMatcherInterface
      */
     public function __construct(array|string $methods)
     {
-        $this->methods = array_reduce(array_map('strtoupper', (array) $methods), static fn (array $methods, string $method) => array_merge($methods, preg_split('/\s*,\s*/', $method)), []);
+        $this->methods = array_reduce(array_map('strtoupper', (array) $methods), static function (array $methods, string $method) {
+            return array_merge($methods, preg_split('/\s*,\s*/', $method));
+        }, []);
     }
 
     public function matches(Request $request): bool

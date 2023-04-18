@@ -183,9 +183,6 @@ class NativeSessionStorage implements SessionStorageInterface
         return $this->saveHandler->getId();
     }
 
-    /**
-     * @return void
-     */
     public function setId(string $id)
     {
         $this->saveHandler->setId($id);
@@ -196,9 +193,6 @@ class NativeSessionStorage implements SessionStorageInterface
         return $this->saveHandler->getName();
     }
 
-    /**
-     * @return void
-     */
     public function setName(string $name)
     {
         $this->saveHandler->setName($name);
@@ -228,9 +222,6 @@ class NativeSessionStorage implements SessionStorageInterface
         return session_regenerate_id($destroy);
     }
 
-    /**
-     * @return void
-     */
     public function save()
     {
         // Store a copy so we can restore the bags in case the session was not left empty
@@ -270,9 +261,6 @@ class NativeSessionStorage implements SessionStorageInterface
         $this->started = false;
     }
 
-    /**
-     * @return void
-     */
     public function clear()
     {
         // clear out the bags
@@ -287,9 +275,6 @@ class NativeSessionStorage implements SessionStorageInterface
         $this->loadSession();
     }
 
-    /**
-     * @return void
-     */
     public function registerBag(SessionBagInterface $bag)
     {
         if ($this->started) {
@@ -314,9 +299,6 @@ class NativeSessionStorage implements SessionStorageInterface
         return $this->bags[$name];
     }
 
-    /**
-     * @return void
-     */
     public function setMetadataBag(MetadataBag $metaBag = null)
     {
         if (1 > \func_num_args()) {
@@ -347,8 +329,6 @@ class NativeSessionStorage implements SessionStorageInterface
      * @param array $options Session ini directives [key => value]
      *
      * @see https://php.net/session.configuration
-     *
-     * @return void
      */
     public function setOptions(array $options)
     {
@@ -392,8 +372,6 @@ class NativeSessionStorage implements SessionStorageInterface
      * @see https://php.net/sessionhandlerinterface
      * @see https://php.net/sessionhandler
      *
-     * @return void
-     *
      * @throws \InvalidArgumentException
      */
     public function setSaveHandler(AbstractProxy|\SessionHandlerInterface $saveHandler = null)
@@ -426,8 +404,6 @@ class NativeSessionStorage implements SessionStorageInterface
      * are set to (either PHP's internal, or a custom save handler set with session_set_save_handler()).
      * PHP takes the return value from the read() handler, unserializes it
      * and populates $_SESSION with the result automatically.
-     *
-     * @return void
      */
     protected function loadSession(array &$session = null)
     {

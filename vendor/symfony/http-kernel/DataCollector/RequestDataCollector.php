@@ -44,7 +44,7 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
         $this->requestStack = $requestStack;
     }
 
-    public function collect(Request $request, Response $response, \Throwable $exception = null): void
+    public function collect(Request $request, Response $response, \Throwable $exception = null)
     {
         // attributes are serialized and as they can be anything, they need to be converted to strings.
         $attributes = [];
@@ -136,7 +136,7 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
                 continue;
             }
             if ('request_headers' === $key || 'response_headers' === $key) {
-                $this->data[$key] = array_map(fn ($v) => isset($v[0]) && !isset($v[1]) ? $v[0] : $v, $value);
+                $this->data[$key] = array_map(function ($v) { return isset($v[0]) && !isset($v[1]) ? $v[0] : $v; }, $value);
             }
         }
 
@@ -173,12 +173,12 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
         }
     }
 
-    public function lateCollect(): void
+    public function lateCollect()
     {
         $this->data = $this->cloneVar($this->data);
     }
 
-    public function reset(): void
+    public function reset()
     {
         $this->data = [];
         $this->controllers = new \SplObjectStorage();
@@ -195,73 +195,46 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
         return $this->data['path_info'];
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getRequestRequest()
     {
         return new ParameterBag($this->data['request_request']->getValue());
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getRequestQuery()
     {
         return new ParameterBag($this->data['request_query']->getValue());
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getRequestFiles()
     {
         return new ParameterBag($this->data['request_files']->getValue());
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getRequestHeaders()
     {
         return new ParameterBag($this->data['request_headers']->getValue());
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getRequestServer(bool $raw = false)
     {
         return new ParameterBag($this->data['request_server']->getValue($raw));
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getRequestCookies(bool $raw = false)
     {
         return new ParameterBag($this->data['request_cookies']->getValue($raw));
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getRequestAttributes()
     {
         return new ParameterBag($this->data['request_attributes']->getValue());
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getResponseHeaders()
     {
         return new ParameterBag($this->data['response_headers']->getValue());
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getResponseCookies()
     {
         return new ParameterBag($this->data['response_cookies']->getValue());
@@ -297,17 +270,11 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
         return $this->data['content'];
     }
 
-    /**
-     * @return bool
-     */
     public function isJsonRequest()
     {
         return 1 === preg_match('{^application/(?:\w+\++)*json$}i', $this->data['request_headers']['content-type']);
     }
 
-    /**
-     * @return string|null
-     */
     public function getPrettyJson()
     {
         $decoded = json_decode($this->getContent());
@@ -340,9 +307,6 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
         return $this->data['locale'];
     }
 
-    /**
-     * @return ParameterBag
-     */
     public function getDotenvVars()
     {
         return new ParameterBag($this->data['dotenv_vars']->getValue());
@@ -400,12 +364,12 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
         return $this->data['forward_token'] ?? null;
     }
 
-    public function onKernelController(ControllerEvent $event): void
+    public function onKernelController(ControllerEvent $event)
     {
         $this->controllers[$event->getRequest()] = $event->getController();
     }
 
-    public function onKernelResponse(ResponseEvent $event): void
+    public function onKernelResponse(ResponseEvent $event)
     {
         if (!$event->isMainRequest()) {
             return;

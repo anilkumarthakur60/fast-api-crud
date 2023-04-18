@@ -48,8 +48,6 @@ class FragmentHandler
 
     /**
      * Adds a renderer.
-     *
-     * @return void
      */
     public function addRenderer(FragmentRendererInterface $renderer)
     {

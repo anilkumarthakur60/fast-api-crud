@@ -23,9 +23,6 @@ use Symfony\Component\DependencyInjection\Reference;
  */
 class RegisterLocaleAwareServicesPass implements CompilerPassInterface
 {
-    /**
-     * @return void
-     */
     public function process(ContainerBuilder $container)
     {
         if (!$container->hasDefinition('locale_aware_listener')) {

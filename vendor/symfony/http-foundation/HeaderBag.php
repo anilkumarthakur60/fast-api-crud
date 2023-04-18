@@ -63,7 +63,7 @@ class HeaderBag implements \IteratorAggregate, \Countable
      *
      * @param string|null $key The name of the headers to return or null to get them all
      *
-     * @return ($key is null ? array<string, array<int, string|null>> : array<int, string|null>)
+     * @return array<string, array<int, string|null>>|array<int, string|null>
      */
     public function all(string $key = null): array
     {
@@ -86,8 +86,6 @@ class HeaderBag implements \IteratorAggregate, \Countable
 
     /**
      * Replaces the current HTTP headers by a new set.
-     *
-     * @return void
      */
     public function replace(array $headers = [])
     {
@@ -97,8 +95,6 @@ class HeaderBag implements \IteratorAggregate, \Countable
 
     /**
      * Adds new headers the current HTTP headers set.
-     *
-     * @return void
      */
     public function add(array $headers)
     {
@@ -130,8 +126,6 @@ class HeaderBag implements \IteratorAggregate, \Countable
      *
      * @param string|string[]|null $values  The value or an array of values
      * @param bool                 $replace Whether to replace the actual value or not (true by default)
-     *
-     * @return void
      */
     public function set(string $key, string|array|null $values, bool $replace = true)
     {
@@ -176,8 +170,6 @@ class HeaderBag implements \IteratorAggregate, \Countable
 
     /**
      * Removes a header.
-     *
-     * @return void
      */
     public function remove(string $key)
     {
@@ -210,8 +202,6 @@ class HeaderBag implements \IteratorAggregate, \Countable
 
     /**
      * Adds a custom Cache-Control directive.
-     *
-     * @return void
      */
     public function addCacheControlDirective(string $key, bool|string $value = true)
     {
@@ -238,8 +228,6 @@ class HeaderBag implements \IteratorAggregate, \Countable
 
     /**
      * Removes a Cache-Control directive.
-     *
-     * @return void
      */
     public function removeCacheControlDirective(string $key)
     {
@@ -266,9 +254,6 @@ class HeaderBag implements \IteratorAggregate, \Countable
         return \count($this->headers);
     }
 
-    /**
-     * @return string
-     */
     protected function getCacheControlHeader()
     {
         ksort($this->cacheControl);

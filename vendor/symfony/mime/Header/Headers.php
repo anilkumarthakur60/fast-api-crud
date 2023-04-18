@@ -61,7 +61,7 @@ final class Headers
         }
     }
 
-    public function setMaxLineLength(int $lineLength): void
+    public function setMaxLineLength(int $lineLength)
     {
         $this->lineLength = $lineLength;
         foreach ($this->all() as $header) {

@@ -38,7 +38,7 @@ class EventDataCollector extends DataCollector implements LateDataCollectorInter
         $this->requestStack = $requestStack;
     }
 
-    public function collect(Request $request, Response $response, \Throwable $exception = null): void
+    public function collect(Request $request, Response $response, \Throwable $exception = null)
     {
         $this->currentRequest = $this->requestStack && $this->requestStack->getMainRequest() !== $request ? $request : null;
         $this->data = [
@@ -48,7 +48,7 @@ class EventDataCollector extends DataCollector implements LateDataCollectorInter
         ];
     }
 
-    public function reset(): void
+    public function reset()
     {
         $this->data = [];
 
@@ -57,7 +57,7 @@ class EventDataCollector extends DataCollector implements LateDataCollectorInter
         }
     }
 
-    public function lateCollect(): void
+    public function lateCollect()
     {
         if ($this->dispatcher instanceof TraceableEventDispatcher) {
             $this->setCalledListeners($this->dispatcher->getCalledListeners($this->currentRequest));
@@ -71,7 +71,7 @@ class EventDataCollector extends DataCollector implements LateDataCollectorInter
     /**
      * @see TraceableEventDispatcher
      */
-    public function setCalledListeners(array $listeners): void
+    public function setCalledListeners(array $listeners)
     {
         $this->data['called_listeners'] = $listeners;
     }
@@ -87,7 +87,7 @@ class EventDataCollector extends DataCollector implements LateDataCollectorInter
     /**
      * @see TraceableEventDispatcher
      */
-    public function setNotCalledListeners(array $listeners): void
+    public function setNotCalledListeners(array $listeners)
     {
         $this->data['not_called_listeners'] = $listeners;
     }
@@ -105,7 +105,7 @@ class EventDataCollector extends DataCollector implements LateDataCollectorInter
      *
      * @see TraceableEventDispatcher
      */
-    public function setOrphanedEvents(array $events): void
+    public function setOrphanedEvents(array $events)
     {
         $this->data['orphaned_events'] = $events;
     }

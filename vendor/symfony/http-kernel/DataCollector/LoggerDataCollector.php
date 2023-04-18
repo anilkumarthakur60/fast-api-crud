@@ -40,12 +40,12 @@ class LoggerDataCollector extends DataCollector implements LateDataCollectorInte
         $this->requestStack = $requestStack;
     }
 
-    public function collect(Request $request, Response $response, \Throwable $exception = null): void
+    public function collect(Request $request, Response $response, \Throwable $exception = null)
     {
         $this->currentRequest = $this->requestStack && $this->requestStack->getMainRequest() !== $request ? $request : null;
     }
 
-    public function reset(): void
+    public function reset()
     {
         if (isset($this->logger)) {
             $this->logger->clear();
@@ -53,7 +53,7 @@ class LoggerDataCollector extends DataCollector implements LateDataCollectorInte
         $this->data = [];
     }
 
-    public function lateCollect(): void
+    public function lateCollect()
     {
         if (isset($this->logger)) {
             $containerDeprecationLogs = $this->getContainerDeprecationLogs();
@@ -110,7 +110,9 @@ class LoggerDataCollector extends DataCollector implements LateDataCollectorInte
         }
 
         // sort logs from oldest to newest
-        usort($logs, static fn ($logA, $logB) => $logA['timestamp'] <=> $logB['timestamp']);
+        usort($logs, static function ($logA, $logB) {
+            return $logA['timestamp'] <=> $logB['timestamp'];
+        });
 
         return $this->processedLogs = $logs;
     }
@@ -227,7 +229,7 @@ class LoggerDataCollector extends DataCollector implements LateDataCollectorInte
         return $logs;
     }
 
-    private function sanitizeLogs(array $logs): array
+    private function sanitizeLogs(array $logs)
     {
         $sanitizedLogs = [];
         $silencedLogs = [];
@@ -259,7 +261,7 @@ class LoggerDataCollector extends DataCollector implements LateDataCollectorInte
                 continue;
             }
 
-            $errorId = hash('xxh128', "{$exception->getSeverity()}/{$exception->getLine()}/{$exception->getFile()}\0{$message}", true);
+            $errorId = md5("{$exception->getSeverity()}/{$exception->getLine()}/{$exception->getFile()}\0{$message}", true);
 
             if (isset($sanitizedLogs[$errorId])) {
                 ++$sanitizedLogs[$errorId]['errorCount'];

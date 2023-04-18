@@ -30,7 +30,7 @@ final class DateHeader extends AbstractHeader
     /**
      * @param \DateTimeInterface $body
      */
-    public function setBody(mixed $body): void
+    public function setBody(mixed $body)
     {
         $this->setDateTime($body);
     }
@@ -50,7 +50,7 @@ final class DateHeader extends AbstractHeader
      *
      * If a DateTime instance is provided, it is converted to DateTimeImmutable.
      */
-    public function setDateTime(\DateTimeInterface $dateTime): void
+    public function setDateTime(\DateTimeInterface $dateTime)
     {
         if ($dateTime instanceof \DateTime) {
             $immutable = new \DateTimeImmutable('@'.$dateTime->getTimestamp());

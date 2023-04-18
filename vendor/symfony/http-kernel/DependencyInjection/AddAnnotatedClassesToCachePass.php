@@ -31,9 +31,6 @@ class AddAnnotatedClassesToCachePass implements CompilerPassInterface
         $this->kernel = $kernel;
     }
 
-    /**
-     * @return void
-     */
     public function process(ContainerBuilder $container)
     {
         $annotatedClasses = [];

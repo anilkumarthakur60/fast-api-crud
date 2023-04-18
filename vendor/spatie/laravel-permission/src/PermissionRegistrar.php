@@ -13,10 +13,10 @@ use Spatie\Permission\Contracts\Role;
 
 class PermissionRegistrar
 {
-    /** @var Repository */
+    /** @var \Illuminate\Contracts\Cache\Repository */
     protected $cache;
 
-    /** @var CacheManager */
+    /** @var \Illuminate\Cache\CacheManager */
     protected $cacheManager;
 
     /** @var string */
@@ -25,29 +25,29 @@ class PermissionRegistrar
     /** @var string */
     protected $roleClass;
 
-    /** @var Collection|null */
+    /** @var \Illuminate\Database\Eloquent\Collection */
     protected $permissions;
 
     /** @var string */
-    public $pivotRole;
+    public static $pivotRole;
 
     /** @var string */
-    public $pivotPermission;
+    public static $pivotPermission;
 
     /** @var \DateInterval|int */
-    public $cacheExpirationTime;
+    public static $cacheExpirationTime;
 
     /** @var bool */
-    public $teams;
+    public static $teams;
 
     /** @var string */
-    public $teamsKey;
+    public static $teamsKey;
 
     /** @var int|string */
     protected $teamId = null;
 
     /** @var string */
-    public $cacheKey;
+    public static $cacheKey;
 
     /** @var array */
     private $cachedRoles = [];
@@ -72,15 +72,15 @@ class PermissionRegistrar
 
     public function initializeCache()
     {
-        $this->cacheExpirationTime = config('permission.cache.expiration_time') ?: \DateInterval::createFromDateString('24 hours');
+        self::$cacheExpirationTime = config('permission.cache.expiration_time') ?: \DateInterval::createFromDateString('24 hours');
 
-        $this->teams = config('permission.teams', false);
-        $this->teamsKey = config('permission.column_names.team_foreign_key');
+        self::$teams = config('permission.teams', false);
+        self::$teamsKey = config('permission.column_names.team_foreign_key');
 
-        $this->cacheKey = config('permission.cache.key');
+        self::$cacheKey = config('permission.cache.key');
 
-        $this->pivotRole = config('permission.column_names.role_pivot_key') ?: 'role_id';
-        $this->pivotPermission = config('permission.column_names.permission_pivot_key') ?: 'permission_id';
+        self::$pivotRole = config('permission.column_names.role_pivot_key') ?: 'role_id';
+        self::$pivotPermission = config('permission.column_names.permission_pivot_key') ?: 'permission_id';
 
         $this->cache = $this->getCacheStoreFromConfig();
     }
@@ -129,9 +129,9 @@ class PermissionRegistrar
      * Register the permission check method on the gate.
      * We resolve the Gate fresh here, for benefit of long-running instances.
      */
-    public function registerPermissions(Gate $gate): bool
+    public function registerPermissions(): bool
     {
-        $gate->before(function (Authorizable $user, string $ability) {
+        app(Gate::class)->before(function (Authorizable $user, string $ability) {
             if (method_exists($user, 'checkPermissionTo')) {
                 return $user->checkPermissionTo($ability) ?: null;
             }
@@ -147,27 +147,17 @@ class PermissionRegistrar
     {
         $this->permissions = null;
 
-        return $this->cache->forget($this->cacheKey);
+        return $this->cache->forget(self::$cacheKey);
     }
 
     /**
-     * Clear already loaded permissions collection.
+     * Clear class permissions.
      * This is only intended to be called by the PermissionServiceProvider on boot,
      * so that long-running instances like Swoole don't keep old data in memory.
      */
-    public function clearPermissionsCollection(): void
-    {
-        $this->permissions = null;
-    }
-
-    /**
-     * @deprecated
-     *
-     * @alias of clearPermissionsCollection()
-     */
     public function clearClassPermissions()
     {
-        $this->clearPermissionsCollection();
+        $this->permissions = null;
     }
 
     /**
@@ -180,7 +170,7 @@ class PermissionRegistrar
             return;
         }
 
-        $this->permissions = $this->cache->remember($this->cacheKey, $this->cacheExpirationTime, function () {
+        $this->permissions = $this->cache->remember(self::$cacheKey, self::$cacheExpirationTime, function () {
             return $this->getSerializedPermissionsForCache();
         });
 
@@ -227,9 +217,12 @@ class PermissionRegistrar
         return $permissions;
     }
 
-    public function getPermissionClass(): string
+    /**
+     * Get an instance of the permission class.
+     */
+    public function getPermissionClass(): Permission
     {
-        return $this->permissionClass;
+        return app($this->permissionClass);
     }
 
     public function setPermissionClass($permissionClass)
@@ -241,9 +234,12 @@ class PermissionRegistrar
         return $this;
     }
 
-    public function getRoleClass(): string
+    /**
+     * Get an instance of the role class.
+     */
+    public function getRoleClass(): Role
     {
-        return $this->roleClass;
+        return app($this->roleClass);
     }
 
     public function setRoleClass($roleClass)
@@ -267,7 +263,7 @@ class PermissionRegistrar
 
     protected function getPermissionsWithRoles(): Collection
     {
-        return $this->permissionClass::select()->with('roles')->get();
+        return $this->getPermissionClass()->select()->with('roles')->get();
     }
 
     /**
@@ -373,26 +369,5 @@ class PermissionRegistrar
         }, $this->permissions['roles']);
 
         $this->permissions['roles'] = [];
-    }
-
-    public static function isUid($value)
-    {
-        if (! is_string($value) || empty(trim($value))) {
-            return false;
-        }
-
-        // check if is UUID/GUID
-        $uid = preg_match('/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/iD', $value) > 0;
-        if ($uid) {
-            return true;
-        }
-
-        // check if is ULID
-        $ulid = 26 == strlen($value) && 26 == strspn($value, '0123456789ABCDEFGHJKMNPQRSTVWXYZabcdefghjkmnpqrstvwxyz') && $value[0] <= '7';
-        if ($ulid) {
-            return true;
-        }
-
-        return false;
     }
 }

@@ -81,9 +81,6 @@ class OutputFormatter implements WrappableOutputFormatterInterface
         $this->styleStack = new OutputFormatterStyleStack();
     }
 
-    /**
-     * @return void
-     */
     public function setDecorated(bool $decorated)
     {
         $this->decorated = $decorated;
@@ -94,9 +91,6 @@ class OutputFormatter implements WrappableOutputFormatterInterface
         return $this->decorated;
     }
 
-    /**
-     * @return void
-     */
     public function setStyle(string $name, OutputFormatterStyleInterface $style)
     {
         $this->styles[strtolower($name)] = $style;

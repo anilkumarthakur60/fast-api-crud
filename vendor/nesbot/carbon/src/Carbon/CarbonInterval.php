@@ -28,7 +28,6 @@ use Carbon\Traits\Options;
 use Carbon\Traits\ToStringFormat;
 use Closure;
 use DateInterval;
-use DateMalformedIntervalStringException;
 use DateTimeInterface;
 use DateTimeZone;
 use Exception;
@@ -1005,14 +1004,8 @@ class CarbonInterval extends DateInterval implements CarbonConverterInterface
             return static::fromString($interval);
         }
 
-        // @codeCoverageIgnoreStart
-        try {
-            /** @var static $interval */
-            $interval = static::createFromDateString($interval);
-        } catch (DateMalformedIntervalStringException $e) {
-            return null;
-        }
-        // @codeCoverageIgnoreEnd
+        /** @var static $interval */
+        $interval = static::createFromDateString($interval);
 
         return !$interval || $interval->isEmpty() ? null : $interval;
     }

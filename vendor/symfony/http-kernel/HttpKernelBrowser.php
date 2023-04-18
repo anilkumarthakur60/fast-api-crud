@@ -47,8 +47,6 @@ class HttpKernelBrowser extends AbstractBrowser
 
     /**
      * Sets whether to catch exceptions when the kernel is handling a request.
-     *
-     * @return void
      */
     public function catchExceptions(bool $catchExceptions)
     {
@@ -112,9 +110,6 @@ EOF;
         return $code.$this->getHandleScript();
     }
 
-    /**
-     * @return string
-     */
     protected function getHandleScript()
     {
         return <<<'EOF'

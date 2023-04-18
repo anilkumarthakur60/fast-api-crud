@@ -41,9 +41,6 @@ class PhpBridgeSessionStorage extends NativeSessionStorage
         return true;
     }
 
-    /**
-     * @return void
-     */
     public function clear()
     {
         // clear out the bags and nothing else that may be set

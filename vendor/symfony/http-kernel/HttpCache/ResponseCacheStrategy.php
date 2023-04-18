@@ -54,9 +54,6 @@ class ResponseCacheStrategy implements ResponseCacheStrategyInterface
         'expires' => null,
     ];
 
-    /**
-     * @return void
-     */
     public function add(Response $response)
     {
         ++$this->embeddedResponses;
@@ -98,9 +95,6 @@ class ResponseCacheStrategy implements ResponseCacheStrategyInterface
         }
     }
 
-    /**
-     * @return void
-     */
     public function update(Response $response)
     {
         // if we have no embedded Response, do nothing
@@ -215,7 +209,7 @@ class ResponseCacheStrategy implements ResponseCacheStrategyInterface
      * as cacheable in a public (shared) cache, but did not provide an explicit lifetime that would serve
      * as an upper bound. In this case, we can proceed and possibly keep the directive on the final response.
      */
-    private function storeRelativeAgeDirective(string $directive, ?int $value, int $age, bool $isHeuristicallyCacheable): void
+    private function storeRelativeAgeDirective(string $directive, ?int $value, int $age, bool $isHeuristicallyCacheable)
     {
         if (null === $value) {
             if ($isHeuristicallyCacheable) {

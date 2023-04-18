@@ -211,11 +211,6 @@ class Data implements \ArrayAccess, \Countable, \IteratorAggregate
         return $data;
     }
 
-    public function getContext(): array
-    {
-        return $this->context;
-    }
-
     /**
      * Seeks to a specific key in nested data structures.
      */
@@ -262,19 +257,16 @@ class Data implements \ArrayAccess, \Countable, \IteratorAggregate
 
     /**
      * Dumps data with a DumperInterface dumper.
-     *
-     * @return void
      */
     public function dump(DumperInterface $dumper)
     {
         $refs = [0];
         $cursor = new Cursor();
-        $label = $this->context['label'] ?? '';
 
         if ($cursor->attr = $this->context[SourceContextProvider::class] ?? []) {
             $cursor->attr['if_links'] = true;
             $cursor->hashType = -1;
-            $dumper->dumpScalar($cursor, 'default', $label.'^');
+            $dumper->dumpScalar($cursor, 'default', '^');
             $cursor->attr = ['if_links' => true];
             $dumper->dumpScalar($cursor, 'default', ' ');
             $cursor->hashType = 0;
@@ -288,7 +280,7 @@ class Data implements \ArrayAccess, \Countable, \IteratorAggregate
      *
      * @param mixed $item A Stub object or the original value being dumped
      */
-    private function dumpItem(DumperInterface $dumper, Cursor $cursor, array &$refs, mixed $item): void
+    private function dumpItem(DumperInterface $dumper, Cursor $cursor, array &$refs, mixed $item)
     {
         $cursor->refIndex = 0;
         $cursor->softRefTo = $cursor->softRefHandle = $cursor->softRefCount = 0;
@@ -368,10 +360,6 @@ class Data implements \ArrayAccess, \Countable, \IteratorAggregate
                     }
                     $cursor->skipChildren = false;
                     $dumper->leaveHash($cursor, $item->type, $item->class, $withChildren, $cut);
-                    break;
-
-                case Stub::TYPE_SCALAR:
-                    $dumper->dumpScalar($cursor, 'default', $item->attr['value']);
                     break;
 
                 default:

@@ -60,8 +60,6 @@ class SymfonyStyle extends OutputStyle
 
     /**
      * Formats a message as a block of text.
-     *
-     * @return void
      */
     public function block(string|array $messages, string $type = null, string $style = null, string $prefix = ' ', bool $padding = false, bool $escape = true)
     {
@@ -72,9 +70,6 @@ class SymfonyStyle extends OutputStyle
         $this->newLine();
     }
 
-    /**
-     * @return void
-     */
     public function title(string $message)
     {
         $this->autoPrependBlock();
@@ -85,9 +80,6 @@ class SymfonyStyle extends OutputStyle
         $this->newLine();
     }
 
-    /**
-     * @return void
-     */
     public function section(string $message)
     {
         $this->autoPrependBlock();
@@ -98,21 +90,17 @@ class SymfonyStyle extends OutputStyle
         $this->newLine();
     }
 
-    /**
-     * @return void
-     */
     public function listing(array $elements)
     {
         $this->autoPrependText();
-        $elements = array_map(fn ($element) => sprintf(' * %s', $element), $elements);
+        $elements = array_map(function ($element) {
+            return sprintf(' * %s', $element);
+        }, $elements);
 
         $this->writeln($elements);
         $this->newLine();
     }
 
-    /**
-     * @return void
-     */
     public function text(string|array $message)
     {
         $this->autoPrependText();
@@ -125,41 +113,27 @@ class SymfonyStyle extends OutputStyle
 
     /**
      * Formats a command comment.
-     *
-     * @return void
      */
     public function comment(string|array $message)
     {
         $this->block($message, null, null, '<fg=default;bg=default> // </>', false, false);
     }
 
-    /**
-     * @return void
-     */
     public function success(string|array $message)
     {
         $this->block($message, 'OK', 'fg=black;bg=green', ' ', true);
     }
 
-    /**
-     * @return void
-     */
     public function error(string|array $message)
     {
         $this->block($message, 'ERROR', 'fg=white;bg=red', ' ', true);
     }
 
-    /**
-     * @return void
-     */
     public function warning(string|array $message)
     {
         $this->block($message, 'WARNING', 'fg=black;bg=yellow', ' ', true);
     }
 
-    /**
-     * @return void
-     */
     public function note(string|array $message)
     {
         $this->block($message, 'NOTE', 'fg=yellow', ' ! ');
@@ -167,25 +141,17 @@ class SymfonyStyle extends OutputStyle
 
     /**
      * Formats an info message.
-     *
-     * @return void
      */
     public function info(string|array $message)
     {
         $this->block($message, 'INFO', 'fg=green', ' ', true);
     }
 
-    /**
-     * @return void
-     */
     public function caution(string|array $message)
     {
         $this->block($message, 'CAUTION', 'fg=white;bg=red', ' ! ', true);
     }
 
-    /**
-     * @return void
-     */
     public function table(array $headers, array $rows)
     {
         $this->createTable()
@@ -199,8 +165,6 @@ class SymfonyStyle extends OutputStyle
 
     /**
      * Formats a horizontal table.
-     *
-     * @return void
      */
     public function horizontalTable(array $headers, array $rows)
     {
@@ -221,8 +185,6 @@ class SymfonyStyle extends OutputStyle
      * * 'A title'
      * * ['key' => 'value']
      * * new TableSeparator()
-     *
-     * @return void
      */
     public function definitionList(string|array|TableSeparator ...$list)
     {
@@ -285,26 +247,17 @@ class SymfonyStyle extends OutputStyle
         return $this->askQuestion($questionChoice);
     }
 
-    /**
-     * @return void
-     */
     public function progressStart(int $max = 0)
     {
         $this->progressBar = $this->createProgressBar($max);
         $this->progressBar->start();
     }
 
-    /**
-     * @return void
-     */
     public function progressAdvance(int $step = 1)
     {
         $this->getProgressBar()->advance($step);
     }
 
-    /**
-     * @return void
-     */
     public function progressFinish()
     {
         $this->getProgressBar()->finish();
@@ -358,9 +311,6 @@ class SymfonyStyle extends OutputStyle
         return $answer;
     }
 
-    /**
-     * @return void
-     */
     public function writeln(string|iterable $messages, int $type = self::OUTPUT_NORMAL)
     {
         if (!is_iterable($messages)) {
@@ -373,9 +323,6 @@ class SymfonyStyle extends OutputStyle
         }
     }
 
-    /**
-     * @return void
-     */
     public function write(string|iterable $messages, bool $newline = false, int $type = self::OUTPUT_NORMAL)
     {
         if (!is_iterable($messages)) {
@@ -388,9 +335,6 @@ class SymfonyStyle extends OutputStyle
         }
     }
 
-    /**
-     * @return void
-     */
     public function newLine(int $count = 1)
     {
         parent::newLine($count);
@@ -437,7 +381,7 @@ class SymfonyStyle extends OutputStyle
     {
         $fetched = $this->bufferedOutput->fetch();
         // Prepend new line if last char isn't EOL:
-        if ($fetched && !str_ends_with($fetched, "\n")) {
+        if (!str_ends_with($fetched, "\n")) {
             $this->newLine();
         }
     }

@@ -126,7 +126,9 @@ final class VcsIgnoredFilterIterator extends \FilterIterator
     {
         return array_filter(
             $this->parentDirectoriesUpwards($from),
-            static fn (string $directory): bool => str_starts_with($directory, $upTo)
+            static function (string $directory) use ($upTo): bool {
+                return str_starts_with($directory, $upTo);
+            }
         );
     }
 

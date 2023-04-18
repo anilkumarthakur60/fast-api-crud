@@ -40,8 +40,6 @@ interface SessionStorageInterface
 
     /**
      * Sets the session ID.
-     *
-     * @return void
      */
     public function setId(string $id);
 
@@ -52,8 +50,6 @@ interface SessionStorageInterface
 
     /**
      * Sets the session name.
-     *
-     * @return void
      */
     public function setName(string $name);
 
@@ -94,8 +90,6 @@ interface SessionStorageInterface
      * a real PHP session would interfere with testing, in which case
      * it should actually persist the session data if required.
      *
-     * @return void
-     *
      * @throws \RuntimeException if the session is saved without being started, or if the session
      *                           is already closed
      */
@@ -103,8 +97,6 @@ interface SessionStorageInterface
 
     /**
      * Clear all session data in memory.
-     *
-     * @return void
      */
     public function clear();
 
@@ -117,8 +109,6 @@ interface SessionStorageInterface
 
     /**
      * Registers a SessionBagInterface for use.
-     *
-     * @return void
      */
     public function registerBag(SessionBagInterface $bag);
 

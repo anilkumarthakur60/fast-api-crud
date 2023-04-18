@@ -16,17 +16,11 @@ class RoleMiddleware
             throw UnauthorizedException::notLoggedIn();
         }
 
-        $user = $authGuard->user();
-
-        if (! method_exists($user, 'hasAnyRole')) {
-            throw UnauthorizedException::missingTraitHasRoles($user);
-        }
-
         $roles = is_array($role)
             ? $role
             : explode('|', $role);
 
-        if (! $user->hasAnyRole($roles)) {
+        if (! $authGuard->user()->hasAnyRole($roles)) {
             throw UnauthorizedException::forRoles($roles);
         }
 
