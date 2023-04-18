@@ -5,7 +5,7 @@ namespace Anil\FastApiCrud\Traits;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
-trait FilterableByDates
+trait DateFilters
 {
     public function scopeToday(Builder $query, $column = 'created_at'): Builder
     {
@@ -52,5 +52,14 @@ trait FilterableByDates
     public function scopeLastYear(Builder $query, $column = 'created_at'): Builder
     {
         return $query->whereBetween($column, [Carbon::now()->subYear(), Carbon::now()]);
+    }
+
+    public function scopeDate($query, $search, $column = 'created_at')
+    {
+        return empty($search) ? $query : $query
+            ->whereDate($this->getTable() . '.' . $column, '>=', Carbon::parse(current(explode(' to ', $search)))
+                ->startOfDay()
+                ->toDateString())
+            ->whereDate($this->getTable() . '.' . $column, '<=', Carbon::parse(last(explode(' to ', $search)))->endOfDay()->toDateString());
     }
 }

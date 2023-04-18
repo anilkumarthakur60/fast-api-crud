@@ -1,40 +1,43 @@
 {
-  "name": "anil/fast-api-crud",
-  "description": "Laravel API CRUD with extended controller",
-  "keywords": [
-    "anil",
-    "laravel",
-    "api",
-    "crud",
-    "controller",
-    "fast",
-    "api-crud",
-    "api-crud-controller",
-    "fast-api-crud"
-  ],
-  "type": "library",
-  "require": {
-    "spatie/laravel-permission": "6.x-dev|5.*|4.*|3.*"
-  },
-  "license": "MIT",
-  "autoload": {
-    "psr-4": {
-      "Anil\\FastApiCrud\\": "src/"
-    }
-  },
-  "authors": [
-    {
-      "name": "Anil Kumar Thakur",
-      "email": "anilkumarthakur60@gmail.com"
-    }
-  ],
-  "extra": {
-    "fast-api-crud": {
-      "providers": [
-        "Anil\\FastApiCrud\\providers\\ApiCrudServiceProvider\\"
-      ]
-    }
-  },
-  "minimum-stability": "stable",
-  "prefer-stable": true
+    "name": "anil/fast-api-crud",
+    "description": "Laravel API CRUD with extended controller",
+    "keywords": [
+        "anil",
+        "laravel",
+        "api",
+        "crud",
+        "controller",
+        "fast",
+        "api-crud",
+        "api-crud-controller",
+        "fast-api-crud"
+    ],
+    "type": "library",
+    "require": {
+        "spatie/laravel-permission": "6.x-dev|5.*|4.*|3.*"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Anil\\FastApiCrud\\": "src/"
+        },
+        "files": [
+            "src/Helpers/fastApiCrud.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Anil Kumar Thakur",
+            "email": "anilkumarthakur60@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Anil\\FastApiCrud\\Providers\\ApiCrudServiceProvider\\"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
