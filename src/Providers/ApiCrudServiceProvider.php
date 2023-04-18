@@ -3,9 +3,13 @@
 namespace Anil\FastApiCrud\Providers;
 
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ApiCrudServiceProvider extends ServiceProvider
 {
@@ -103,6 +107,40 @@ class ApiCrudServiceProvider extends ServiceProvider
                 'path' => Paginator::resolveCurrentPath(),
                 'pageName' => $pageName,
             ]);
+        });
+
+        Builder::macro('toRawSql', function (): string {
+            $bindings = [];
+            foreach ($this->getBindings() as $value) {
+                if (is_string($value)) {
+                    $bindings[] = "'{$value}'";
+                } else {
+                    $bindings[] = $value;
+                }
+            }
+
+            return Str::replaceArray('?', $bindings, $this->toSql());
+        });
+
+        Builder::macro('getSqlQuery', function () {
+            $query = str_replace(['?'], ['\'%s\''], $this->toSql());
+
+            return vsprintf($query, $this->getBindings());
+        });
+
+        Collection::macro('paginates', function ($perPage = 15, $total = null, $page = null, $pageName = 'page') {
+            $page = $page ?: LengthAwarePaginator::resolveCurrentPage($pageName);
+
+            return new LengthAwarePaginator(
+                $this->forPage($page, $perPage),
+                $total ?: $this->count(),
+                $perPage,
+                $page,
+                [
+                    'path'     => LengthAwarePaginator::resolveCurrentPath(),
+                    'pageName' => $pageName,
+                ]
+            );
         });
     }
 
