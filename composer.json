@@ -32,6 +32,13 @@
         }
     ],
     "extra": {
+
+        "fast-api-crud": {
+            "providers": [
+                "Anil\\FastApiCrud\\providers\\ApiCrudServiceProvider\\"
+            ]
+        },
+
         "laravel": {
             "providers": [
                 "Anil\\FastApiCrud\\Providers\\ApiCrudServiceProvider\\"
