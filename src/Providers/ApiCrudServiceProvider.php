@@ -2,6 +2,7 @@
 
 namespace Anil\FastApiCrud\Providers;
 
+
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
@@ -10,10 +11,12 @@ class ApiCrudServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/fastApiCrud.php', 'fastApiCrud');
+
+
         $this->publishes([
-            __DIR__.'/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
-        ]);
+            __DIR__ . '/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
+        ], 'config');
+
 
         Builder::macro('likeWhere', function (array $attributes, string $searchTerm = null) {
             $this->where(function (Builder $query) use ($attributes, $searchTerm) {
@@ -105,5 +108,7 @@ class ApiCrudServiceProvider extends ServiceProvider
 
     public function register()
     {
+
+        $this->mergeConfigFrom(__DIR__ . '/../config/fastApiCrud.php', 'fastApiCrud');
     }
 }
