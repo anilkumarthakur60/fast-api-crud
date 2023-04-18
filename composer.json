@@ -41,7 +41,7 @@
 
         "laravel": {
             "providers": [
-                "Anil\\FastApiCrud\\Providers\\ApiCrudServiceProvider\\"
+                "Anil\\FastApiCrud\\providers\\ApiCrudServiceProvider\\"
             ]
         }
     },
