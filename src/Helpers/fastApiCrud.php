@@ -56,7 +56,7 @@ if (!function_exists('duration')) {
     {
         $interval = CarbonInterval::seconds($duration)->cascade();
 
-        return $output = sprintf('%dh %dm', $interval->totalHours, $interval->toArray()['minutes']);
+        return sprintf('%dh %dm', $interval->totalHours, $interval->toArray()['minutes']);
 
         // return CarbonInterval::second($duration)->cascade()->forHumans();
     }
