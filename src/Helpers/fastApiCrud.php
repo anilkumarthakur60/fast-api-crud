@@ -58,7 +58,7 @@ if (!function_exists('duration')) {
 
         return $output = sprintf('%dh %dm', $interval->totalHours, $interval->toArray()['minutes']);
 
-        return CarbonInterval::second($duration)->cascade()->forHumans();
+        // return CarbonInterval::second($duration)->cascade()->forHumans();
     }
 }
 
@@ -119,13 +119,9 @@ if (!function_exists('flatData')) {
 }
 
 if (!function_exists('defaultOrder')) {
-    function defaultOrder($value = NULL): string
+    function defaultOrder(): string
     {
-        if ($value === TRUE) {
-            return 'DESC';
-        }
-
-        return json_decode(request()->query('descending')) ? 'DESC' : 'ASC';
+       return (boolean)request()->query('descending')===TRUE ? 'ASC' : 'DESC';
     }
 }
 if (!function_exists('defaultSort')) {
