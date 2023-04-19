@@ -4,12 +4,6 @@ use Carbon\Carbon;
 use Carbon\CarbonInterval;
 
 if (!function_exists('_dd')) {
-    /*
-     * Dump the passed variables and end the script.
-     *
-     * @param  mixed  $args
-     * @return void
-     */
     function _dd(...$args)
     {
         header('Access-Control-Allow-Origin: *');
@@ -37,15 +31,6 @@ if (!function_exists('shortName')) {
     }
 }
 
-if (!function_exists('videoDuration')) {
-    function videoDuration($file): mixed
-    {
-        $getID3 = new getID3;
-        $fileData = $getID3->analyze($file);
-
-        return $fileData['playtime_seconds'];
-    }
-}
 
 if (!function_exists('totalSeconds')) {
     function totalSeconds($times): mixed
@@ -107,21 +92,13 @@ if (!function_exists('dateForReports')) {
         return NULL;
     }
 }
-if (!function_exists('getSqlQuery')) {
-    function getSqlQuery($sql)
-    {
-        $query = str_replace(['?'], ['\'%s\''], $sql->toSql());
-
-        return vsprintf($query, $sql->getBindings());
-    }
-}
 if (!function_exists('getFilterByKey')) {
     function getFilterByKey($key = 'date')
     {
         $jsonData = json_decode(request()->query('filters'));
         $value = collect($jsonData)->get($key);
 
-        return $value ?? FALSE;
+        return $value ?? null;
     }
 }
 if (!function_exists('getArrayFilterByKey')) {
