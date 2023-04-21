@@ -25,6 +25,7 @@ trait DateFilters
     public function scopeQuarterToDate(Builder $query, $column = 'created_at'): Builder
     {
         $now = Carbon::now();
+
         return $query->whereBetween($column, [$now->startOfQuarter(), $now]);
     }
 
@@ -46,6 +47,7 @@ trait DateFilters
     public function scopeLastQuarter(Builder $query, $column = 'created_at'): Builder
     {
         $now = Carbon::now();
+
         return $query->whereBetween($column, [$now->startOfQuarter()->subMonths(3), $now->startOfQuarter()]);
     }
 
@@ -57,9 +59,9 @@ trait DateFilters
     public function scopeDate($query, $search, $column = 'created_at')
     {
         return empty($search) ? $query : $query
-            ->whereDate($this->getTable() . '.' . $column, '>=', Carbon::parse(current(explode(' to ', $search)))
+            ->whereDate($this->getTable().'.'.$column, '>=', Carbon::parse(current(explode(' to ', $search)))
                 ->startOfDay()
                 ->toDateString())
-            ->whereDate($this->getTable() . '.' . $column, '<=', Carbon::parse(last(explode(' to ', $search)))->endOfDay()->toDateString());
+            ->whereDate($this->getTable().'.'.$column, '<=', Carbon::parse(last(explode(' to ', $search)))->endOfDay()->toDateString());
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Anil\ExceptionResponse\Traits;
 
-
 trait ReplicatesWithRelations
 {
     public function replicateWithRelations()

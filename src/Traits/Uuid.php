@@ -9,7 +9,7 @@ trait Uuid
         parent::boot();
 
         static::creating(function ($model) {
-            $model->id = (string)Str::uuid();
+            $model->id = (string) Str::uuid();
         });
     }
 
@@ -17,7 +17,6 @@ trait Uuid
     {
         return false;
     }
-
 
     public function getKeyType(): string
     {

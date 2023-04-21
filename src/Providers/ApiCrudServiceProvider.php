@@ -2,25 +2,24 @@
 
 namespace Anil\FastApiCrud\Providers;
 
-
-use Closure;
+use Anil\FastApiCrud\Commands\MakeAction;
+use Anil\FastApiCrud\Commands\MakeService;
+use Anil\FastApiCrud\Commands\MakeTrait;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class ApiCrudServiceProvider extends ServiceProvider
 {
     public function boot()
     {
 
-
         $this->publishes([
-            __DIR__ . '/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
+            __DIR__.'/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
         ], 'config');
-
 
         Builder::macro('likeWhere', function (array $attributes, string $searchTerm = null) {
             $this->where(function (Builder $query) use ($attributes, $searchTerm) {
@@ -137,7 +136,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                 $perPage,
                 $page,
                 [
-                    'path'     => LengthAwarePaginator::resolveCurrentPath(),
+                    'path' => LengthAwarePaginator::resolveCurrentPath(),
                     'pageName' => $pageName,
                 ]
             );
@@ -147,6 +146,8 @@ class ApiCrudServiceProvider extends ServiceProvider
     public function register()
     {
 
-        $this->mergeConfigFrom(__DIR__ . '/../config/fastApiCrud.php', 'fastApiCrud');
+        $this->mergeConfigFrom(__DIR__.'/../config/fastApiCrud.php', 'fastApiCrud');
+        $this->commands([MakeAction::class, MakeService::class, MakeTrait::class]);
+
     }
 }

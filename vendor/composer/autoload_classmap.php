@@ -6,6 +6,9 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Anil\\FastApiCrud\\Commands\\MakeAction' => $baseDir . '/src/Commands/MakeAction.php',
+    'Anil\\FastApiCrud\\Commands\\MakeService' => $baseDir . '/src/Commands/MakeService.php',
+    'Anil\\FastApiCrud\\Commands\\MakeTrait' => $baseDir . '/src/Commands/MakeTrait.php',
     'Anil\\FastApiCrud\\Controller\\CrudBaseController' => $baseDir . '/src/Controller/CrudBaseController.php',
     'Anil\\FastApiCrud\\Exceptions\\ApiCrudException' => $baseDir . '/src/Exceptions/ApiCrudException.php',
     'Anil\\FastApiCrud\\Providers\\ApiCrudServiceProvider' => $baseDir . '/src/Providers/ApiCrudServiceProvider.php',

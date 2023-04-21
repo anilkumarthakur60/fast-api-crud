@@ -331,6 +331,9 @@ class ComposerStaticInit33aa1d9ebbe155622daa94a46d058dd7
     );
 
     public static $classMap = array (
+        'Anil\\FastApiCrud\\Commands\\MakeAction' => __DIR__ . '/../..' . '/src/Commands/MakeAction.php',
+        'Anil\\FastApiCrud\\Commands\\MakeService' => __DIR__ . '/../..' . '/src/Commands/MakeService.php',
+        'Anil\\FastApiCrud\\Commands\\MakeTrait' => __DIR__ . '/../..' . '/src/Commands/MakeTrait.php',
         'Anil\\FastApiCrud\\Controller\\CrudBaseController' => __DIR__ . '/../..' . '/src/Controller/CrudBaseController.php',
         'Anil\\FastApiCrud\\Exceptions\\ApiCrudException' => __DIR__ . '/../..' . '/src/Exceptions/ApiCrudException.php',
         'Anil\\FastApiCrud\\Providers\\ApiCrudServiceProvider' => __DIR__ . '/../..' . '/src/Providers/ApiCrudServiceProvider.php',
