@@ -2,15 +2,20 @@
 
 namespace Anil\FastApiCrud\Controller;
 
-use App\Http\Controllers\Controller;
 use Exception;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use ReflectionClass;
-
-class CrudBaseController extends Controller
+use Illuminate\Routing\Controller as BaseController;
+class CrudBaseController extends BaseController
 {
+
+    use AuthorizesRequests, ValidatesRequests;
+
+
     public array $scopes = [];
 
     public array $scopeWithValue = [];
@@ -62,11 +67,11 @@ class CrudBaseController extends Controller
             $permissionSlug = null;
         }
         if ($permissionSlug && $this->applyPermission) {
-            $this->middleware('permission:view-'.$this->model::permissionSlug)
+            $this->middleware('permission:view-' . $this->model::permissionSlug)
                 ->only(['index', 'show']);
-            $this->middleware('permission:alter-'.$this->model::permissionSlug)
+            $this->middleware('permission:alter-' . $this->model::permissionSlug)
                 ->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
-            $this->middleware('permission:delete-'.$this->model::permissionSlug)
+            $this->middleware('permission:delete-' . $this->model::permissionSlug)
                 ->only(['delete']);
         }
     }
@@ -124,7 +129,8 @@ class CrudBaseController extends Controller
         $message = 'Something went wrong',
         $data = [],
         $code = Response::HTTP_INTERNAL_SERVER_ERROR,
-    ) {
+    )
+    {
         return response()->json([
             'message' => $message,
             'data' => $data,
@@ -190,12 +196,12 @@ class CrudBaseController extends Controller
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:'.(new $this->model())->getTable().',id'],
+            'delete_rows.*' => ['required', 'exists:' . (new $this->model())->getTable() . ',id'],
         ]);
 
         try {
             DB::beginTransaction();
-            foreach ((array) request()->input('delete_rows') as $item) {
+            foreach ((array)request()->input('delete_rows') as $item) {
                 $model = $this->model::initializer()
                     ->when(property_exists($this, 'deleteScopes') && count($this->deleteScopes), function ($query) {
                         foreach ($this->deleteScopes as $value) {
@@ -209,7 +215,7 @@ class CrudBaseController extends Controller
                     })
                     ->find($item);
 
-                if (! $model) {
+                if (!$model) {
                     continue;
                 }
 
@@ -237,7 +243,8 @@ class CrudBaseController extends Controller
         $message = 'Data fetched successfully',
         $data = [],
         $code = Response::HTTP_OK,
-    ) {
+    )
+    {
         return response()->json([
             'message' => $message,
             'data' => $data,
@@ -263,7 +270,7 @@ class CrudBaseController extends Controller
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (! $this->checkFillable($model, [$column])) {
+            if (!$this->checkFillable($model, [$column])) {
                 DB::rollBack();
                 throw new Exception("$column column not found in fillable");
             }
@@ -353,7 +360,7 @@ class CrudBaseController extends Controller
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (! $this->checkFillable($model, ['status'])) {
+            if (!$this->checkFillable($model, ['status'])) {
                 DB::rollBack();
                 throw new Exception('Status column not found in fillable');
             }

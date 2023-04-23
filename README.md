@@ -15,7 +15,7 @@ composer require anil/fast-api-crud
 * $updateRequest: The name of the request class to use when updating data.
 * $resource: The name of the resource class to use when returning data.
 
-### Register Provider in config/app.php###
+### This package has auto-discovery for laravel 6 and higher and for below you can add this in your providers array  ###
 
 ```
 
@@ -25,9 +25,38 @@ composer require anil/fast-api-crud
     ]
 ```
 
-### Eample ###
+
+### This package is build on Top of Spatie role and permission Register in Kernel.php if you want to apply permission as well  ###
+
+```angular2html
+
+// Laravel 9 uses $routeMiddleware = [
+//protected $routeMiddleware = [
+// Laravel 10+ uses $middlewareAliases = [
+protected $middlewareAliases = [
+// ...
+'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
+];
+
+```
+
+### Eample  ###
 
 ```apacheconf
+<?php
+
+namespace App\Http\Controllers;
+
+use Anil\FastApiCrud\Controller\CrudBaseController;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
+use App\Http\Resources\Post\PostResource;
+use App\Models\Post;
+
+class PostControllerCrud extends CrudBaseController
+{
     public function __construct()
     {
         parent::__construct(
@@ -36,11 +65,29 @@ composer require anil/fast-api-crud
             updateRequest: UpdatePostRequest::class,
             resource: PostResource::class
         );
+//        $this->applyPermission = true;
     }
+}
 
 ```
 
-### The class has several protected properties that can be overridden in child classes:###
+### In Model File  use ```Crud``` Trait  ###
+
+```angular2html
+namespace App\Models;
+
+use Anil\FastApiCrud\Traits\Crud;
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model
+{
+    use HasFactory;
+    use Crud;
+}   
+
+```
+
+### The class has several protected properties that can be overridden in child classes: ###
 
 
 * ```$scopes```: An array of scopes to apply when fetching all records.
@@ -65,7 +112,7 @@ composer require anil/fast-api-crud
 * ```$updateScopes```: An array of scopes to apply when updating a record.
 * ```$updateScopeWithValue```: An array of scoped values to apply when updating a record.
 
-### The class has several methods that correspond to basic CRUD operations:###
+### The class has several methods that correspond to basic CRUD operations: ###
 
  
 
@@ -83,4 +130,47 @@ composer require anil/fast-api-crud
 
 
 #### There are also two helper methods, ```error()``` and ```success()```, that return a JSON response with a message and data. These are used to standardize error and success responses across the controller. ####
+
+### for example  ###
+```angular2html
+//you 
+Route::controller(PostController::class)->prefix('posts')->group(function () {
+    Route::get('', 'index');
+    Route::post('', 'store');
+    Route::post('delete', 'delete');
+    Route::post('restore-all-trashed', 'restoreAllTrashed');
+    Route::post('force-delete-trashed', 'forceDeleteTrashed');
+    Route::get('{id}', 'show');
+    Route::put('{id}', 'update');
+    Route::put('{id}/status-change/{column}', 'changeStatusOtherColumn'); //specific columns change value from 0 to 1 and vice versa
+    Route::put('{id}/status-change', 'changeStatus');//default status column from 0 to 1 and vice versa
+    Route::put('{id}/restore-trash', 'restoreTrashed');
+
+    Route::delete('{id}', 'destroy');
+});
+    
+```
+    
+### This package has also featured for making service ,action,trait file also  ###
+After installation, the command `php artisan make:service {name} {--N|noContract}` will be available.
+
+### Create services files
+
+For example, the command `php artisan make:service createUser` will generate a service file called `CreateUserService.php` located in `app/Services/CreateUser`.
+
+It will also generate an interface (contract) called `CreateUserContract.php` located in `app/Services/Contracts`.
+
+### Create services for models
+
+Adding a ```--service``` or ```-S``` option is now available when creating a model.
+
+For example, the command `php artisan make:model Post --service` or `php artisan make:model Post -S` will generate a model with service too.
+
+The command `php artisan make:model Post --all` or `php artisan make:model Post -a` will now generate a model, migration, factory, seeder, policy, controller, form requests and service.
+
+### Contracts
+
+Adding a ```--noContract``` or ```-N``` option will prevent the commands from implementing any contract and will not create any contract file.
+
+If you never need any contracts. Publish the config file and then turn the **with_interface** value to false in the config file.
 

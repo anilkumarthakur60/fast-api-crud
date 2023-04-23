@@ -14,6 +14,7 @@ return array(
     'Anil\\FastApiCrud\\Providers\\ApiCrudServiceProvider' => $baseDir . '/src/Providers/ApiCrudServiceProvider.php',
     'Anil\\FastApiCrud\\Traits\\Crud' => $baseDir . '/src/Traits/Crud.php',
     'Anil\\FastApiCrud\\Traits\\DateFilters' => $baseDir . '/src/Traits/DateFilters.php',
+    'Anil\\FastApiCrud\\Traits\\ReplicatesWithRelations' => $baseDir . '/src/Traits/ReplicatesWithRelations.php',
     'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
     'Brick\\Math\\BigDecimal' => $vendorDir . '/brick/math/src/BigDecimal.php',
     'Brick\\Math\\BigInteger' => $vendorDir . '/brick/math/src/BigInteger.php',

@@ -339,6 +339,7 @@ class ComposerStaticInit33aa1d9ebbe155622daa94a46d058dd7
         'Anil\\FastApiCrud\\Providers\\ApiCrudServiceProvider' => __DIR__ . '/../..' . '/src/Providers/ApiCrudServiceProvider.php',
         'Anil\\FastApiCrud\\Traits\\Crud' => __DIR__ . '/../..' . '/src/Traits/Crud.php',
         'Anil\\FastApiCrud\\Traits\\DateFilters' => __DIR__ . '/../..' . '/src/Traits/DateFilters.php',
+        'Anil\\FastApiCrud\\Traits\\ReplicatesWithRelations' => __DIR__ . '/../..' . '/src/Traits/ReplicatesWithRelations.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Brick\\Math\\BigDecimal' => __DIR__ . '/..' . '/brick/math/src/BigDecimal.php',
         'Brick\\Math\\BigInteger' => __DIR__ . '/..' . '/brick/math/src/BigInteger.php',

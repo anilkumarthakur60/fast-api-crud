@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '9c3114b5c5351137e250111bdbabbc6d92e93e0a',
+        'reference' => 'c480add9b73a52bf5c3eb3097393623bb9576e9c',
         'name' => 'anil/fast-api-crud',
         'dev' => true,
     ),
@@ -16,7 +16,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '9c3114b5c5351137e250111bdbabbc6d92e93e0a',
+            'reference' => 'c480add9b73a52bf5c3eb3097393623bb9576e9c',
             'dev_requirement' => false,
         ),
         'brick/math' => array(
