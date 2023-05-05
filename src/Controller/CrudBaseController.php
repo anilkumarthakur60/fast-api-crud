@@ -3,13 +3,16 @@
 namespace Anil\FastApiCrud\Controller;
 
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use ReflectionClass;
-use Illuminate\Routing\Controller as BaseController;
+
 class CrudBaseController extends BaseController
 {
 
@@ -36,12 +39,9 @@ class CrudBaseController extends BaseController
 
     public array $loadAggregate = [];
 
-    public bool $isApi = true;
+    public bool $isApi = true; // in future we will have it for both blade and api 
 
     public bool $forceDelete = false;
-
-    public bool $applyPermission = false;
-
     public array $deleteScopes = [];
 
     public array $deleteScopeWithValue = [];
@@ -60,17 +60,33 @@ class CrudBaseController extends BaseController
 
     public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource)
     {
+
+        if (!(new $this->model() instanceof Model)) {
+            throw  new Exception('Model is not instance of Model', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        if (!(new $this->storeRequest() instanceof FormRequest)) {
+            throw  new Exception('StoreRequest is not instance of form request', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        if (!(new $this->updateRequest() instanceof FormRequest)) {
+            throw  new Exception('UpdateRequest is not instance of FormRequest', Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+
         $constants = new ReflectionClass($this->model);
         try {
             $permissionSlug = $constants->getConstant('permissionSlug');
         } catch (Exception $e) {
             $permissionSlug = null;
         }
-        if ($permissionSlug && $this->applyPermission) {
+        if ($permissionSlug) {
+
             $this->middleware('permission:view-' . $this->model::permissionSlug)
                 ->only(['index', 'show']);
+
             $this->middleware('permission:alter-' . $this->model::permissionSlug)
                 ->only(['store', 'update', 'changeStatus', 'changeStatusOtherColumn', 'restore']);
+
             $this->middleware('permission:delete-' . $this->model::permissionSlug)
                 ->only(['delete']);
         }
@@ -129,8 +145,7 @@ class CrudBaseController extends BaseController
         $message = 'Something went wrong',
         $data = [],
         $code = Response::HTTP_INTERNAL_SERVER_ERROR,
-    )
-    {
+    ) {
         return response()->json([
             'message' => $message,
             'data' => $data,
@@ -229,7 +244,7 @@ class CrudBaseController extends BaseController
             }
 
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
             DB::rollBack();
 
@@ -243,8 +258,7 @@ class CrudBaseController extends BaseController
         $message = 'Data fetched successfully',
         $data = [],
         $code = Response::HTTP_OK,
-    )
-    {
+    ) {
         return response()->json([
             'message' => $message,
             'data' => $data,

@@ -11,26 +11,22 @@ trait Crud
         if (method_exists(static::class, 'initializeModel')) {
             $model = static::initializeModel();
         } else {
-            $model = static::where((new static())->getTable().'.id', '>', 0);
+            $model = static::where((new static())->getTable() . '.id', '>', 0);
         }
         foreach (collect($filters) as $filter => $value) {
-            if (isset($value) && method_exists(static::class, 'scope'.ucfirst($filter))) {
+            if (isset($value) && method_exists(static::class, 'scope' . ucfirst($filter))) {
                 $model->$filter($value);
             }
         }
         $sortBy = (string) $request->query('sortBy', 'id');
-        $desc = (bool) $request->boolean('descending', true);
+        $desc = $request->boolean('descending', true);
         if ($orderBy) {
             if ($sortBy && method_exists(static::class, 'sortByDefaults')) {
                 $sortByDefaults = static::sortByDefaults();
                 $sortBy = $sortByDefaults['sortBy'];
                 $desc = $sortByDefaults['sortByDesc'];
             }
-            if ($desc === true) {
-                $model->orderBy($sortBy, 'DESC');
-            } else {
-                $model->orderBy($sortBy, 'ASC');
-            }
+            $desc === true ? $model->latest($sortBy) : $model->oldest($sortBy);
         }
 
         return $model;
