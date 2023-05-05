@@ -65,28 +65,10 @@ class PostControllerCrud extends CrudBaseController
             updateRequest: UpdatePostRequest::class,
             resource: PostResource::class
         );
-//        $this->applyPermission = true;
     }
 }
 
 ```
-
-### In Model File  use ```Crud``` Trait  ###
-
-```angular2html
-namespace App\Models;
-
-use Anil\FastApiCrud\Traits\Crud;
-use Illuminate\Database\Eloquent\Model;
-
-class Post extends Model
-{
-    use HasFactory;
-    use Crud;
-}   
-
-```
-
 ### The class has several protected properties that can be overridden in child classes: ###
 
 
