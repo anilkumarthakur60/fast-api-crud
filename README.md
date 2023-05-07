@@ -65,7 +65,6 @@ class PostControllerCrud extends CrudBaseController
             updateRequest: UpdatePostRequest::class,
             resource: PostResource::class
         );
-//        $this->applyPermission = true;
     }
 }
 
