@@ -43,7 +43,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             });
         });
 
-        Builder::macro('equalWhere', function (array $attributes, string $searchTerm = null) {
+        Builder::macro('equalWhere', function (array $attributes, mixed $searchTerm = null) {
             return  $this->where(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach ($attributes as $attribute) {
                     $query->when(
