@@ -3,7 +3,7 @@
         'name' => 'anil/fast-api-crud',
         'pretty_version' => '2.x-dev',
         'version' => '2.9999999.9999999.9999999-dev',
-        'reference' => 'dc84c9781b1209fad0e3f8e3112bd63738c3e127',
+        'reference' => '53b153371e0e42eb96afea7ce1a218a3f5746b9b',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'anil/fast-api-crud' => array(
             'pretty_version' => '2.x-dev',
             'version' => '2.9999999.9999999.9999999-dev',
-            'reference' => 'dc84c9781b1209fad0e3f8e3112bd63738c3e127',
+            'reference' => '53b153371e0e42eb96afea7ce1a218a3f5746b9b',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

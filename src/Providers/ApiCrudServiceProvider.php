@@ -17,7 +17,7 @@ use Closure;
 
 class ApiCrudServiceProvider extends ServiceProvider
 {
-    public function boot()
+    public function boot(): void
     {
 
         $this->publishes([
@@ -169,7 +169,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             if (method_exists($this->model, 'initializeModel')) {
                 $model = $this->model->initializeModel();
             } else {
-                $model = $this->where($this->getModel()->getTable() . '.id', '>', 0);
+                $model = $this->where($this->getModel()->getTable() . '.'.$this->getModel()->getKeyName(), '>', 0);
             }
             foreach (collect($filters) as $filter => $value) {
                 if (isset($value) && method_exists($this->model, 'scope' . ucfirst($filter))) {
@@ -191,7 +191,7 @@ class ApiCrudServiceProvider extends ServiceProvider
         });
     }
 
-    public function register()
+    public function register(): void
     {
 
         $this->mergeConfigFrom(__DIR__ . '/../config/fastApiCrud.php', 'fastApiCrud');
