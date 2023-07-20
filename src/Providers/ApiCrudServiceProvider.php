@@ -78,7 +78,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             });
         });
 
-        Builder::macro('paginates', function (int $perPage = null, $columns = ['*'], $pageName = 'page', int $page = null) {
+        Builder::macro('paginates', function ($perPage = null, $columns = ['*'], $pageName = 'page', int $page = null) {
             request()->validate(['rowsPerPage' => 'nullable|numeric|gte:0|lte:100000']);
 
             $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -163,13 +163,13 @@ class ApiCrudServiceProvider extends ServiceProvider
         });
 
 
-        Builder::macro('initializer', function ($orderBy = true) {
+        Builder::macro('initializer', function (bool $orderBy = true) {
             $request = request();
             $filters = json_decode($request->query('filters'), true);
             if (method_exists($this->model, 'initializeModel')) {
                 $model = $this->model->initializeModel();
             } else {
-                $model = $this->where($this->getModel()->getTable() . '.'.$this->getModel()->getKeyName(), '>', 0);
+                $model = $this->newQuery();
             }
             foreach (collect($filters) as $filter => $value) {
                 if (isset($value) && method_exists($this->model, 'scope' . ucfirst($filter))) {
