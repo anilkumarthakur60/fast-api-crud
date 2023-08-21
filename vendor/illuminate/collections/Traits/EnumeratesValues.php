@@ -313,6 +313,29 @@ trait EnumeratesValues
     }
 
     /**
+     * Ensure that every item in the collection is of the expected type.
+     *
+     * @template TEnsureOfType
+     *
+     * @param  class-string<TEnsureOfType>  $type
+     * @return static<mixed, TEnsureOfType>
+     *
+     * @throws \UnexpectedValueException
+     */
+    public function ensure($type)
+    {
+        return $this->each(function ($item) use ($type) {
+            $itemType = get_debug_type($item);
+
+            if ($itemType !== $type && ! $item instanceof $type) {
+                throw new UnexpectedValueException(
+                    sprintf("Collection should only include '%s' items, but '%s' found.", $type, $itemType)
+                );
+            }
+        });
+    }
+
+    /**
      * Determine if the collection is not empty.
      *
      * @return bool
@@ -456,6 +479,25 @@ trait EnumeratesValues
         }
 
         return new static([new static($passed), new static($failed)]);
+    }
+
+    /**
+     * Calculate the percentage of items that pass a given truth test.
+     *
+     * @param  (callable(TValue, TKey): bool)  $callback
+     * @param  int  $precision
+     * @return float|null
+     */
+    public function percentage(callable $callback, int $precision = 2)
+    {
+        if ($this->isEmpty()) {
+            return null;
+        }
+
+        return round(
+            $this->filter($callback)->count() / $this->count() * 100,
+            $precision
+        );
     }
 
     /**
