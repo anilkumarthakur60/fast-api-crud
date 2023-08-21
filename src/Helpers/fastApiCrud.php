@@ -132,3 +132,19 @@ if (!function_exists('defaultSort')) {
         return request()->query('sortBy', $key);
     }
 }
+
+
+
+
+if (! function_exists('getColumns')) {
+    function getColumns($table = 'users'): array
+    {
+        if (is_subclass_of($table, 'Illuminate\Database\Eloquent\Model')) {
+            $model = new $table();
+
+            return $model->getConnection()->getSchemaBuilder()->getColumnListing($model->getTable());
+        } else {
+            return \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($table);
+        }
+    }
+}
