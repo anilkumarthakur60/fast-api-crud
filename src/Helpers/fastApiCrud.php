@@ -142,9 +142,16 @@ if (! function_exists('getColumns')) {
         if (is_subclass_of($table, 'Illuminate\Database\Eloquent\Model')) {
             $model = new $table();
 
-            return $model->getConnection()->getSchemaBuilder()->getColumnListing($model->getTable());
+            $columns= $model->getConnection()->getSchemaBuilder()->getColumnListing($model->getTable());
         } else {
-            return \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($table);
+            $columns= \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($table);
         }
+
+        $columns = array_diff($columns, ["id"]);
+        $specialColumns = ["created_at", "updated_at", "deleted_at"];
+        $columns = array_diff($columns, $specialColumns);
+        sort($columns);
+        $sortedColumns = array_merge(["id"], $columns, $specialColumns);
+        return $sortedColumns;
     }
 }
