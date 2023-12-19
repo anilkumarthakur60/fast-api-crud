@@ -1,6 +1,6 @@
 <?php
 
-namespace Anil\ExceptionResponse\Traits;
+namespace Anil\FastApiCrud\Traits;
 
 use Illuminate\Support\Facades\DB;
 
