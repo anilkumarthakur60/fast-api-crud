@@ -74,7 +74,7 @@ if (!function_exists('dateForHumans')) {
 }
 
 if (!function_exists('ymdDate')) {
-    function ymdDate($date, $format = 'Y-m-d'):string|null
+    function ymdDate($date, $format = 'Y-m-d'): string|null
     {
         if ($date) {
             return Carbon::parse($date)->format($format);
@@ -133,18 +133,37 @@ if (!function_exists('defaultSort')) {
     }
 }
 
+if (!function_exists('getClassMethod')) {
+    function getClassMethod($class)
+    {
+
+        $class = new ReflectionClass($class);
+        $methods = $class->getMethods(ReflectionMethod::IS_PUBLIC);
+        $scopeMethods = [];
+        foreach ($methods as $method) {
+            if (str_starts_with($method->getName(), 'scope')) {
+                $scopeMethods[] = $method->getName();
+            }
+        }
+
+        return $scopeMethods;
+    }
+}
 
 
 
-if (! function_exists('getColumns')) {
+
+
+
+if (!function_exists('getColumns')) {
     function getColumns($table = 'users'): array
     {
         if (is_subclass_of($table, 'Illuminate\Database\Eloquent\Model')) {
             $model = new $table();
 
-            $columns= $model->getConnection()->getSchemaBuilder()->getColumnListing($model->getTable());
+            $columns = $model->getConnection()->getSchemaBuilder()->getColumnListing($model->getTable());
         } else {
-            $columns= \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($table);
+            $columns = \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($table);
         }
 
         $columns = array_diff($columns, ["id"]);

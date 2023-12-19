@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 trait DeleteEvent
 {
-    public static function bootCommonEventListener(): void
+    public static function bootDeleteEvent(): void
     {
 
         static::deleting(function ($model) {

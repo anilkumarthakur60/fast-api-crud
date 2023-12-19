@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 trait Uuid
 {
-    protected static function boot()
+    protected static function bootUuid()
     {
         parent::boot();
 
