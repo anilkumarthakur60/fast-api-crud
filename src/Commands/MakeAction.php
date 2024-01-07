@@ -17,7 +17,6 @@ class MakeAction extends GeneratorCommand
     protected function getStub(): string
     {
         return self::STUB_PATH.'action.stub';
-
     }
 
     public function handle()
@@ -32,8 +31,8 @@ class MakeAction extends GeneratorCommand
 
         $path = $this->getPath($name);
 
-        if ((! $this->hasOption('force') ||
-                ! $this->option('force')) &&
+        if ((!$this->hasOption('force') ||
+                !$this->option('force')) &&
             $this->alreadyExists($this->getNameInput())) {
             $this->error($this->type.' already exists!');
 

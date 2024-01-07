@@ -12,7 +12,7 @@ if (!function_exists('_dd')) {
         http_response_code(500);
 
         foreach ($args as $x) {
-            (new Symfony\Component\VarDumper\VarDumper)->dump($x);
+            (new Symfony\Component\VarDumper\VarDumper())->dump($x);
         }
 
         exit(1);
@@ -20,7 +20,6 @@ if (!function_exists('_dd')) {
 }
 
 if (!function_exists('shortName')) {
-
     function shortName($param)
     {
         if (!app($param)) {
@@ -41,7 +40,7 @@ if (!function_exists('totalSeconds')) {
             $carbon = new Carbon($times);
             $seconds = $carbon->diffInSeconds(Carbon::createFromFormat('H:i:s', '00:00:00'));
         } elseif (count($time) == 2) {
-            $minSec = '00:' . $times;
+            $minSec = '00:'.$times;
             $carbon = new Carbon($minSec);
             $seconds = $carbon->diffInSeconds(Carbon::createFromFormat('H:i:s', '00:00:00'));
         } else {
@@ -123,7 +122,7 @@ if (!function_exists('flatData')) {
 if (!function_exists('defaultOrder')) {
     function defaultOrder(): string
     {
-        return (bool)request()->query('descending') === true ? 'ASC' : 'DESC';
+        return (bool) request()->query('descending') === true ? 'ASC' : 'DESC';
     }
 }
 if (!function_exists('defaultSort')) {
@@ -136,7 +135,6 @@ if (!function_exists('defaultSort')) {
 if (!function_exists('getClassMethod')) {
     function getClassMethod($class)
     {
-
         $class = new ReflectionClass($class);
         $methods = $class->getMethods(ReflectionMethod::IS_PUBLIC);
         $scopeMethods = [];
@@ -150,11 +148,6 @@ if (!function_exists('getClassMethod')) {
     }
 }
 
-
-
-
-
-
 if (!function_exists('getColumns')) {
     function getColumns($table = 'users'): array
     {
@@ -166,11 +159,12 @@ if (!function_exists('getColumns')) {
             $columns = \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($table);
         }
 
-        $columns = array_diff($columns, ["id"]);
-        $specialColumns = ["created_at", "updated_at", "deleted_at"];
+        $columns = array_diff($columns, ['id']);
+        $specialColumns = ['created_at', 'updated_at', 'deleted_at'];
         $columns = array_diff($columns, $specialColumns);
         sort($columns);
-        $sortedColumns = array_merge(["id"], $columns, $specialColumns);
+        $sortedColumns = array_merge(['id'], $columns, $specialColumns);
+
         return $sortedColumns;
     }
 }
