@@ -26,7 +26,7 @@ trait ReplicatesWithRelations
         $newModel->save();
 
         foreach ($this->getRelations() as $relationName => $relationValue) {
-            if (! $relationValue) {
+            if (!$relationValue) {
                 continue;
             }
 

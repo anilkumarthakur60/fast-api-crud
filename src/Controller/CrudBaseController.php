@@ -59,14 +59,14 @@ class CrudBaseController extends BaseController
 
     public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource)
     {
-        if (! (new $this->model() instanceof Model)) {
+        if (!(new $this->model() instanceof Model)) {
             throw new Exception('Model is not instance of Model', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-        if (! (new $this->storeRequest() instanceof FormRequest)) {
+        if (!(new $this->storeRequest() instanceof FormRequest)) {
             throw new Exception('StoreRequest is not instance of form request', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        if (! (new $this->updateRequest() instanceof FormRequest)) {
+        if (!(new $this->updateRequest() instanceof FormRequest)) {
             throw new Exception('UpdateRequest is not instance of FormRequest', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -227,7 +227,7 @@ class CrudBaseController extends BaseController
                     })
                     ->find($item);
 
-                if (! $model) {
+                if (!$model) {
                     continue;
                 }
 
@@ -281,7 +281,7 @@ class CrudBaseController extends BaseController
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (! $this->checkFillable($model, [$column])) {
+            if (!$this->checkFillable($model, [$column])) {
                 DB::rollBack();
 
                 throw new Exception("$column column not found in fillable");
@@ -373,7 +373,7 @@ class CrudBaseController extends BaseController
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
                 $model->beforeChangeStatusProcess();
             }
-            if (! $this->checkFillable($model, ['status'])) {
+            if (!$this->checkFillable($model, ['status'])) {
                 DB::rollBack();
 
                 throw new Exception('Status column not found in fillable');
