@@ -119,7 +119,7 @@ if (!function_exists('flatData')) {
     }
 }
 
-if (! function_exists('defaultOrder')) {
+if (!function_exists('defaultOrder')) {
     function defaultOrder(): string
     {
         return (bool) request()->query('descending') === true ? 'ASC' : 'DESC';

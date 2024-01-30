@@ -181,7 +181,7 @@ class ApiCrudServiceProvider extends ServiceProvider
 
         Builder::macro('withAggregates', function (array $aggregates) {
 
-            if (! count($aggregates)) {
+            if (!count($aggregates)) {
                 return $this;
             }
             foreach ($aggregates as $relation => $columns) {
