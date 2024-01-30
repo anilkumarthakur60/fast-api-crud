@@ -17,7 +17,6 @@ class ApiCrudServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-
         $this->publishes([
             __DIR__.'/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
         ], 'config');
@@ -46,14 +45,11 @@ class ApiCrudServiceProvider extends ServiceProvider
                 foreach ($attributes as $attribute) {
                     $query->when(
                         Str::contains($attribute, '.'),
-
                         function (Builder $query) use ($attribute, $searchTerm) {
-
                             $relationName = Str::beforeLast($attribute, '.');
                             $relationAttribute = Str::afterLast($attribute, '.');
 
                             $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm) {
-
                                 if (is_array($searchTerm)) {
                                     $query->whereIn($relationAttribute, $searchTerm);
                                 } else {
@@ -61,9 +57,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                                 }
                             });
                         },
-
                         function (Builder $query) use ($attribute, $searchTerm) {
-
                             if (is_array($searchTerm)) {
                                 $query->whereIn($attribute, $searchTerm);
                             } else {
@@ -82,7 +76,8 @@ class ApiCrudServiceProvider extends ServiceProvider
 
             $total = func_num_args() === 5 ? value(func_get_arg(4)) : $this->toBase()->getCountForPagination();
 
-            $perPage = ($perPage instanceof Closure
+            $perPage = (
+                $perPage instanceof Closure
                 ? $perPage($total)
                 : $perPage
             ) ?: $this->model->getPerPage();
@@ -100,12 +95,11 @@ class ApiCrudServiceProvider extends ServiceProvider
                 : $this->model->newCollection();
 
             return $this->paginator($results, $total, $perPage, $page, [
-                'path' => Paginator::resolveCurrentPath(),
+                'path'     => Paginator::resolveCurrentPath(),
                 'pageName' => $pageName,
             ]);
         });
         Builder::macro('simplePaginates', function (?int $perPage = null, $columns = ['*'], $pageName = 'page', $page = null) {
-
             request()->validate(['rowsPerPage' => 'nullable|numeric|gte:0|lte:100000']);
             if (request()->filled('rowsPerPage')) {
                 if ((int) request('rowsPerPage') === 0) {
@@ -119,7 +113,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             $this->offset(($page - 1) * $perPage)->limit($perPage + 1);
 
             return $this->simplePaginator($this->get($columns), $perPage, $page, [
-                'path' => Paginator::resolveCurrentPath(),
+                'path'     => Paginator::resolveCurrentPath(),
                 'pageName' => $pageName,
             ]);
         });
@@ -152,7 +146,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                 $perPage,
                 $page,
                 [
-                    'path' => LengthAwarePaginator::resolveCurrentPath(),
+                    'path'     => LengthAwarePaginator::resolveCurrentPath(),
                     'pageName' => $pageName,
                 ]
             );
@@ -204,7 +198,6 @@ class ApiCrudServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-
         $this->mergeConfigFrom(__DIR__.'/../config/fastApiCrud.php', 'fastApiCrud');
         $this->commands([MakeAction::class, MakeService::class, MakeTrait::class]);
     }

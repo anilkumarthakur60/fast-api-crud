@@ -15,8 +15,8 @@ use ReflectionClass;
 
 class CrudBaseController extends BaseController
 {
-    use AuthorizesRequests, ValidatesRequests;
-
+    use AuthorizesRequests;
+    use ValidatesRequests;
     public array $scopes = [];
 
     public array $scopeWithValue = [];
@@ -59,7 +59,6 @@ class CrudBaseController extends BaseController
 
     public function __construct(public $model, public $storeRequest, public $updateRequest, public $resource)
     {
-
         if (! (new $this->model() instanceof Model)) {
             throw new Exception('Model is not instance of Model', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -72,13 +71,13 @@ class CrudBaseController extends BaseController
         }
 
         $constants = new ReflectionClass($this->model);
+
         try {
             $permissionSlug = $constants->getConstant('permissionSlug');
         } catch (Exception $e) {
             $permissionSlug = null;
         }
         if ($permissionSlug) {
-
             $this->middleware('permission:view-'.$this->model::permissionSlug)
                 ->only(['index', 'show']);
 
@@ -146,7 +145,7 @@ class CrudBaseController extends BaseController
     ) {
         return response()->json([
             'message' => $message,
-            'data' => $data,
+            'data'    => $data,
         ], $code);
     }
 
@@ -208,7 +207,7 @@ class CrudBaseController extends BaseController
     public function delete()
     {
         request()->validate([
-            'delete_rows' => ['required', 'array'],
+            'delete_rows'   => ['required', 'array'],
             'delete_rows.*' => ['required', 'exists:'.(new $this->model())->getTable().',id'],
         ]);
 
@@ -243,7 +242,6 @@ class CrudBaseController extends BaseController
 
             DB::commit();
         } catch (Exception $e) {
-
             DB::rollBack();
 
             return $this->error($e->getMessage());
@@ -259,7 +257,7 @@ class CrudBaseController extends BaseController
     ) {
         return response()->json([
             'message' => $message,
-            'data' => $data,
+            'data'    => $data,
         ], $code);
     }
 
@@ -277,6 +275,7 @@ class CrudBaseController extends BaseController
                 }
             })
             ->findOrFail($id);
+
         try {
             DB::beginTransaction();
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
@@ -284,6 +283,7 @@ class CrudBaseController extends BaseController
             }
             if (! $this->checkFillable($model, [$column])) {
                 DB::rollBack();
+
                 throw new Exception("$column column not found in fillable");
             }
             $model->update([$column => $model->$column === 1 ? 0 : 1]);
@@ -367,6 +367,7 @@ class CrudBaseController extends BaseController
                 }
             })
             ->findOrFail($id);
+
         try {
             DB::beginTransaction();
             if (method_exists(new $this->model(), 'beforeChangeStatusProcess')) {
@@ -374,6 +375,7 @@ class CrudBaseController extends BaseController
             }
             if (! $this->checkFillable($model, ['status'])) {
                 DB::rollBack();
+
                 throw new Exception('Status column not found in fillable');
             }
             $model->update(['status' => $model->status === 1 ? 0 : 1]);

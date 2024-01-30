@@ -12,7 +12,7 @@ if (! function_exists('_dd')) {
         http_response_code(500);
 
         foreach ($args as $x) {
-            (new Symfony\Component\VarDumper\VarDumper)->dump($x);
+            (new Symfony\Component\VarDumper\VarDumper())->dump($x);
         }
 
         exit(1);
@@ -20,7 +20,6 @@ if (! function_exists('_dd')) {
 }
 
 if (! function_exists('shortName')) {
-
     function shortName($param)
     {
         if (! app($param)) {
@@ -136,7 +135,6 @@ if (! function_exists('defaultSort')) {
 if (! function_exists('getClassMethod')) {
     function getClassMethod($class)
     {
-
         $class = new ReflectionClass($class);
         $methods = $class->getMethods(ReflectionMethod::IS_PUBLIC);
         $scopeMethods = [];

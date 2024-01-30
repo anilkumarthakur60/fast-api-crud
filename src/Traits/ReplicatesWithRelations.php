@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Collection;
-
 trait ReplicatesWithRelations
 {
     /**
@@ -89,9 +88,9 @@ trait ReplicatesWithRelations
             'bool', 'boolean' => is_bool($value) || in_array(strtolower($value), ['1', 'true', 'yes']),
             'string' => is_string($value),
             'array', 'json' => is_array($value) || is_object($value) && method_exists($value, 'toArray'),
-            'object' => is_object($value),
+            'object'     => is_object($value),
             'collection' => $value instanceof Collection,
-            default => false,
+            default      => false,
         };
     }
 }
