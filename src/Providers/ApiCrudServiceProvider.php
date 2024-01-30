@@ -82,7 +82,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                 : $perPage
             ) ?: $this->model->getPerPage();
 
-            if (request()->filled('rowsPerPage') && ! ($perPage instanceof Closure)) {
+            if (request()->filled('rowsPerPage') && !($perPage instanceof Closure)) {
                 if ((int) request('rowsPerPage') === 0) {
                     $perPage = $total === 0 ? 15 : $total;
                 } else {
