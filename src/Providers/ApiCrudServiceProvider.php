@@ -180,7 +180,6 @@ class ApiCrudServiceProvider extends ServiceProvider
         });
 
         Builder::macro('withAggregates', function (array $aggregates) {
-
             if (!count($aggregates)) {
                 return $this;
             }
@@ -192,7 +191,6 @@ class ApiCrudServiceProvider extends ServiceProvider
             }
 
             return $this;
-
         });
     }
 
