@@ -3,7 +3,7 @@
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 
-if (!function_exists('_dd')) {
+if (! function_exists('_dd')) {
     function _dd(...$args)
     {
         header('Access-Control-Allow-Origin: *');
@@ -19,11 +19,11 @@ if (!function_exists('_dd')) {
     }
 }
 
-if (!function_exists('shortName')) {
+if (! function_exists('shortName')) {
 
     function shortName($param)
     {
-        if (!app($param)) {
+        if (! app($param)) {
             return null;
         }
         $reflection = new ReflectionClass(app($param));
@@ -32,7 +32,7 @@ if (!function_exists('shortName')) {
     }
 }
 
-if (!function_exists('totalSeconds')) {
+if (! function_exists('totalSeconds')) {
     function totalSeconds($times): mixed
     {
         $time = explode(':', $times);
@@ -41,7 +41,7 @@ if (!function_exists('totalSeconds')) {
             $carbon = new Carbon($times);
             $seconds = $carbon->diffInSeconds(Carbon::createFromFormat('H:i:s', '00:00:00'));
         } elseif (count($time) == 2) {
-            $minSec = '00:' . $times;
+            $minSec = '00:'.$times;
             $carbon = new Carbon($minSec);
             $seconds = $carbon->diffInSeconds(Carbon::createFromFormat('H:i:s', '00:00:00'));
         } else {
@@ -51,7 +51,7 @@ if (!function_exists('totalSeconds')) {
         return $seconds;
     }
 }
-if (!function_exists('duration')) {
+if (! function_exists('duration')) {
     function duration($duration): string
     {
         $interval = CarbonInterval::seconds($duration)->cascade();
@@ -62,8 +62,8 @@ if (!function_exists('duration')) {
     }
 }
 
-if (!function_exists('dateForHumans')) {
-    function dateForHumans($date): string|null
+if (! function_exists('dateForHumans')) {
+    function dateForHumans($date): ?string
     {
         if ($date) {
             return Carbon::parse($date)->diffForHumans();
@@ -73,8 +73,8 @@ if (!function_exists('dateForHumans')) {
     }
 }
 
-if (!function_exists('ymdDate')) {
-    function ymdDate($date, $format = 'Y-m-d'): string|null
+if (! function_exists('ymdDate')) {
+    function ymdDate($date, $format = 'Y-m-d'): ?string
     {
         if ($date) {
             return Carbon::parse($date)->format($format);
@@ -84,8 +84,8 @@ if (!function_exists('ymdDate')) {
     }
 }
 
-if (!function_exists('dateForReports')) {
-    function dateForReports($date, $format = 'Y-m-d H:i'): string|null
+if (! function_exists('dateForReports')) {
+    function dateForReports($date, $format = 'Y-m-d H:i'): ?string
     {
         if ($date) {
             return Carbon::parse($date)->format($format);
@@ -94,8 +94,8 @@ if (!function_exists('dateForReports')) {
         return null;
     }
 }
-if (!function_exists('getFilterByKey')) {
-    function getFilterByKey($key = 'date'): string|null
+if (! function_exists('getFilterByKey')) {
+    function getFilterByKey($key = 'date'): ?string
     {
         $jsonData = json_decode(request()->query('filters'));
         $value = collect($jsonData)->get($key);
@@ -103,8 +103,8 @@ if (!function_exists('getFilterByKey')) {
         return $value ?? null;
     }
 }
-if (!function_exists('getArrayFilterByKey')) {
-    function getArrayFilterByKey($key = 'date'): array|null
+if (! function_exists('getArrayFilterByKey')) {
+    function getArrayFilterByKey($key = 'date'): ?array
     {
         $jsonData = json_decode(request()->query('filters'));
         $value = collect($jsonData)->get($key);
@@ -113,27 +113,27 @@ if (!function_exists('getArrayFilterByKey')) {
     }
 }
 
-if (!function_exists('flatData')) {
+if (! function_exists('flatData')) {
     function flatData($data, $depth = 0): array
     {
         return collect($data)->flatten($depth)->toArray();
     }
 }
 
-if (!function_exists('defaultOrder')) {
+if (! function_exists('defaultOrder')) {
     function defaultOrder(): string
     {
-        return (bool)request()->query('descending') === true ? 'ASC' : 'DESC';
+        return (bool) request()->query('descending') === true ? 'ASC' : 'DESC';
     }
 }
-if (!function_exists('defaultSort')) {
+if (! function_exists('defaultSort')) {
     function defaultSort($key = 'id'): string
     {
         return request()->query('sortBy', $key);
     }
 }
 
-if (!function_exists('getClassMethod')) {
+if (! function_exists('getClassMethod')) {
     function getClassMethod($class)
     {
 
@@ -150,12 +150,7 @@ if (!function_exists('getClassMethod')) {
     }
 }
 
-
-
-
-
-
-if (!function_exists('getColumns')) {
+if (! function_exists('getColumns')) {
     function getColumns($table = 'users'): array
     {
         if (is_subclass_of($table, 'Illuminate\Database\Eloquent\Model')) {
@@ -166,11 +161,12 @@ if (!function_exists('getColumns')) {
             $columns = \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($table);
         }
 
-        $columns = array_diff($columns, ["id"]);
-        $specialColumns = ["created_at", "updated_at", "deleted_at"];
+        $columns = array_diff($columns, ['id']);
+        $specialColumns = ['created_at', 'updated_at', 'deleted_at'];
         $columns = array_diff($columns, $specialColumns);
         sort($columns);
-        $sortedColumns = array_merge(["id"], $columns, $specialColumns);
+        $sortedColumns = array_merge(['id'], $columns, $specialColumns);
+
         return $sortedColumns;
     }
 }

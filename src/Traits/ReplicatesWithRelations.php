@@ -1,6 +1,7 @@
 <?php
 
 namespace Anil\FastApiCrud\Traits;
+
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -8,11 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Model;
-use  \Illuminate\Support\Collection;
+use Illuminate\Support\Collection;
+
 trait ReplicatesWithRelations
 {
-
     /**
      * @throws \Exception
      */
@@ -27,7 +27,7 @@ trait ReplicatesWithRelations
         $newModel->save();
 
         foreach ($this->getRelations() as $relationName => $relationValue) {
-            if (!$relationValue) {
+            if (! $relationValue) {
                 continue;
             }
 
@@ -54,14 +54,13 @@ trait ReplicatesWithRelations
                     $newModel->{$relationName}()->associate($newModelRelation);
                     break;
                 default:
-                    throw  new  \Exception('Relation not found');
+                    throw new \Exception('Relation not found');
                     break;
             }
         }
 
         return $newModel;
     }
-
 
     public function getMatchedCastableAttributes(): array
     {
@@ -78,10 +77,11 @@ trait ReplicatesWithRelations
                 $matchedCastableAttributes[$attribute] = $castType;
             }
         }
+
         return $matchedCastableAttributes;
     }
 
-    protected function isCastable($value, $type):bool
+    protected function isCastable($value, $type): bool
     {
         return match ($type) {
             'int', 'integer' => is_numeric($value),

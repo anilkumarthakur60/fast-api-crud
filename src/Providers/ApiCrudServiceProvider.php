@@ -5,7 +5,7 @@ namespace Anil\FastApiCrud\Providers;
 use Anil\FastApiCrud\Commands\MakeAction;
 use Anil\FastApiCrud\Commands\MakeService;
 use Anil\FastApiCrud\Commands\MakeTrait;
-
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
@@ -13,19 +13,17 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
-use Closure;
-
 class ApiCrudServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
 
         $this->publishes([
-            __DIR__ . '/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
+            __DIR__.'/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
         ], 'config');
 
-        Builder::macro('likeWhere', function (array $attributes, string $searchTerm = null) {
-            return  $this->where(function (Builder $query) use ($attributes, $searchTerm) {
+        Builder::macro('likeWhere', function (array $attributes, ?string $searchTerm = null) {
+            return $this->where(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach ($attributes as $attribute) {
                     $query->when(
                         Str::contains($attribute, '.'),
@@ -44,7 +42,7 @@ class ApiCrudServiceProvider extends ServiceProvider
         });
 
         Builder::macro('equalWhere', function (array $attributes, mixed $searchTerm = null) {
-            return  $this->where(function (Builder $query) use ($attributes, $searchTerm) {
+            return $this->where(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach ($attributes as $attribute) {
                     $query->when(
                         Str::contains($attribute, '.'),
@@ -64,7 +62,6 @@ class ApiCrudServiceProvider extends ServiceProvider
                             });
                         },
 
-
                         function (Builder $query) use ($attribute, $searchTerm) {
 
                             if (is_array($searchTerm)) {
@@ -78,7 +75,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             });
         });
 
-        Builder::macro('paginates', function ($perPage = null, $columns = ['*'], $pageName = 'page', int $page = null) {
+        Builder::macro('paginates', function ($perPage = null, $columns = ['*'], $pageName = 'page', ?int $page = null) {
             request()->validate(['rowsPerPage' => 'nullable|numeric|gte:0|lte:100000']);
 
             $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -90,11 +87,11 @@ class ApiCrudServiceProvider extends ServiceProvider
                 : $perPage
             ) ?: $this->model->getPerPage();
 
-            if (request()->filled('rowsPerPage') && !($perPage instanceof  Closure)) {
-                if ((int)request('rowsPerPage') === 0) {
+            if (request()->filled('rowsPerPage') && ! ($perPage instanceof Closure)) {
+                if ((int) request('rowsPerPage') === 0) {
                     $perPage = $total === 0 ? 15 : $total;
                 } else {
-                    $perPage = (int)request('rowsPerPage');
+                    $perPage = (int) request('rowsPerPage');
                 }
             }
 
@@ -102,20 +99,19 @@ class ApiCrudServiceProvider extends ServiceProvider
                 ? $this->forPage($page, $perPage)->get($columns)
                 : $this->model->newCollection();
 
-
             return $this->paginator($results, $total, $perPage, $page, [
                 'path' => Paginator::resolveCurrentPath(),
                 'pageName' => $pageName,
             ]);
         });
-        Builder::macro('simplePaginates', function (int $perPage = null, $columns = ['*'], $pageName = 'page', $page = null) {
+        Builder::macro('simplePaginates', function (?int $perPage = null, $columns = ['*'], $pageName = 'page', $page = null) {
 
             request()->validate(['rowsPerPage' => 'nullable|numeric|gte:0|lte:100000']);
             if (request()->filled('rowsPerPage')) {
-                if ((int)request('rowsPerPage') === 0) {
+                if ((int) request('rowsPerPage') === 0) {
                     $perPage = $this->count();
                 } else {
-                    $perPage = (int)request('rowsPerPage');
+                    $perPage = (int) request('rowsPerPage');
                 }
             }
             $page = $page ?: Paginator::resolveCurrentPage($pageName);
@@ -162,7 +158,6 @@ class ApiCrudServiceProvider extends ServiceProvider
             );
         });
 
-
         Builder::macro('initializer', function (bool $orderBy = true) {
             $request = request();
             $filters = json_decode($request->query('filters'), true);
@@ -172,7 +167,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                 $model = $this->newQuery();
             }
             foreach (collect($filters) as $filter => $value) {
-                if (isset($value) && method_exists($this->model, 'scope' . ucfirst($filter))) {
+                if (isset($value) && method_exists($this->model, 'scope'.ucfirst($filter))) {
                     $model->$filter($value);
                 }
             }
@@ -189,12 +184,28 @@ class ApiCrudServiceProvider extends ServiceProvider
 
             return $model;
         });
+
+        Builder::macro('withAggregates', function (array $aggregates) {
+
+            if (! count($aggregates)) {
+                return $this;
+            }
+            foreach ($aggregates as $relation => $columns) {
+                $columns = is_array($columns) ? $columns : [$columns];
+                foreach ($columns as $column) {
+                    $this->withAggregate($relation, $column);
+                }
+            }
+
+            return $this;
+
+        });
     }
 
     public function register(): void
     {
 
-        $this->mergeConfigFrom(__DIR__ . '/../config/fastApiCrud.php', 'fastApiCrud');
+        $this->mergeConfigFrom(__DIR__.'/../config/fastApiCrud.php', 'fastApiCrud');
         $this->commands([MakeAction::class, MakeService::class, MakeTrait::class]);
     }
 }
