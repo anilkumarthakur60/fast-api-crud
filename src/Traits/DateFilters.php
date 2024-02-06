@@ -9,51 +9,51 @@ trait DateFilters
 {
     public function scopeToday(Builder $query, $column = 'created_at'): Builder
     {
-        return $query->whereDate($column, Carbon::today());
+        return $query->whereDate($this->getTable().'.'.$column, Carbon::today());
     }
 
     public function scopeYesterday(Builder $query, $column = 'created_at'): Builder
     {
-        return $query->whereDate($column, Carbon::yesterday());
+        return $query->whereDate($this->getTable().'.'.$column, Carbon::yesterday());
     }
 
     public function scopeMonthToDate(Builder $query, $column = 'created_at'): Builder
     {
-        return $query->whereBetween($column, [Carbon::now()->startOfMonth(), Carbon::now()]);
+        return $query->whereBetween($this->getTable().'.'.$column, [Carbon::now()->startOfMonth(), Carbon::now()]);
     }
 
     public function scopeQuarterToDate(Builder $query, $column = 'created_at'): Builder
     {
         $now = Carbon::now();
 
-        return $query->whereBetween($column, [$now->startOfQuarter(), $now]);
+        return $query->whereBetween($this->getTable().'.'.$column, [$now->startOfQuarter(), $now]);
     }
 
     public function scopeYearToDate(Builder $query, $column = 'created_at'): Builder
     {
-        return $query->whereBetween($column, [Carbon::now()->startOfYear(), Carbon::now()]);
+        return $query->whereBetween($this->getTable().'.'.$column, [Carbon::now()->startOfYear(), Carbon::now()]);
     }
 
     public function scopeLast7Days(Builder $query, $column = 'created_at'): Builder
     {
-        return $query->whereBetween($column, [Carbon::today()->subDays(6), Carbon::now()]);
+        return $query->whereBetween($this->getTable().'.'.$column, [Carbon::today()->subDays(6), Carbon::now()]);
     }
 
     public function scopeLast30Days(Builder $query, $column = 'created_at'): Builder
     {
-        return $query->whereBetween($column, [Carbon::today()->subDays(29), Carbon::now()]);
+        return $query->whereBetween($this->getTable().'.'.$column, [Carbon::today()->subDays(29), Carbon::now()]);
     }
 
     public function scopeLastQuarter(Builder $query, $column = 'created_at'): Builder
     {
         $now = Carbon::now();
 
-        return $query->whereBetween($column, [$now->startOfQuarter()->subMonths(3), $now->startOfQuarter()]);
+        return $query->whereBetween($this->getTable().'.'.$column, [$now->startOfQuarter()->subMonths(3), $now->startOfQuarter()]);
     }
 
     public function scopeLastYear(Builder $query, $column = 'created_at'): Builder
     {
-        return $query->whereBetween($column, [Carbon::now()->subYear(), Carbon::now()]);
+        return $query->whereBetween($this->getTable().'.'.$column, [Carbon::now()->subYear(), Carbon::now()]);
     }
 
     public function scopeDate($query, $search, $column = 'created_at')
