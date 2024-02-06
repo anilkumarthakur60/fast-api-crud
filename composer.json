@@ -14,12 +14,12 @@
   ],
   "type": "library",
   "require": {
-    "illuminate/auth": "10.*|9.*|8.*|7.*|6.*|5.*",
-    "illuminate/http": "10.*|9.*|8.*|7.*|6.*|5.*",
-    "illuminate/pagination": "10.*|9.*|8.*|7.*|6.*|5.*|4.*",
-    "illuminate/routing": "10.*|9.*|8.*|7.*|6.*|5.*",
-    "illuminate/support": "10.*|9.*|8.*|7.*|6.*|5.*",
-    "spatie/laravel-permission": "6.*|5.*|4.*|3.*|2.*|1.*"
+    "illuminate/auth": "10.*|9.*|8.*|7.*",
+    "illuminate/http": "10.*|9.*|8.*|7.*",
+    "illuminate/pagination": "10.*|9.*|8.*|7.*",
+    "illuminate/routing": "10.*|9.*|8.*|7.*",
+    "illuminate/support": "10.*|9.*|8.*|7.*",
+    "spatie/laravel-permission": "6.*|5.*|4.*"
   },
   "license": "MIT",
   "autoload": {

@@ -12,6 +12,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class ApiCrudServiceProvider extends ServiceProvider
 {
@@ -59,12 +60,13 @@ class ApiCrudServiceProvider extends ServiceProvider
                         function (Builder $query) use ($attribute, $searchTerm) {
                             $relationName = Str::beforeLast($attribute, '.');
                             $relationAttribute = Str::afterLast($attribute, '.');
-
-                            $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm) {
+                            $relation = $this->getRelationWithoutConstraints($relationName);
+                            $table=$relation->getModel()->getTable();
+                            $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm,$table) {
                                 if (is_array($searchTerm)) {
-                                    $query->whereIn($relationAttribute, $searchTerm);
+                                    $query->whereIn($table.'.'.$relationAttribute, $searchTerm);
                                 } else {
-                                    $query->where($relationAttribute, $searchTerm);
+                                    $query->where($table.'.'.$relationAttribute, $searchTerm);
                                 }
                             });
                         },
