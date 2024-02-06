@@ -22,6 +22,7 @@ class ApiCrudServiceProvider extends ServiceProvider
         ], 'config');
 
         Builder::macro('likeWhere', function (array $attributes, ?string $searchTerm = null) {
+
             if (empty($searchTerm)){
                 return $this;
             }
@@ -45,10 +46,10 @@ class ApiCrudServiceProvider extends ServiceProvider
 
         Builder::macro('equalWhere', function (array $attributes, mixed $searchTerm = null) {
 
-            if(is_array($searchTerm) && count($searchTerm) === 0){
+            if (is_array($searchTerm) && count($searchTerm) === 0) {
                 return $this;
             }
-            if (!is_array($searchTerm) && empty($searchTerm)){
+            if (!is_array($searchTerm) && empty($searchTerm)) {
                 return $this;
             }
 
