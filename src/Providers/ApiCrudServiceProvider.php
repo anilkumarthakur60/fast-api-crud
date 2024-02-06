@@ -22,10 +22,10 @@ class ApiCrudServiceProvider extends ServiceProvider
         ], 'config');
 
         Builder::macro('likeWhere', function (array $attributes, ?string $searchTerm = null) {
-
             if (empty($searchTerm)) {
                 return $this;
             }
+
             return $this->where(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach ($attributes as $attribute) {
                     $query->when(
@@ -45,7 +45,6 @@ class ApiCrudServiceProvider extends ServiceProvider
         });
 
         Builder::macro('equalWhere', function (array $attributes, mixed $searchTerm = null) {
-
             if (is_array($searchTerm) && count($searchTerm) === 0) {
                 return $this;
             }
