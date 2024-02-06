@@ -12,7 +12,6 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Relations\Relation;
 
 class ApiCrudServiceProvider extends ServiceProvider
 {
@@ -61,7 +60,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                             $relationName = Str::beforeLast($attribute, '.');
                             $relationAttribute = Str::afterLast($attribute, '.');
                             $relation = $this->getRelationWithoutConstraints($relationName);
-                            $table=$relation->getModel()->getTable();
+                            $table = $relation->getModel()->getTable();
                             $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm,$table) {
                                 if (is_array($searchTerm)) {
                                     $query->whereIn($table.'.'.$relationAttribute, $searchTerm);
