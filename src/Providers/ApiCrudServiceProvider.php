@@ -61,7 +61,7 @@ class ApiCrudServiceProvider extends ServiceProvider
                             $relationAttribute = Str::afterLast($attribute, '.');
                             $relation = $this->getRelationWithoutConstraints($relationName);
                             $table = $relation->getModel()->getTable();
-                            $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm,$table) {
+                            $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm, $table) {
                                 if (is_array($searchTerm)) {
                                     $query->whereIn($table.'.'.$relationAttribute, $searchTerm);
                                 } else {
