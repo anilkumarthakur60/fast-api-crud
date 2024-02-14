@@ -48,7 +48,7 @@ class ApiCrudServiceProvider extends ServiceProvider
             if (is_array($searchTerm) && count($searchTerm) === 0) {
                 return $this;
             }
-            if (!is_array($searchTerm) && empty($searchTerm)) {
+            if (!is_array($searchTerm) && !isset($searchTerm)) {
                 return $this;
             }
 
@@ -166,7 +166,10 @@ class ApiCrudServiceProvider extends ServiceProvider
 
         Builder::macro('initializer', function (bool $orderBy = true) {
             $request = request();
-            $filters = json_decode($request->query('filters'), true);
+            $filters=[];
+            if ($request->filled('filters')) {
+                $filters = json_decode($request->query('filters'), true);
+            }
             if (method_exists($this->model, 'initializeModel')) {
                 $model = $this->model->initializeModel();
             } else {
