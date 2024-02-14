@@ -166,7 +166,7 @@ class ApiCrudServiceProvider extends ServiceProvider
 
         Builder::macro('initializer', function (bool $orderBy = true) {
             $request = request();
-            $filters=[];
+            $filters = [];
             if ($request->filled('filters')) {
                 $filters = json_decode($request->query('filters'), true);
             }
