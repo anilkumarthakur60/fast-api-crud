@@ -207,6 +207,20 @@ class ApiCrudServiceProvider extends ServiceProvider
 
             return $this;
         });
+
+        Builder::macro('withCountWhereHas', function ($relation, Closure $callback = null, $operator = '>=', $count = 1) {
+            $this->whereHas(Str::before($relation, ':'), $callback, $operator, $count)
+                ->withCount(relations: $callback ? [$relation => fn ($query) => $callback($query)] : $relation);
+
+            return $this;
+        });
+
+        Builder::macro('orWithCountWhereHas', function ($relation, Closure $callback = null, $operator = '>=', $count = 1) {
+            $this->orWhereHas(Str::before($relation, ':'), $callback, $operator, $count)
+                ->withCount(relations: $callback ? [$relation => fn ($query) => $callback($query)] : $relation);
+
+            return $this;
+        });
     }
 
     public function register(): void
