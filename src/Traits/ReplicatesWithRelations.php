@@ -2,6 +2,7 @@
 
 namespace Anil\FastApiCrud\Traits;
 
+use Exception;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +15,7 @@ use Illuminate\Support\Collection;
 trait ReplicatesWithRelations
 {
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function replicateWithRelations(): self
     {
@@ -54,7 +55,7 @@ trait ReplicatesWithRelations
                     $newModel->{$relationName}()->associate($newModelRelation);
                     break;
                 default:
-                    throw new \Exception('Relation not found');
+                    throw new Exception('Relation not found');
                     break;
             }
         }
@@ -89,9 +90,9 @@ trait ReplicatesWithRelations
             'bool', 'boolean' => is_bool($value) || in_array(strtolower($value), ['1', 'true', 'yes']),
             'string' => is_string($value),
             'array', 'json' => is_array($value) || is_object($value) && method_exists($value, 'toArray'),
-            'object'     => is_object($value),
+            'object' => is_object($value),
             'collection' => $value instanceof Collection,
-            default      => false,
+            default => false,
         };
     }
 }
