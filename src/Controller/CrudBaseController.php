@@ -99,9 +99,7 @@ class CrudBaseController extends BaseController
                 return $query->withCount($this->withCount);
             })
             ->when(property_exists($this, 'withAggregate') && count($this->withAggregate), function ($query) {
-                foreach ($this->withAggregate as $key => $value) {
-                    $query->withAggregate($key, $value);
-                }
+                return $query->withAggregates($this->withAggregate);
             })
             ->when(property_exists($this, 'scopes') && count($this->scopes), function ($query) {
                 foreach ($this->scopes as $value) {
