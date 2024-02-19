@@ -88,7 +88,7 @@ if (!function_exists('dateForReports')) {
     {
         try {
             return Carbon::parse($date)->format($format);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return null;
         }
     }
