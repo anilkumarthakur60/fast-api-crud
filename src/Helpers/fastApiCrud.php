@@ -86,11 +86,11 @@ if (!function_exists('ymdDate')) {
 if (!function_exists('dateForReports')) {
     function dateForReports($date, $format = 'Y-m-d H:i'): ?string
     {
-        if ($date) {
+        try {
             return Carbon::parse($date)->format($format);
+        }catch (\Exception $e) {
+            return null;
         }
-
-        return null;
     }
 }
 if (!function_exists('getFilterByKey')) {
