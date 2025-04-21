@@ -64,7 +64,6 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setUpDatabase(): void
     {
-        $this->artisan('migrate', ['--database' => 'mysql'])->run();
         $this->userMigration();
         $this->tagMigration();
         $this->postMigration();

@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 use Pest\PendingCalls\DescribeCall;
 use Pest\Support\Backtrace;
 use Pest\TestSuite;
+use Symfony\Component\VarDumper\Caster\ScalarStub;
+use Symfony\Component\VarDumper\VarDumper;
 
 if (! function_exists('_dd')) {
     /**
@@ -23,7 +25,27 @@ if (! function_exists('_dd')) {
         header('Access-Control-Allow-Methods: *');
         header('Access-Control-Allow-Headers: *');
         http_response_code(500);
-        dd($args);
+        // dd($args);
+
+        if (! \in_array(\PHP_SAPI, ['cli', 'phpdbg', 'embed'], true) && ! headers_sent()) {
+            header('HTTP/1.1 500 Internal Server Error');
+        }
+
+        if (! $args) {
+            VarDumper::dump(new ScalarStub('🐛'));
+
+            exit(1);
+        }
+
+        if (array_key_exists(0, $args) && count($args) === 1) {
+            VarDumper::dump($args[0]);
+        } else {
+            foreach ($args as $k => $v) {
+                VarDumper::dump($v, is_int($k) ? 1 + $k : $k);
+            }
+        }
+
+        exit(1);
     }
 }
 
@@ -43,29 +65,31 @@ if (! function_exists('shortName')) {
         return $reflection->getShortName();
     }
 }
+function totalSeconds(string $times): int
+{
+    $time = explode(':', $times);
+    $seconds = 0;
 
-if (! function_exists('totalSeconds')) {
-    /**
-     * Convert time string to total seconds.
-     */
-    function totalSeconds(string $times): int|float
-    {
-        $time = explode(':', $times);
-        $seconds = 0;
+    if (count($time) >= 3) {
+        $carbon = Carbon::createFromFormat('H:i:s', $times);
+        $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
 
-        if (count($time) >= 3) {
-            $carbon = new Carbon($times);
-            $seconds = $carbon->diffInSeconds(Carbon::createFromFormat('H:i:s', '00:00:00'));
-        } elseif (count($time) === 2) {
-            $minSec = '00:'.$times;
-            $carbon = new Carbon($minSec);
-            $seconds = $carbon->diffInSeconds(Carbon::createFromFormat('H:i:s', '00:00:00'));
-        } else {
-            $seconds = (int) $times; // Ensure $seconds is an integer
+        if ($carbon && $reference) {
+            $seconds = $carbon->diffInSeconds($reference);
         }
+    } elseif (count($time) === 2) {
+        $minSec = '00:'.$times;
+        $carbon = Carbon::createFromFormat('H:i:s', $minSec);
+        $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
 
-        return $seconds;
+        if ($carbon && $reference) {
+            $seconds = $carbon->diffInSeconds($reference);
+        }
+    } else {
+        $seconds = (int) $times;
     }
+
+    return $seconds;
 }
 
 if (! function_exists('duration')) {
@@ -316,7 +340,6 @@ if (! function_exists('recursiveDatabaseClasses')) {
 
         return array_values($classes);
     }
-
 }
 
 if (! function_exists('toFormattedDateString')) {

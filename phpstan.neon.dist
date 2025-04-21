@@ -8,14 +8,9 @@ parameters:
         treatPhpDocTypesAsCertain: false
     paths:
         - src/
-        - database/
     level: 9
 
     excludePaths:
 
     ignoreErrors:
-        - '#Trait Anil\\FastApiCrud\\Traits\\HasUuid is used zero times and is not analysed#'
-        - '#Trait Anil\\FastApiCrud\\Traits\\HasReplicatesWithRelation is used zero times and is not analysed#'
-        - '#Trait Anil\\FastApiCrud\\Traits\\HasDeleteEvent is used zero times and is not analysed#'
-        - '#Trait Anil\\FastApiCrud\\Traits\\HasDateFilters is used zero times and is not analysed#'
-        - '#.*::initializer\(\)#'
+          - '#.*::initializer\(\)#'
