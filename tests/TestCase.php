@@ -64,14 +64,24 @@ abstract class TestCase extends OrchestraTestCase
 
     protected function setUpDatabase(): void
     {
-        $this->userMigration();
-        $this->tagMigration();
-        $this->postMigration();
-        $this->permissionMigration();
+        $schema = $this->app['db']->connection()->getSchemaBuilder();
+        if (! $schema->hasTable('users')) {
+            $this->userMigration();
+        }
+        if (! $schema->hasTable('tags')) {
+            $this->tagMigration();
+        }
+        if (! $schema->hasTable('posts')) {
+            $this->postMigration();
+        }
+        if (! $schema->hasTable('permissions')) {
+            $this->permissionMigration();
+        }
     }
 
     protected function userMigration(): void
     {
+
         /** @var Application $app */
         $app = $this->app;
         $app['db']->connection()
