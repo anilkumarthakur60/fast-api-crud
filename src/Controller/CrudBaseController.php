@@ -315,7 +315,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -330,29 +332,27 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
+
     /**
+     * Return an error response
+     *
      * @param  array<string, mixed>  $data
      */
-    protected function error(
-        string $message = 'Something went wrong',
-        array $data = [],
-        int $code = ResponseAlias::HTTP_INTERNAL_SERVER_ERROR
-    ): JsonResponse {
+    public function error(array $data = [], int $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
+    {
         return response()->json([
-            'success' => false,
-            'message' => $message,
             'data' => $data,
-        ], $code);
+        ], $status);
     }
 
     public function show(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()
-            ->when($this->loadAll, fn (Builder $query): Builder => $query->with($this->loadAll))
-            ->when($this->loadCount, fn (Builder $query): Builder => $query->withCount($this->loadCount))
-            ->when($this->loadAggregate, fn (Builder $query): Builder => $this->applyLoadAggregate($query))
-            ->when($this->loadScopes, fn (Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
-            ->when($this->loadScopeWithValue, fn (Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
+            ->when($this->loadAll, fn(Builder $query): Builder => $query->with($this->loadAll))
+            ->when($this->loadCount, fn(Builder $query): Builder => $query->withCount($this->loadCount))
+            ->when($this->loadAggregate, fn(Builder $query): Builder => $this->applyLoadAggregate($query))
+            ->when($this->loadScopes, fn(Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
+            ->when($this->loadScopeWithValue, fn(Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
             ->findOrFail($id);
 
         return new $this->resource($model);
@@ -378,7 +378,7 @@ class CrudBaseController extends BaseController
         $this->forceDelete ? $model->forceDelete() : $model->delete();
         $this->afterDeleteProcess($model);
 
-        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
     /**
@@ -393,8 +393,8 @@ class CrudBaseController extends BaseController
     {
 
         $query = $this->model::query()
-            ->when(! empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes))
-            ->when(! empty($scopeWithValue), fn (Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
+            ->when(! empty($scopes), fn(Builder $query): Builder => $this->applyScopes($query, $scopes))
+            ->when(! empty($scopeWithValue), fn(Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
 
         return $query->findOrFail($id);
     }
@@ -412,7 +412,7 @@ class CrudBaseController extends BaseController
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:'.(new $this->model)->getTable().',id'],
+            'delete_rows.*' => ['required', 'exists:' . (new $this->model)->getTable() . ',id'],
         ]);
 
         try {
@@ -428,10 +428,12 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
-        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
     protected function afterDeleteProcess(Model $model): Model
@@ -447,13 +449,10 @@ class CrudBaseController extends BaseController
      * @param  array<string, mixed>|null  $data
      */
     protected function success(
-        ?array $data = null,
-        string $message = 'Success',
+        ?array $data = [],
         int $code = ResponseAlias::HTTP_OK
     ): JsonResponse {
         return response()->json([
-            'success' => true,
-            'message' => $message,
             'data' => $data,
         ], $code);
     }
@@ -472,7 +471,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -533,7 +534,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -575,7 +578,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -593,8 +598,8 @@ class CrudBaseController extends BaseController
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()->onlyTrashed()
-            ->when($this->restoreScopes, fn ($query) => $this->applyScopes($query, $this->restoreScopes))
-            ->when($this->restoreScopeWithValue, fn ($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
+            ->when($this->restoreScopes, fn($query) => $this->applyScopes($query, $this->restoreScopes))
+            ->when($this->restoreScopeWithValue, fn($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
             ->findOrFail($id);
 
         try {
@@ -606,7 +611,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -639,10 +646,12 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
-        return $this->success(message: 'Data restored successfully');
+        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
     public function forceDeleteTrashed(int|string $id): JsonResponse|Model
@@ -658,10 +667,12 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
-        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
     protected function beforeForceDeleteProcess(Model $model): Model
