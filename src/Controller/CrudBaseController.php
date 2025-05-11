@@ -445,12 +445,13 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @param  array<string, mixed>|null  $data
+     * Return a success response
+     *
+     * @param  array<string, mixed>  $data
+     * @param  int  $code
      */
-    protected function success(
-        ?array $data = [],
-        int $code = ResponseAlias::HTTP_OK
-    ): JsonResponse {
+    public function success(array $data = [], $code = ResponseAlias::HTTP_OK): JsonResponse
+    {
         return response()->json([
             'data' => $data,
         ], $code);

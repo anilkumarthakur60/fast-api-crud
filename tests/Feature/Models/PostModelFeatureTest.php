@@ -88,8 +88,8 @@ describe(description: 'testing_post_model_factory', tests: function () {
                 [
                     'name' => $inputName = 'Post 1',
                     'desc' => $inputDesc = 'Post 1 Description',
-                    'status' => $active = true,
-                    'active' => $inActive = false,
+                    'status' => 1,
+                    'active' => 0,
                     'user_id' => $this->user->id,
                 ]
             );
@@ -97,8 +97,8 @@ describe(description: 'testing_post_model_factory', tests: function () {
         $this->assertDatabaseMissing('posts', [
             'name' => $inputName,
             'desc' => $inputDesc,
-            'status' => $active,
-            'active' => $inActive,
+            'status' => 1,
+            'active' => 0,
             'deleted_at' => null,
         ]);
     });
@@ -272,6 +272,6 @@ describe(description: 'test_post_controller', tests: function () {
         ]);
         $this->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[0]]);
         $this->assertDatabaseHas(table: 'post_tag', data: ['post_id' => $response->json('data.id'), 'tag_id' => $tagIds[1]]);
-        $this->assertSame(2, PostModel::query()->find(1)->tags()->count());
+        $this->assertSame(2, PostModel::query()->find($response->json('data.id'))->tags()->count());
     });
 });
