@@ -255,7 +255,7 @@ class CrudBaseController extends BaseController
             $this->applyScopeWithValue($query, $this->scopeWithValue);
         }
 
-        return $this->resource::collection($query->paginate());
+        return $this->resource::collection($query->paginates());
     }
 
     /**
@@ -315,7 +315,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -331,18 +333,15 @@ class CrudBaseController extends BaseController
     }
 
     /**
+     * Return an error response
+     *
      * @param  array<string, mixed>  $data
      */
-    protected function error(
-        string $message = 'Something went wrong',
-        array $data = [],
-        int $code = ResponseAlias::HTTP_INTERNAL_SERVER_ERROR
-    ): JsonResponse {
+    public function error(array $data = [], int $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
+    {
         return response()->json([
-            'success' => false,
-            'message' => $message,
             'data' => $data,
-        ], $code);
+        ], $status);
     }
 
     public function show(int|string $id): JsonResource|JsonResponse
@@ -378,7 +377,7 @@ class CrudBaseController extends BaseController
         $this->forceDelete ? $model->forceDelete() : $model->delete();
         $this->afterDeleteProcess($model);
 
-        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
     /**
@@ -428,10 +427,12 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
-        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
     protected function afterDeleteProcess(Model $model): Model
@@ -444,16 +445,14 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @param  array<string, mixed>|null  $data
+     * Return a success response
+     *
+     * @param  array<string, mixed>  $data
+     * @param  int  $code
      */
-    protected function success(
-        ?array $data = null,
-        string $message = 'Success',
-        int $code = ResponseAlias::HTTP_OK
-    ): JsonResponse {
+    public function success(array $data = [], $code = ResponseAlias::HTTP_OK): JsonResponse
+    {
         return response()->json([
-            'success' => true,
-            'message' => $message,
             'data' => $data,
         ], $code);
     }
@@ -472,7 +471,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -533,7 +534,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -575,7 +578,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -606,7 +611,9 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
         return new $this->resource($model);
@@ -639,10 +646,12 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
-        return $this->success(message: 'Data restored successfully');
+        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
     public function forceDeleteTrashed(int|string $id): JsonResponse|Model
@@ -658,10 +667,12 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error($e->getMessage());
+            return $this->error([
+                'message' => $e->getMessage(),
+            ]);
         }
 
-        return $this->success(message: 'Data deleted successfully', code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
     protected function beforeForceDeleteProcess(Model $model): Model
