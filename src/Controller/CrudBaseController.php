@@ -2,6 +2,7 @@
 
 namespace Anil\FastApiCrud\Controller;
 
+use Anil\FastApiCrud\Traits\HasApiResponse;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -27,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
  * @property array<string> $with
  * @property array<string> $withCount
  * @property array<string, string> $withAggregate
- * @property array<string> $loadAll
+ * @property array<string> $load
  * @property array<string> $loadCount
  * @property array<string, string> $loadAggregate
  * @property bool $isApi
@@ -46,6 +47,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 class CrudBaseController extends BaseController
 {
     use AuthorizesRequests;
+    use HasApiResponse;
     use ValidatesRequests;
 
     /**
@@ -86,7 +88,7 @@ class CrudBaseController extends BaseController
     /**
      * @var array<string>
      */
-    public array $loadAll = [];
+    public array $load = [];
 
     /**
      * @var array<string>
@@ -219,7 +221,7 @@ class CrudBaseController extends BaseController
             $this->middleware("permission:store-{$permissionSlug}")->only(['store']);
             $this->middleware("permission:update-{$permissionSlug}")->only(['update']);
             $this->middleware("permission:delete-{$permissionSlug}")->only(['delete']);
-            $this->middleware("permission:change-status-{$permissionSlug}")->only(['changeStatus', 'changeStatusOtherColumn']);
+            $this->middleware("permission:change-status-{$permissionSlug}")->only(['changeStatus']);
             $this->middleware("permission:restore-{$permissionSlug}")->only(['restore']);
         }
     }
@@ -315,9 +317,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
@@ -332,22 +332,10 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    /**
-     * Return an error response
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function error(array $data = [], int $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
-    {
-        return response()->json([
-            'data' => $data,
-        ], $status);
-    }
-
     public function show(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()
-            ->when($this->loadAll, fn (Builder $query): Builder => $query->with($this->loadAll))
+            ->when($this->load, fn (Builder $query): Builder => $query->with($this->load))
             ->when($this->loadCount, fn (Builder $query): Builder => $query->withCount($this->loadCount))
             ->when($this->loadAggregate, fn (Builder $query): Builder => $this->applyLoadAggregate($query))
             ->when($this->loadScopes, fn (Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
@@ -427,9 +415,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
@@ -442,41 +428,6 @@ class CrudBaseController extends BaseController
         }
 
         return $model;
-    }
-
-    /**
-     * Return a success response
-     *
-     * @param  array<string, mixed>  $data
-     * @param  int  $code
-     */
-    public function success(array $data = [], $code = ResponseAlias::HTTP_OK): JsonResponse
-    {
-        return response()->json([
-            'data' => $data,
-        ], $code);
-    }
-
-    public function changeStatusOtherColumn(int|string $id, string $column): JsonResource|JsonResponse
-    {
-
-        $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
-        $this->validateColumn($model, $column);
-
-        try {
-            DB::beginTransaction();
-            $this->beforeChangeStatusProcess($model);
-            $model->update([$column => $model->$column === 1 ? 0 : 1]);
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
-        }
-
-        return new $this->resource($model);
     }
 
     protected function validateColumn(Model $model, string $column): bool
@@ -534,9 +485,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
@@ -578,9 +527,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
@@ -611,9 +558,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
@@ -646,9 +591,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
@@ -667,9 +610,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);

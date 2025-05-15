@@ -102,13 +102,6 @@ describe(description: 'testing_post_model_factory', tests: function () {
             'deleted_at' => null,
         ]);
     });
-});
-describe(description: 'test_post_controller', tests: function () {
-
-    beforeEach(function () {
-        $this->user = UserModel::factory()->create();
-        $this->actingAs($this->user);
-    });
 
     it(description: 'can_get_all_posts', closure: function () {
         $this->user->givePermissionTo(['view-posts']);
