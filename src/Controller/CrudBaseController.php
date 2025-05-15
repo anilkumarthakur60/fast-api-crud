@@ -255,7 +255,7 @@ class CrudBaseController extends BaseController
             $this->applyScopeWithValue($query, $this->scopeWithValue);
         }
 
-        return $this->resource::collection($query->paginate());
+        return $this->resource::collection($query->paginates());
     }
 
     /**
