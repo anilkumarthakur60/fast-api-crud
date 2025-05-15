@@ -2,6 +2,7 @@
 
 namespace Anil\FastApiCrud\Controller;
 
+use Anil\FastApiCrud\Traits\HasApiResponse;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -46,6 +47,7 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 class CrudBaseController extends BaseController
 {
     use AuthorizesRequests;
+    use HasApiResponse;
     use ValidatesRequests;
 
     /**
@@ -315,9 +317,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
@@ -332,26 +332,14 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    /**
-     * Return an error response
-     *
-     * @param  array<string, mixed>  $data
-     */
-    public function error(array $data = [], int $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
-    {
-        return response()->json([
-            'errors' => $data,
-        ], $status);
-    }
-
     public function show(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()
-            ->when($this->load, fn(Builder $query): Builder => $query->with($this->load))
-            ->when($this->loadCount, fn(Builder $query): Builder => $query->withCount($this->loadCount))
-            ->when($this->loadAggregate, fn(Builder $query): Builder => $this->applyLoadAggregate($query))
-            ->when($this->loadScopes, fn(Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
-            ->when($this->loadScopeWithValue, fn(Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
+            ->when($this->load, fn (Builder $query): Builder => $query->with($this->load))
+            ->when($this->loadCount, fn (Builder $query): Builder => $query->withCount($this->loadCount))
+            ->when($this->loadAggregate, fn (Builder $query): Builder => $this->applyLoadAggregate($query))
+            ->when($this->loadScopes, fn (Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
+            ->when($this->loadScopeWithValue, fn (Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
             ->findOrFail($id);
 
         return new $this->resource($model);
@@ -392,8 +380,8 @@ class CrudBaseController extends BaseController
     {
 
         $query = $this->model::query()
-            ->when(! empty($scopes), fn(Builder $query): Builder => $this->applyScopes($query, $scopes))
-            ->when(! empty($scopeWithValue), fn(Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
+            ->when(! empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes))
+            ->when(! empty($scopeWithValue), fn (Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
 
         return $query->findOrFail($id);
     }
@@ -411,7 +399,7 @@ class CrudBaseController extends BaseController
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:' . (new $this->model)->getTable() . ',id'],
+            'delete_rows.*' => ['required', 'exists:'.(new $this->model)->getTable().',id'],
         ]);
 
         try {
@@ -427,9 +415,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
@@ -442,19 +428,6 @@ class CrudBaseController extends BaseController
         }
 
         return $model;
-    }
-
-    /**
-     * Return a success response
-     *
-     * @param  array<string, mixed>  $data
-     * @param  int  $code
-     */
-    public function success(array $data = [], $code = ResponseAlias::HTTP_OK): JsonResponse
-    {
-        return response()->json([
-            'data' => $data,
-        ], $code);
     }
 
     protected function validateColumn(Model $model, string $column): bool
@@ -512,9 +485,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
@@ -556,9 +527,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
@@ -576,8 +545,8 @@ class CrudBaseController extends BaseController
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()->onlyTrashed()
-            ->when($this->restoreScopes, fn($query) => $this->applyScopes($query, $this->restoreScopes))
-            ->when($this->restoreScopeWithValue, fn($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
+            ->when($this->restoreScopes, fn ($query) => $this->applyScopes($query, $this->restoreScopes))
+            ->when($this->restoreScopeWithValue, fn ($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
             ->findOrFail($id);
 
         try {
@@ -589,9 +558,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return new $this->resource($model);
@@ -624,9 +591,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
@@ -645,9 +610,7 @@ class CrudBaseController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
 
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
+            return $this->error($e->getMessage());
         }
 
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
@@ -669,125 +632,5 @@ class CrudBaseController extends BaseController
         }
 
         return $model;
-    }
-
-    /**
-     * @param  array<string, string|int>  $data
-     */
-    public function unauthorized(array $data = [], int $status = ResponseAlias::HTTP_UNAUTHORIZED): JsonResponse
-    {
-        return $this->error($data, $status);
-    }
-
-    /**
-     * @param  array<string, string|int>  $data
-     */
-    public function notFound(array $data = [], int $status = ResponseAlias::HTTP_NOT_FOUND): JsonResponse
-    {
-        return $this->error($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function forbidden(array $data = [], int $status = ResponseAlias::HTTP_FORBIDDEN): JsonResponse
-    {
-        return $this->error($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function badRequest(array $data = [], int $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
-    {
-        return $this->error($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function internalServerError(array $data = [], int $status = ResponseAlias::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
-    {
-        return $this->error($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function created(array $data = [], int $status = ResponseAlias::HTTP_CREATED): JsonResponse
-    {
-        return $this->success($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function accepted(array $data = [], int $status = ResponseAlias::HTTP_ACCEPTED): JsonResponse
-    {
-        return $this->success($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function noContent(array $data = [], int $status = ResponseAlias::HTTP_NO_CONTENT): JsonResponse
-    {
-        return $this->success($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function ok(array $data = [], int $status = ResponseAlias::HTTP_OK): JsonResponse
-    {
-        return $this->success($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function seeOther(array $data = [], int $status = ResponseAlias::HTTP_SEE_OTHER): JsonResponse
-    {
-        return $this->success($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function notModified(array $data = [], int $status = ResponseAlias::HTTP_NOT_MODIFIED): JsonResponse
-    {
-        return $this->success($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function temporaryRedirect(array $data = [], int $status = ResponseAlias::HTTP_TEMPORARY_REDIRECT): JsonResponse
-    {
-        return $this->success($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function badGateway(array $data = [], int $status = ResponseAlias::HTTP_BAD_GATEWAY): JsonResponse
-    {
-        return $this->error($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function gatewayTimeout(array $data = [], int $status = ResponseAlias::HTTP_GATEWAY_TIMEOUT): JsonResponse
-    {
-        return $this->error($data, $status);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function serviceUnavailable(array $data = [], int $status = ResponseAlias::HTTP_SERVICE_UNAVAILABLE): JsonResponse
-    {
-        return $this->error($data, $status);
     }
 }
