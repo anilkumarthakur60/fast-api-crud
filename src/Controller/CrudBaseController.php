@@ -219,7 +219,7 @@ class CrudBaseController extends BaseController
             $this->middleware("permission:store-{$permissionSlug}")->only(['store']);
             $this->middleware("permission:update-{$permissionSlug}")->only(['update']);
             $this->middleware("permission:delete-{$permissionSlug}")->only(['delete']);
-            $this->middleware("permission:change-status-{$permissionSlug}")->only(['changeStatus', 'changeStatusOtherColumn']);
+            $this->middleware("permission:change-status-{$permissionSlug}")->only(['changeStatus']);
             $this->middleware("permission:restore-{$permissionSlug}")->only(['restore']);
         }
     }
@@ -457,28 +457,6 @@ class CrudBaseController extends BaseController
         ], $code);
     }
 
-    public function changeStatusOtherColumn(int|string $id, string $column): JsonResource|JsonResponse
-    {
-
-        $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
-        $this->validateColumn($model, $column);
-
-        try {
-            DB::beginTransaction();
-            $this->beforeChangeStatusProcess($model);
-            $model->update([$column => $model->$column === 1 ? 0 : 1]);
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-
-            return $this->error([
-                'message' => $e->getMessage(),
-            ]);
-        }
-
-        return new $this->resource($model);
-    }
-
     protected function validateColumn(Model $model, string $column): bool
     {
         if (! $this->checkFillable($model, [$column])) {
@@ -691,5 +669,125 @@ class CrudBaseController extends BaseController
         }
 
         return $model;
+    }
+
+    /**
+     * @param  array<string, string|int>  $data
+     */
+    public function unauthorized(array $data = [], int $status = ResponseAlias::HTTP_UNAUTHORIZED): JsonResponse
+    {
+        return $this->error($data, $status);
+    }
+
+    /**
+     * @param  array<string, string|int>  $data
+     */
+    public function notFound(array $data = [], int $status = ResponseAlias::HTTP_NOT_FOUND): JsonResponse
+    {
+        return $this->error($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function forbidden(array $data = [], int $status = ResponseAlias::HTTP_FORBIDDEN): JsonResponse
+    {
+        return $this->error($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function badRequest(array $data = [], int $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
+    {
+        return $this->error($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function internalServerError(array $data = [], int $status = ResponseAlias::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
+    {
+        return $this->error($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function created(array $data = [], int $status = ResponseAlias::HTTP_CREATED): JsonResponse
+    {
+        return $this->success($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function accepted(array $data = [], int $status = ResponseAlias::HTTP_ACCEPTED): JsonResponse
+    {
+        return $this->success($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function noContent(array $data = [], int $status = ResponseAlias::HTTP_NO_CONTENT): JsonResponse
+    {
+        return $this->success($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function ok(array $data = [], int $status = ResponseAlias::HTTP_OK): JsonResponse
+    {
+        return $this->success($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function seeOther(array $data = [], int $status = ResponseAlias::HTTP_SEE_OTHER): JsonResponse
+    {
+        return $this->success($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function notModified(array $data = [], int $status = ResponseAlias::HTTP_NOT_MODIFIED): JsonResponse
+    {
+        return $this->success($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function temporaryRedirect(array $data = [], int $status = ResponseAlias::HTTP_TEMPORARY_REDIRECT): JsonResponse
+    {
+        return $this->success($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function badGateway(array $data = [], int $status = ResponseAlias::HTTP_BAD_GATEWAY): JsonResponse
+    {
+        return $this->error($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function gatewayTimeout(array $data = [], int $status = ResponseAlias::HTTP_GATEWAY_TIMEOUT): JsonResponse
+    {
+        return $this->error($data, $status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function serviceUnavailable(array $data = [], int $status = ResponseAlias::HTTP_SERVICE_UNAVAILABLE): JsonResponse
+    {
+        return $this->error($data, $status);
     }
 }
