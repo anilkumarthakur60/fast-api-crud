@@ -340,7 +340,7 @@ class CrudBaseController extends BaseController
     public function error(array $data = [], int $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
     {
         return response()->json([
-            'data' => $data,
+            'errors' => $data,
         ], $status);
     }
 
