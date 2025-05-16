@@ -281,8 +281,12 @@ class CrudBaseController extends BaseController
     protected function applyScopes(Builder $query, array $scopes): Builder
     {
         foreach ($scopes as $scope) {
+            $upperKey = ucfirst($scope);
+            $scopeMethod = "scope{$upperKey}";
             if (method_exists($query->getModel(), $scope)) {
                 $query->{$scope}();
+            } elseif (method_exists($query->getModel(), $scopeMethod)) {
+                $query->{$scopeMethod}();
             }
         }
 
@@ -297,8 +301,12 @@ class CrudBaseController extends BaseController
     protected function applyScopeWithValue(Builder $query, array $scopeWithValue): Builder
     {
         foreach ($scopeWithValue as $key => $value) {
+            $upperKey = ucfirst($key);
+            $scopeMethod = "scope{$upperKey}";
             if (method_exists($query->getModel(), $key)) {
                 $query->$key($value);
+            } elseif (method_exists($query->getModel(), $scopeMethod)) {
+                $query->$scopeMethod($value);
             }
         }
 
