@@ -71,7 +71,7 @@ class CrudBaseController extends BaseController
     public array $loadScopeWithValue = [];
 
     /**
-     * @var array<string>
+     * @var array<int|string, string|list<string>|\Closure>
      */
     public array $with = [];
 
@@ -86,7 +86,7 @@ class CrudBaseController extends BaseController
     public array $withAggregate = [];
 
     /**
-     * @var array<string>
+     * @var array<int|string, string|list<string>|\Closure>
      */
     public array $load = [];
 
@@ -343,11 +343,11 @@ class CrudBaseController extends BaseController
     public function show(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()
-            ->when($this->load, fn (Builder $query): Builder => $query->with($this->load))
-            ->when($this->loadCount, fn (Builder $query): Builder => $query->withCount($this->loadCount))
-            ->when($this->loadAggregate, fn (Builder $query): Builder => $this->applyLoadAggregate($query))
-            ->when($this->loadScopes, fn (Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
-            ->when($this->loadScopeWithValue, fn (Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
+            ->when($this->load, fn(Builder $query): Builder => $query->with($this->load))
+            ->when($this->loadCount, fn(Builder $query): Builder => $query->withCount($this->loadCount))
+            ->when($this->loadAggregate, fn(Builder $query): Builder => $this->applyLoadAggregate($query))
+            ->when($this->loadScopes, fn(Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
+            ->when($this->loadScopeWithValue, fn(Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
             ->findOrFail($id);
 
         return new $this->resource($model);
@@ -388,8 +388,8 @@ class CrudBaseController extends BaseController
     {
 
         $query = $this->model::query()
-            ->when(! empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes))
-            ->when(! empty($scopeWithValue), fn (Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
+            ->when(! empty($scopes), fn(Builder $query): Builder => $this->applyScopes($query, $scopes))
+            ->when(! empty($scopeWithValue), fn(Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
 
         return $query->findOrFail($id);
     }
@@ -407,7 +407,7 @@ class CrudBaseController extends BaseController
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:'.(new $this->model)->getTable().',id'],
+            'delete_rows.*' => ['required', 'exists:' . (new $this->model)->getTable() . ',id'],
         ]);
 
         try {
@@ -553,8 +553,8 @@ class CrudBaseController extends BaseController
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()->onlyTrashed()
-            ->when($this->restoreScopes, fn ($query) => $this->applyScopes($query, $this->restoreScopes))
-            ->when($this->restoreScopeWithValue, fn ($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
+            ->when($this->restoreScopes, fn($query) => $this->applyScopes($query, $this->restoreScopes))
+            ->when($this->restoreScopeWithValue, fn($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
             ->findOrFail($id);
 
         try {
