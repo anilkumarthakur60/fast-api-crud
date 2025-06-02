@@ -71,7 +71,7 @@ class CrudBaseController extends BaseController
     public array $loadScopeWithValue = [];
 
     /**
-     * @var array<string>
+     * @var array<int|string, string|list<string>|\Closure>
      */
     public array $with = [];
 
@@ -86,7 +86,7 @@ class CrudBaseController extends BaseController
     public array $withAggregate = [];
 
     /**
-     * @var array<string>
+     * @var array<int|string, string|list<string>|\Closure>
      */
     public array $load = [];
 

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -274,19 +272,19 @@ if (! function_exists('getColumns')) {
     }
 }
 
-if (! function_exists('describe') && version_compare(app()->version(), '10.0.0', '<')) {
-    /**
-     * Adds the given closure as a group of tests. The first argument
-     * is the group description; the second argument is a closure
-     * that contains the group tests.
-     */
-    function describe(string $description, Closure $tests): DescribeCall
-    {
-        $filename = Backtrace::testFile();
+// if (! function_exists('describe') && version_compare(app()->version(), '10.0.0', '<')) {
+//     /**
+//      * Adds the given closure as a group of tests. The first argument
+//      * is the group description; the second argument is a closure
+//      * that contains the group tests.
+//      */
+//     function describe(string $description, Closure $tests): DescribeCall
+//     {
+//         $filename = Backtrace::testFile();
 
-        return new DescribeCall(TestSuite::getInstance(), $filename, $description, $tests);
-    }
-}
+//         return new DescribeCall(TestSuite::getInstance(), $filename, $description, $tests);
+//     }
+// }
 
 if (! function_exists('recursiveDatabaseClasses')) {
     /**
@@ -367,6 +365,14 @@ if (! function_exists('implodeFillable')) {
         }
 
         return implode(',', $columns);
+    }
+}
+if (! function_exists('implodeColumns')) {
+    function implodeColumns(string $model, string $separator = ','): string
+    {
+        $columns = getColumns($model);
+
+        return implode($separator, $columns);
     }
 }
 
