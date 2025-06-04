@@ -6,12 +6,12 @@ parameters:
     level: 9
     paths:
         - src/
+        - tests/TestSetup/
 
     # Prevent false positives on PHPDoc types
     treatPhpDocTypesAsCertain: false
 
     excludePaths:
-        - tests/
 
     ignoreErrors:
         # Ignore custom builder method like initializer()

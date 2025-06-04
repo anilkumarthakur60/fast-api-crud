@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use ReflectionException;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+use Throwable;
 
 /**
  * Class Controller
@@ -286,8 +287,8 @@ class Controller extends BaseController
      * Apply both simple and parameterized scopes to the query builder.
      *
      * Example of $scopes:
-     *  - ['active']           // calls scopeActive() with no arguments
-     *  - ['byUser' => 5]      // calls scopeByUser(5)
+     *  - ['active'] // calls scopeActive() with no arguments
+     *  - ['byUser' => 5] // calls scopeByUser(5)
      *  - ['dateRange' => [$from, $to]] // calls scopeDateRange($from, $to)
      *
      * @param  Builder<Model>  $query  The Eloquent query builder.
@@ -344,6 +345,8 @@ class Controller extends BaseController
      * calls afterCreateProcess if defined, and returns the new resource.
      *
      * @return JsonResponse|JsonResource The created resource or JSON error response.
+     *
+     * @throws Throwable
      */
     public function store(): JsonResponse|JsonResource
     {
@@ -423,6 +426,8 @@ class Controller extends BaseController
      *
      * @param  int|string  $id  The primary key of the resource.
      * @return JsonResponse HTTP 204 No Content on success, or error response.
+     *
+     * @throws Exception
      */
     public function destroy(int|string $id): JsonResponse
     {
@@ -477,6 +482,8 @@ class Controller extends BaseController
      * in a transaction, calling before/after hooks for each model.
      *
      * @return JsonResponse HTTP 204 No Content on success, or error response.
+     *
+     * @throws Throwable
      */
     public function delete(): JsonResponse
     {
@@ -530,6 +537,8 @@ class Controller extends BaseController
      * @param  int|string  $id  The primary key of the resource.
      * @param  string  $column  The name of the status column (default 'status').
      * @return JsonResource|JsonResponse The updated resource or JSON error response.
+     *
+     * @throws Throwable
      */
     public function changeStatus(int|string $id, string $column = 'status'): JsonResource|JsonResponse
     {
@@ -709,10 +718,12 @@ class Controller extends BaseController
     /**
      * Restore a single trashed (soft-deleted) resource.
      *
-     * Applies any restoreScopes, calls pre/post hooks, and returns the restored resource.
+     * Applies any restoreScopes, calls pre/post hooks, and returns the restoring resource.
      *
      * @param  int|string  $id  The primary key of the resource.
-     * @return JsonResource|JsonResponse The restored resource or JSON error response.
+     * @return JsonResource|JsonResponse The restoring resource or JSON error response.
+     *
+     * @throws Throwable
      */
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
@@ -752,6 +763,14 @@ class Controller extends BaseController
         return $model;
     }
 
+    /**
+     * Hook for post-restore logic on the model.
+     *
+     * If the model defines an afterRestoreProcess() method, it will be called.
+     *
+     * @param  Model  $model  The model instance that was restoring.
+     * @return Model The model instance (possibly modified).
+     */
     protected function afterRestoreProcess(Model $model): Model
     {
         if (method_exists($model, 'afterRestoreProcess')) {
@@ -761,6 +780,15 @@ class Controller extends BaseController
         return $model;
     }
 
+    /**
+     * Restore all trashed (soft-deleted) records for this model.
+     *
+     * Does not return a resource, only HTTP 204 on success.
+     *
+     * @return JsonResponse HTTP 204 No Content on success, or error response.
+     *
+     * @throws Throwable
+     */
     public function restoreAllTrashed(): JsonResponse
     {
         try {
@@ -776,6 +804,16 @@ class Controller extends BaseController
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
+    /**
+     * Force delete a single trashed (soft-deleted) resource.
+     *
+     * Applies any forceDeleteScopes, calls pre/post hooks, and returns the deleted resource.
+     *
+     * @param  int|string  $id  The primary key of the resource.
+     * @return JsonResponse|Model The deleted resource or JSON error response.
+     *
+     * @throws Throwable
+     */
     public function forceDeleteTrashed(int|string $id): JsonResponse|Model
     {
         $model = $this->model::query()->initializer()->onlyTrashed()->findOrFail($id);
