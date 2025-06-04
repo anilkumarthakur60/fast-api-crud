@@ -1,13 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
-use Pest\PendingCalls\DescribeCall;
-use Pest\Support\Backtrace;
-use Pest\TestSuite;
 use Symfony\Component\VarDumper\Caster\ScalarStub;
 use Symfony\Component\VarDumper\VarDumper;
 
@@ -23,7 +22,6 @@ if (! function_exists('_dd')) {
         header('Access-Control-Allow-Methods: *');
         header('Access-Control-Allow-Headers: *');
         http_response_code(500);
-        // dd($args);
 
         if (! \in_array(\PHP_SAPI, ['cli', 'phpdbg', 'embed'], true) && ! headers_sent()) {
             header('HTTP/1.1 500 Internal Server Error');
@@ -39,6 +37,7 @@ if (! function_exists('_dd')) {
             VarDumper::dump($args[0]);
         } else {
             foreach ($args as $k => $v) {
+                // @phpstan-ignore-next-line
                 VarDumper::dump($v, is_int($k) ? 1 + $k : $k);
             }
         }
@@ -47,13 +46,13 @@ if (! function_exists('_dd')) {
     }
 }
 
-if (! function_exists('shortName')) {
+if (! function_exists('getClassShortName')) {
     /**
      * Get the short name of the class.
      *
      * @throws ReflectionException
      */
-    function shortName(string $param): ?string
+    function getClassShortName(string $param): ?string
     {
         if (! app($param)) {
             return null;
@@ -63,50 +62,52 @@ if (! function_exists('shortName')) {
         return $reflection->getShortName();
     }
 }
-function totalSeconds(string $times): int
-{
-    $time = explode(':', $times);
-    $seconds = 0;
+if (! function_exists('parseTimeToSeconds')) {
+    function parseTimeToSeconds(string $times): int|float
+    {
+        $time = explode(':', $times);
+        $seconds = 0;
 
-    if (count($time) >= 3) {
-        $carbon = Carbon::createFromFormat('H:i:s', $times);
-        $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
+        if (count($time) >= 3) {
+            $carbon = Carbon::createFromFormat('H:i:s', $times);
+            $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
 
-        if ($carbon && $reference) {
-            $seconds = $carbon->diffInSeconds($reference);
+            if ($carbon && $reference) {
+                $seconds = $carbon->diffInSeconds($reference);
+            }
+        } elseif (count($time) === 2) {
+            $minSec = "00:{$times}";
+            $carbon = Carbon::createFromFormat('H:i:s', $minSec);
+            $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
+
+            if ($carbon && $reference) {
+                $seconds = $carbon->diffInSeconds($reference);
+            }
+        } else {
+            $seconds = (int) $times;
         }
-    } elseif (count($time) === 2) {
-        $minSec = '00:'.$times;
-        $carbon = Carbon::createFromFormat('H:i:s', $minSec);
-        $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
 
-        if ($carbon && $reference) {
-            $seconds = $carbon->diffInSeconds($reference);
-        }
-    } else {
-        $seconds = (int) $times;
+        return $seconds;
     }
-
-    return $seconds;
 }
 
-if (! function_exists('duration')) {
+if (! function_exists('formatDuration')) {
     /**
-     * Format duration in hours and minutes.
+     * Format formatDuration in hours and minutes.
      */
-    function duration(int $duration): string
+    function formatDuration(int $duration, string $format = '%dh %dm'): string
     {
         $interval = CarbonInterval::seconds($duration)->cascade();
 
-        return sprintf('%dh %dm', $interval->totalHours, $interval->minutes);
+        return sprintf($format, $interval->totalHours, $interval->minutes);
     }
 }
 
-if (! function_exists('dateForHumans')) {
+if (! function_exists('diffForHumans')) {
     /**
      * Get human-readable date difference.
      */
-    function dateForHumans(?string $date): ?string
+    function diffForHumans(?string $date): ?string
     {
         return $date ? Carbon::parse($date)->diffForHumans() : null;
     }
@@ -399,7 +400,7 @@ if (! function_exists('toTimeString')) {
 
 if (! function_exists('recursiveClasses')) {
     /**
-     * Get list of classes in a directory path, with optional inclusion/exclusion filters
+     * Get a list of classes in a directory path, with optional inclusion/exclusion filters
      *
      * @param  string  $path  Base path to scan for classes
      * @param  array<string>  $excluding  Classes to exclude from results
@@ -445,9 +446,12 @@ if (! function_exists('slug')) {
     }
 }
 
-if (! function_exists('anyRoute')) {
-    function anyRoute(mixed $params, string $action, string $method = 'get'): \Illuminate\Routing\Route
+if (! function_exists('pathRelativeToBase')) {
+    function getRelativePath(string $path): string
     {
-        return Route::$method($params, $action);
+        $fullPath = $path;
+        $basePath = base_path();
+
+        return str_replace($basePath.DIRECTORY_SEPARATOR, '', $fullPath);
     }
 }

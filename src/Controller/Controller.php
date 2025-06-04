@@ -19,46 +19,26 @@ use ReflectionException;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 /**
- * @property class-string<Model> $model
- * @property class-string<JsonResource> $resource
- * @property array<string> $scopes
- * @property array<string, mixed> $scopeWithValue
- * @property array<string> $loadScopes
- * @property array<string, mixed> $loadScopeWithValue
- * @property array<string> $with
- * @property array<string> $withCount
- * @property array<string, string> $withAggregate
- * @property array<string> $load
- * @property array<string> $loadCount
- * @property array<string, string> $loadAggregate
- * @property bool $isApi
- * @property bool $forceDelete
- * @property array<string> $deleteScopes
- * @property array<string, mixed> $deleteScopeWithValue
- * @property array<string> $changeStatusScopes
- * @property array<string, mixed> $changeStatusScopeWithValue
- * @property array<string> $restoreScopes
- * @property array<string, mixed> $restoreScopeWithValue
- * @property array<string> $updateScopes
- * @property array<string, mixed> $updateScopeWithValue
+ * Class Controller
  *
- * @mixin Builder<Model>
+ * A base controller providing standard CRUD operations (index, show, store, update, delete, restore, etc.)
+ * for Eloquent models, with support for scopes, eager loading, aggregates, permissions, and API responses.
  */
-class CrudBaseController extends BaseController
+class Controller extends BaseController
 {
     use AuthorizesRequests;
     use HasApiResponse;
     use ValidatesRequests;
 
     /**
-     * @var array<string>
+     * Whether to paginate the results if
      */
-    public array $scopes = [];
+    public bool $isPaginate = true;
 
     /**
-     * @var array<string, mixed>
+     * @var list<string>|array<string, string|number|bool>
      */
-    public array $scopeWithValue = [];
+    public array $scopes = [];
 
     /**
      * @var array<string>
@@ -66,12 +46,7 @@ class CrudBaseController extends BaseController
     public array $loadScopes = [];
 
     /**
-     * @var array<string, mixed>
-     */
-    public array $loadScopeWithValue = [];
-
-    /**
-     * @var array<int|string, string|list<string>|\Closure>
+     * @var array<array-key, string|array<string, string|int|float|bool>|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)>
      */
     public array $with = [];
 
@@ -86,7 +61,7 @@ class CrudBaseController extends BaseController
     public array $withAggregate = [];
 
     /**
-     * @var array<int|string, string|list<string>|\Closure>
+     * @var array<array-key, string|array<string, string|int|float|bool>|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)>
      */
     public array $load = [];
 
@@ -156,8 +131,18 @@ class CrudBaseController extends BaseController
     protected string $resource;
 
     /**
-     * @throws ReflectionException
-     * @throws Exception
+     * Controller constructor.
+     *
+     * Validates that the provided model, store request, update request, and resource classes
+     * are of the correct type, then sets up permission middleware if the model defines a permission slug.
+     *
+     * @param  class-string<Model>  $model  Fully qualified class name of the Eloquent model.
+     * @param  class-string<FormRequest>  $storeRequest  Fully qualified class name of the FormRequest for store().
+     * @param  class-string<FormRequest>  $updateRequest  Fully qualified class name of the FormRequest for update().
+     * @param  class-string<JsonResource>  $resource  Fully qualified class name of the API Resource.
+     *
+     * @throws ReflectionException If reflection on model/request/resource fails.
+     * @throws Exception If any class is not of the expected type.
      */
     public function __construct(string $model, string $storeRequest, string $updateRequest, string $resource)
     {
@@ -169,7 +154,11 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @throws Exception
+     * Ensure the given class is a valid Eloquent model and instantiate it.
+     *
+     * @param  class-string<Model>  $modelClass  Fully qualified class name of the model.
+     *
+     * @throws Exception If the class is not a subclass of Illuminate\Database\Eloquent\Model.
      */
     protected function validateModel(string $modelClass): void
     {
@@ -180,7 +169,12 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @throws Exception
+     * Ensure the given class is a valid FormRequest and instantiate it for store or update.
+     *
+     * @param  class-string<FormRequest>  $request  Fully qualified class name of the FormRequest.
+     * @param  string  $requestName  Either 'StoreRequest' or 'UpdateRequest' (for error messages).
+     *
+     * @throws Exception If the class is not a subclass of Illuminate\Foundation\Http\FormRequest.
      */
     protected function validateRequest(string $request, string $requestName): void
     {
@@ -195,7 +189,12 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @throws Exception
+     * Ensure the given class is a valid API Resource (JsonResource).
+     *
+     * @param  class-string<JsonResource>  $resource  Fully qualified class name of the Resource.
+     * @param  string  $resourceName  Used in error messages.
+     *
+     * @throws Exception If the class is not a subclass of Illuminate\Http\Resources\Json\JsonResource.
      */
     protected function validateResource(string $resource, string $resourceName): void
     {
@@ -206,12 +205,21 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @throws Exception
+     * Set up permission middleware based on the model's permission slug (if defined).
+     *
+     * If the model has a getPermissionSlug() method, attaches middleware such as:
+     * - view-{slug}   to index()
+     * - store-{slug}  to store()
+     * - update-{slug} to update()
+     * - delete-{slug} to delete()
+     * - change-status-{slug} to changeStatus()
+     * - restore-{slug} to restoreTrashed()
+     *
+     * @throws Exception If any permission middleware cannot be attached (rare).
      */
     protected function setupPermissions(): void
     {
         $permissionSlug = null;
-        /** @var Model $model */
         $model = $this->model;
         if (method_exists($model, 'getPermissionSlug')) {
             $permissionSlug = $model->getPermissionSlug();
@@ -227,8 +235,9 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @return AnonymousResourceCollection<JsonResource>
-     *                                                   /
+     * List all records, applying any defined scopes, eager loads, counts, and aggregates.
+     *
+     * @return AnonymousResourceCollection<JsonResource> Paginated collection of resources.
      */
     public function index(): AnonymousResourceCollection
     {
@@ -253,11 +262,11 @@ class CrudBaseController extends BaseController
             $this->applyScopes($query, $this->scopes);
         }
 
-        if (! empty($this->scopeWithValue)) {
-            $this->applyScopeWithValue($query, $this->scopeWithValue);
+        if ($this->isPaginate) {
+            return $this->resource::collection($query->paginates());
         }
 
-        return $this->resource::collection($query->paginates());
+        return $this->resource::collection($query->get());
     }
 
     /**
@@ -274,45 +283,68 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @param  Builder<Model>  $query
-     * @param  array<string>  $scopes
-     * @return Builder<Model>
+     * Apply both simple and parameterized scopes to the query builder.
+     *
+     * Example of $scopes:
+     *  - ['active']           // calls scopeActive() with no arguments
+     *  - ['byUser' => 5]      // calls scopeByUser(5)
+     *  - ['dateRange' => [$from, $to]] // calls scopeDateRange($from, $to)
+     *
+     * @param  Builder<Model>  $query  The Eloquent query builder.
+     * @param  array<int|string, string>  $scopes  An array of scopes to apply.
+     * @return Builder<Model> The modified query builder.
      */
     protected function applyScopes(Builder $query, array $scopes): Builder
     {
-        foreach ($scopes as $scope) {
-            $upperKey = ucfirst($scope);
-            $scopeMethod = "scope{$upperKey}";
+        foreach ($scopes as $key => $value) {
+            if (is_int($key)) {
+                $scope = $value;
+                $args = [];
+            } else {
+                $scope = $key;
+                $args = is_array($value) ? $value : [$value];
+            }
+
+            $scopeMethod = 'scope'.ucfirst($scope);
+
             if (method_exists($query->getModel(), $scope)) {
-                $query->{$scope}();
+                $query->{$scope}(...$args);
             } elseif (method_exists($query->getModel(), $scopeMethod)) {
-                $query->{$scopeMethod}();
+                $query->{$scopeMethod}(...$args);
             }
         }
 
         return $query;
     }
+
+    // /**
+    //  * @param  Builder<Model>  $query
+    //  * @param  array<string, mixed>  $scopeWithValue
+    //  * @return Builder<Model>
+    //  */
+    // protected function applyScopeWithValue(Builder $query, array $scopeWithValue): Builder
+    // {
+    //     foreach ($scopeWithValue as $key => $value) {
+    //         $upperKey = ucfirst($key);
+    //         $scopeMethod = "scope{$upperKey}";
+    //         if (method_exists($query->getModel(), $key)) {
+    //             $query->$key($value);
+    //         } elseif (method_exists($query->getModel(), $scopeMethod)) {
+    //             $query->$scopeMethod($value);
+    //         }
+    //     }
+
+    //     return $query;
+    // }
 
     /**
-     * @param  Builder<Model>  $query
-     * @param  array<string, mixed>  $scopeWithValue
-     * @return Builder<Model>
+     * Store a newly created resource in storage.
+     *
+     * Validates using the storeRequest, then creates the model instance inside a transaction,
+     * calls afterCreateProcess if defined, and returns the new resource.
+     *
+     * @return JsonResponse|JsonResource The created resource or JSON error response.
      */
-    protected function applyScopeWithValue(Builder $query, array $scopeWithValue): Builder
-    {
-        foreach ($scopeWithValue as $key => $value) {
-            $upperKey = ucfirst($key);
-            $scopeMethod = "scope{$upperKey}";
-            if (method_exists($query->getModel(), $key)) {
-                $query->$key($value);
-            } elseif (method_exists($query->getModel(), $scopeMethod)) {
-                $query->$scopeMethod($value);
-            }
-        }
-
-        return $query;
-    }
-
     public function store(): JsonResponse|JsonResource
     {
         $data = resolve($this->storeRequest::class)->safe()->only((new $this->model)->getFillable());
@@ -331,7 +363,15 @@ class CrudBaseController extends BaseController
         return new $this->resource($model);
     }
 
-    protected function afterCreateProcess(Model $model): Model|string
+    /**
+     * Hook for post-create logic on the model.
+     *
+     * If the model defines an afterCreateProcess() method, it will be called.
+     *
+     * @param  Model  $model  The newly created model instance.
+     * @return Model The potentially modified model.
+     */
+    protected function afterCreateProcess(Model $model): Model
     {
         if (method_exists($model, 'afterCreateProcess')) {
             $model->afterCreateProcess();
@@ -340,6 +380,14 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
+    /**
+     * Display the specified resource.
+     *
+     * Applies any defined eager loads, counts, aggregates, and scopes, then returns the resource.
+     *
+     * @param  int|string  $id  The primary key of the resource.
+     * @return JsonResource|JsonResponse The found resource or JSON error response.
+     */
     public function show(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()
@@ -347,15 +395,16 @@ class CrudBaseController extends BaseController
             ->when($this->loadCount, fn (Builder $query): Builder => $query->withCount($this->loadCount))
             ->when($this->loadAggregate, fn (Builder $query): Builder => $this->applyLoadAggregate($query))
             ->when($this->loadScopes, fn (Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
-            ->when($this->loadScopeWithValue, fn (Builder $query): Builder => $this->applyScopeWithValue($query, $this->loadScopeWithValue))
             ->findOrFail($id);
 
         return new $this->resource($model);
     }
 
     /**
-     * @param  Builder<Model>  $query
-     * @return Builder<Model>
+     * Apply aggregate functions (e.g., withAggregate) when loading a single resource.
+     *
+     * @param  Builder<Model>  $query  The Eloquent query builder.
+     * @return Builder<Model> The modified query builder.
      */
     protected function applyLoadAggregate(Builder $query): Builder
     {
@@ -366,6 +415,15 @@ class CrudBaseController extends BaseController
         return $query;
     }
 
+    /**
+     * Remove the specified resource from storage (soft-delete or force delete).
+     *
+     * Applies any deleteScopes, calls beforeDeleteProcess, deletes (soft or force),
+     * then calls afterDeleteProcess.
+     *
+     * @param  int|string  $id  The primary key of the resource.
+     * @return JsonResponse HTTP 204 No Content on success, or error response.
+     */
     public function destroy(int|string $id): JsonResponse
     {
         $model = $this->findModel($id, $this->deleteScopes, $this->deleteScopeWithValue);
@@ -377,23 +435,32 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * Find model by ID with optional scopes.
+     * Find a model by ID, applying optional scopes and scope-with-value filters.
      *
-     * @param  array<string>  $scopes
-     * @param  array<string, mixed>  $scopeWithValue
+     * @param  int|string  $id  The primary key of the model.
+     * @param  string[]  $scopes  List of scope method names to apply.
+     * @param  array<string,mixed>  $scopeWithValue  Key-value pairs for parameterized scopes.
+     * @return Model The found model instance.
      *
-     * @throws Exception
+     * @throws Exception If the model cannot be found with the given scopes.
      */
     protected function findModel(int|string $id, array $scopes = [], array $scopeWithValue = []): Model
     {
 
         $query = $this->model::query()
-            ->when(! empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes))
-            ->when(! empty($scopeWithValue), fn (Builder $query): Builder => $this->applyScopeWithValue($query, $scopeWithValue));
+            ->when(! empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes));
 
         return $query->findOrFail($id);
     }
 
+    /**
+     * Hook for pre-delete logic on the model.
+     *
+     * If the model defines a beforeDeleteProcess() method, it will be called.
+     *
+     * @param  Model  $model  The model instance about to be deleted.
+     * @return Model The model instance (possibly modified).
+     */
     protected function beforeDeleteProcess(Model $model): Model
     {
         if (method_exists($model, 'beforeDeleteProcess')) {
@@ -403,6 +470,14 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
+    /**
+     * Delete multiple resources by passing an array of IDs in 'delete_rows'.
+     *
+     * Validates that 'delete_rows' exists and each entry is a valid ID. Wraps the batch delete
+     * in a transaction, calling before/after hooks for each model.
+     *
+     * @return JsonResponse HTTP 204 No Content on success, or error response.
+     */
     public function delete(): JsonResponse
     {
         request()->validate([
@@ -429,6 +504,14 @@ class CrudBaseController extends BaseController
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
+    /**
+     * Hook for post-delete logic on the model.
+     *
+     * If the model defines an afterDeleteProcess() method, it will be called.
+     *
+     * @param  Model  $model  The model instance that was deleted.
+     * @return Model The model instance (possibly modified).
+     */
     protected function afterDeleteProcess(Model $model): Model
     {
         if (method_exists($model, 'afterDeleteProcess')) {
@@ -438,6 +521,49 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
+    /**
+     * Change the status column (toggle between 0 and 1) for the specified resource.
+     *
+     * Applies any changeStatusScopes, validates that the column is fillable, calls pre/post hooks,
+     * and toggles the status inside a transaction.
+     *
+     * @param  int|string  $id  The primary key of the resource.
+     * @param  string  $column  The name of the status column (default 'status').
+     * @return JsonResource|JsonResponse The updated resource or JSON error response.
+     */
+    public function changeStatus(int|string $id, string $column = 'status'): JsonResource|JsonResponse
+    {
+        $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
+        $this->validateColumn($model, $column);
+
+        try {
+            DB::beginTransaction();
+            $this->beforeChangeStatusProcess($model);
+            if (Schema::hasColumn($model->getTable(), $column)) {
+                $model->update([$column => $model->$column === 1 ? 0 : 1]);
+            } else {
+                throw new Exception("{$column} column does not exist in the database.");
+            }
+            $this->afterChangeStatusProcess($model);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return $this->error($e->getMessage());
+        }
+
+        return new $this->resource($model);
+    }
+
+    /**
+     * Validate that a given column is present in the model's fillable attributes.
+     *
+     * @param  Model  $model  The model instance to inspect.
+     * @param  string  $column  The column name to validate.
+     * @return bool Always returns true if validation passes.
+     *
+     * @throws Exception If the column is not listed as fillable.
+     */
     protected function validateColumn(Model $model, string $column): bool
     {
         if (! $this->checkFillable($model, [$column])) {
@@ -448,7 +574,11 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @param  array<string>  $columns
+     * Check whether all specified columns are fillable on the model.
+     *
+     * @param  Model  $model  The model instance.
+     * @param  string[]  $columns  List of column names to check.
+     * @return bool True if all columns appear in the model's table listing.
      */
     protected function checkFillable(Model $model, array $columns): bool
     {
@@ -458,18 +588,35 @@ class CrudBaseController extends BaseController
     }
 
     /**
-     * @return array<string>
+     * Retrieve all column names for the model's underlying database table.
+     *
+     * @param  Model  $model  The model instance.
+     * @return string[] List of column names.
      */
     protected function fillableColumn(Model $model): array
     {
         return Schema::getColumnListing($this->tableName($model));
     }
 
+    /**
+     * Get the table name associated with the model.
+     *
+     * @param  Model  $model  The model instance.
+     * @return string The table name.
+     */
     protected function tableName(Model $model): string
     {
         return $model->getTable();
     }
 
+    /**
+     * Hook for pre-change-status logic on the model.
+     *
+     * If the model defines a beforeChangeStatusProcess() method, it will be called.
+     *
+     * @param  Model  $model  The model instance whose status is about to be toggled.
+     * @return Model The model instance (possibly modified).
+     */
     protected function beforeChangeStatusProcess(Model $model): Model
     {
         if (method_exists($model, 'beforeChangeStatusProcess')) {
@@ -479,6 +626,15 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
+    /**
+     * Update the specified resource in storage.
+     *
+     * Validates using the updateRequest, applies any updateScopes, calls pre/post hooks,
+     * and returns the updated resource.
+     *
+     * @param  int|string  $id  The primary key of the resource.
+     * @return JsonResource|JsonResponse The updated resource or JSON error response.
+     */
     public function update(int|string $id): JsonResource|JsonResponse
     {
         $data = resolve($this->updateRequest::class)->safe()->only((new $this->model)->getFillable());
@@ -499,6 +655,14 @@ class CrudBaseController extends BaseController
         return new $this->resource($model);
     }
 
+    /**
+     * Hook for pre-update logic on the model.
+     *
+     * If the model defines a beforeUpdateProcess() method, it will be called.
+     *
+     * @param  Model  $model  The model instance about to be updated.
+     * @return Model The model instance (possibly modified).
+     */
     protected function beforeUpdateProcess(Model $model): Model
     {
         if (method_exists($model, 'beforeUpdateProcess')) {
@@ -508,6 +672,14 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
+    /**
+     * Hook for post-update logic on the model.
+     *
+     * If the model defines an afterUpdateProcess() method, it will be called.
+     *
+     * @param  Model  $model  The model instance that was updated.
+     * @return Model The model instance (possibly modified).
+     */
     protected function afterUpdateProcess(Model $model): Model
     {
         if (method_exists($model, 'afterUpdateProcess')) {
@@ -517,30 +689,14 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
-    public function changeStatus(int|string $id, string $column = 'status'): JsonResource|JsonResponse
-    {
-        $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
-        $this->validateColumn($model, $column);
-
-        try {
-            DB::beginTransaction();
-            $this->beforeChangeStatusProcess($model);
-            if (Schema::hasColumn($model->getTable(), $column)) {
-                $model->update([$column => $model->$column === 1 ? 0 : 1]);
-            } else {
-                throw new Exception('Status column does not exist in the database.');
-            }
-            $this->afterChangeStatusProcess($model);
-            DB::commit();
-        } catch (Exception $e) {
-            DB::rollBack();
-
-            return $this->error($e->getMessage());
-        }
-
-        return new $this->resource($model);
-    }
-
+    /**
+     * Hook for post-change-status logic on the model.
+     *
+     * If the model defines an afterChangeStatusProcess() method, it will be called.
+     *
+     * @param  Model  $model  The model instance whose status was toggled.
+     * @return Model|string The model instance (possibly modified), or a string if the hook returns one.
+     */
     protected function afterChangeStatusProcess(Model $model): Model|string
     {
         if (method_exists($model, 'afterChangeStatusProcess')) {
@@ -550,11 +706,18 @@ class CrudBaseController extends BaseController
         return $model;
     }
 
+    /**
+     * Restore a single trashed (soft-deleted) resource.
+     *
+     * Applies any restoreScopes, calls pre/post hooks, and returns the restored resource.
+     *
+     * @param  int|string  $id  The primary key of the resource.
+     * @return JsonResource|JsonResponse The restored resource or JSON error response.
+     */
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()->onlyTrashed()
             ->when($this->restoreScopes, fn ($query) => $this->applyScopes($query, $this->restoreScopes))
-            ->when($this->restoreScopeWithValue, fn ($query) => $this->applyScopeWithValue($query, $this->restoreScopeWithValue))
             ->findOrFail($id);
 
         try {
@@ -572,6 +735,14 @@ class CrudBaseController extends BaseController
         return new $this->resource($model);
     }
 
+    /**
+     * Hook for pre-restore logic on the model.
+     *
+     * If the model defines a beforeRestoreProcess() method, it will be called.
+     *
+     * @param  Model  $model  The model instance about to be restored.
+     * @return Model The model instance (possibly modified).
+     */
     protected function beforeRestoreProcess(Model $model): Model
     {
         if (method_exists($model, 'beforeRestoreProcess')) {
