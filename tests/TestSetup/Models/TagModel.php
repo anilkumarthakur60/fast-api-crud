@@ -44,7 +44,7 @@ class TagModel extends Model
         'active',
     ];
 
-    public function afterCreateProcess(): void
+    public function afterCreate(): void
     {
         $request = request();
         if ($request->filled('post_ids')) {
@@ -70,7 +70,7 @@ class TagModel extends Model
         );
     }
 
-    public function afterUpdateProcess(): void
+    public function afterUpdate(): void
     {
         $request = request();
         if ($request->filled('post_ids')) {

@@ -56,8 +56,8 @@ describe(description: 'tag_model_class_test1', tests: function () {
     });
 
     it(description: 'should_have_all_the_method_defined_in_the_model', closure: function () {
-        expect(method_exists($this->tagModel, 'afterCreateProcess'))->toBeTrue()
-            ->and(method_exists($this->tagModel, 'afterUpdateProcess'))->toBeTrue()
+        expect(method_exists($this->tagModel, 'afterCreate'))->toBeTrue()
+            ->and(method_exists($this->tagModel, 'afterUpdate'))->toBeTrue()
             ->and(method_exists($this->tagModel, 'posts'))->toBeTrue()
             ->and(method_exists($this->tagModel, 'scopeQueryFilter'))->toBeTrue()
             ->and(method_exists($this->tagModel, 'scopeActive'))->toBeTrue()
@@ -71,7 +71,7 @@ describe(description: 'tag_model_class_test1', tests: function () {
         $this->tagModel->active = 1;
         $this->tagModel->save();
 
-        $this->tagModel->afterCreateProcess();
+        $this->tagModel->afterCreate();
 
         $posts = PostModel::factory(2)->create()->pluck('id')->toArray();
         // Assuming post_ids is passed in the request
@@ -89,7 +89,7 @@ describe(description: 'tag_model_class_test1', tests: function () {
         $posts = PostModel::factory(2)->create()->pluck('id')->toArray();
         // Simulating post IDs
         $this->tagModel->posts()->attach($posts);
-        $this->tagModel->afterUpdateProcess();
+        $this->tagModel->afterUpdate();
 
         $newPosts = PostModel::factory(7)->create()->pluck('id')->toArray();
 

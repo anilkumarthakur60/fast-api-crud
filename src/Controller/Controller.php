@@ -306,7 +306,7 @@ class Controller extends BaseController
                 $args = is_array($value) ? $value : [$value];
             }
 
-            $scopeMethod = 'scope'.ucfirst($scope);
+            $scopeMethod = 'scope' . ucfirst($scope);
 
             if (method_exists($query->getModel(), $scope)) {
                 $query->{$scope}(...$args);
@@ -342,7 +342,7 @@ class Controller extends BaseController
      * Store a newly created resource in storage.
      *
      * Validates using the storeRequest, then creates the model instance inside a transaction,
-     * calls afterCreateProcess if defined, and returns the new resource.
+     * calls afterCreate if defined, and returns the new resource.
      *
      * @return JsonResponse|JsonResource The created resource or JSON error response.
      *
@@ -355,7 +355,7 @@ class Controller extends BaseController
         try {
             DB::beginTransaction();
             $model = $this->model::create($data);
-            $this->afterCreateProcess($model);
+            $this->afterCreate($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -369,15 +369,15 @@ class Controller extends BaseController
     /**
      * Hook for post-create logic on the model.
      *
-     * If the model defines an afterCreateProcess() method, it will be called.
+     * If the model defines an afterCreate() method, it will be called.
      *
      * @param  Model  $model  The newly created model instance.
      * @return Model The potentially modified model.
      */
-    protected function afterCreateProcess(Model $model): Model
+    protected function afterCreate(Model $model): Model
     {
-        if (method_exists($model, 'afterCreateProcess')) {
-            $model->afterCreateProcess();
+        if (method_exists($model, 'afterCreate')) {
+            $model->afterCreate();
         }
 
         return $model;
@@ -394,10 +394,10 @@ class Controller extends BaseController
     public function show(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()
-            ->when($this->load, fn (Builder $query): Builder => $query->with($this->load))
-            ->when($this->loadCount, fn (Builder $query): Builder => $query->withCount($this->loadCount))
-            ->when($this->loadAggregate, fn (Builder $query): Builder => $this->applyLoadAggregate($query))
-            ->when($this->loadScopes, fn (Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
+            ->when($this->load, fn(Builder $query): Builder => $query->with($this->load))
+            ->when($this->loadCount, fn(Builder $query): Builder => $query->withCount($this->loadCount))
+            ->when($this->loadAggregate, fn(Builder $query): Builder => $this->applyLoadAggregate($query))
+            ->when($this->loadScopes, fn(Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
             ->findOrFail($id);
 
         return new $this->resource($model);
@@ -421,8 +421,8 @@ class Controller extends BaseController
     /**
      * Remove the specified resource from storage (soft-delete or force delete).
      *
-     * Applies any deleteScopes, calls beforeDeleteProcess, deletes (soft or force),
-     * then calls afterDeleteProcess.
+     * Applies any deleteScopes, calls beforeDelete, deletes (soft or force),
+     * then calls afterDelete.
      *
      * @param  int|string  $id  The primary key of the resource.
      * @return JsonResponse HTTP 204 No Content on success, or error response.
@@ -432,9 +432,9 @@ class Controller extends BaseController
     public function destroy(int|string $id): JsonResponse
     {
         $model = $this->findModel($id, $this->deleteScopes, $this->deleteScopeWithValue);
-        $this->beforeDeleteProcess($model);
+        $this->beforeDelete($model);
         $this->forceDelete ? $model->forceDelete() : $model->delete();
-        $this->afterDeleteProcess($model);
+        $this->afterDelete($model);
 
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
@@ -453,7 +453,7 @@ class Controller extends BaseController
     {
 
         $query = $this->model::query()
-            ->when(! empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes));
+            ->when(! empty($scopes), fn(Builder $query): Builder => $this->applyScopes($query, $scopes));
 
         return $query->findOrFail($id);
     }
@@ -461,15 +461,15 @@ class Controller extends BaseController
     /**
      * Hook for pre-delete logic on the model.
      *
-     * If the model defines a beforeDeleteProcess() method, it will be called.
+     * If the model defines a beforeDelete() method, it will be called.
      *
      * @param  Model  $model  The model instance about to be deleted.
      * @return Model The model instance (possibly modified).
      */
-    protected function beforeDeleteProcess(Model $model): Model
+    protected function beforeDelete(Model $model): Model
     {
-        if (method_exists($model, 'beforeDeleteProcess')) {
-            $model->beforeDeleteProcess();
+        if (method_exists($model, 'beforeDelete')) {
+            $model->beforeDelete();
         }
 
         return $model;
@@ -489,7 +489,7 @@ class Controller extends BaseController
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:'.(new $this->model)->getTable().',id'],
+            'delete_rows.*' => ['required', 'exists:' . (new $this->model)->getTable() . ',id'],
         ]);
 
         try {
@@ -497,9 +497,9 @@ class Controller extends BaseController
             foreach ((array) request()->delete_rows as $item) {
                 /** @var int $item */
                 $model = $this->findModel($item, $this->deleteScopes, $this->deleteScopeWithValue);
-                $this->beforeDeleteProcess($model);
+                $this->beforeDelete($model);
                 $this->forceDelete ? $model->forceDelete() : $model->delete();
-                $this->afterDeleteProcess($model);
+                $this->afterDelete($model);
             }
             DB::commit();
         } catch (Exception $e) {
@@ -514,15 +514,15 @@ class Controller extends BaseController
     /**
      * Hook for post-delete logic on the model.
      *
-     * If the model defines an afterDeleteProcess() method, it will be called.
+     * If the model defines an afterDelete() method, it will be called.
      *
      * @param  Model  $model  The model instance that was deleted.
      * @return Model The model instance (possibly modified).
      */
-    protected function afterDeleteProcess(Model $model): Model
+    protected function afterDelete(Model $model): Model
     {
-        if (method_exists($model, 'afterDeleteProcess')) {
-            $model->afterDeleteProcess();
+        if (method_exists($model, 'afterDelete')) {
+            $model->afterDelete();
         }
 
         return $model;
@@ -547,13 +547,13 @@ class Controller extends BaseController
 
         try {
             DB::beginTransaction();
-            $this->beforeChangeStatusProcess($model);
+            $this->beforeStatusChange($model);
             if (Schema::hasColumn($model->getTable(), $column)) {
                 $model->update([$column => $model->$column === 1 ? 0 : 1]);
             } else {
                 throw new Exception("{$column} column does not exist in the database.");
             }
-            $this->afterChangeStatusProcess($model);
+            $this->afterStatusChange($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -621,15 +621,15 @@ class Controller extends BaseController
     /**
      * Hook for pre-change-status logic on the model.
      *
-     * If the model defines a beforeChangeStatusProcess() method, it will be called.
+     * If the model defines a beforeStatusChange() method, it will be called.
      *
      * @param  Model  $model  The model instance whose status is about to be toggled.
      * @return Model The model instance (possibly modified).
      */
-    protected function beforeChangeStatusProcess(Model $model): Model
+    protected function beforeStatusChange(Model $model): Model
     {
-        if (method_exists($model, 'beforeChangeStatusProcess')) {
-            $model->beforeChangeStatusProcess();
+        if (method_exists($model, 'beforeStatusChange')) {
+            $model->beforeStatusChange();
         }
 
         return $model;
@@ -651,9 +651,9 @@ class Controller extends BaseController
 
         try {
             DB::beginTransaction();
-            $this->beforeUpdateProcess($model);
+            $this->beforeUpdate($model);
             $model->update($data);
-            $this->afterUpdateProcess($model);
+            $this->afterUpdate($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -667,15 +667,15 @@ class Controller extends BaseController
     /**
      * Hook for pre-update logic on the model.
      *
-     * If the model defines a beforeUpdateProcess() method, it will be called.
+     * If the model defines a beforeUpdate() method, it will be called.
      *
      * @param  Model  $model  The model instance about to be updated.
      * @return Model The model instance (possibly modified).
      */
-    protected function beforeUpdateProcess(Model $model): Model
+    protected function beforeUpdate(Model $model): Model
     {
-        if (method_exists($model, 'beforeUpdateProcess')) {
-            $model->beforeUpdateProcess();
+        if (method_exists($model, 'beforeUpdate')) {
+            $model->beforeUpdate();
         }
 
         return $model;
@@ -684,15 +684,15 @@ class Controller extends BaseController
     /**
      * Hook for post-update logic on the model.
      *
-     * If the model defines an afterUpdateProcess() method, it will be called.
+     * If the model defines an afterUpdate() method, it will be called.
      *
      * @param  Model  $model  The model instance that was updated.
      * @return Model The model instance (possibly modified).
      */
-    protected function afterUpdateProcess(Model $model): Model
+    protected function afterUpdate(Model $model): Model
     {
-        if (method_exists($model, 'afterUpdateProcess')) {
-            $model->afterUpdateProcess();
+        if (method_exists($model, 'afterUpdate')) {
+            $model->afterUpdate();
         }
 
         return $model;
@@ -701,15 +701,15 @@ class Controller extends BaseController
     /**
      * Hook for post-change-status logic on the model.
      *
-     * If the model defines an afterChangeStatusProcess() method, it will be called.
+     * If the model defines an afterStatusChange() method, it will be called.
      *
      * @param  Model  $model  The model instance whose status was toggled.
      * @return Model|string The model instance (possibly modified), or a string if the hook returns one.
      */
-    protected function afterChangeStatusProcess(Model $model): Model|string
+    protected function afterStatusChange(Model $model): Model|string
     {
-        if (method_exists($model, 'afterChangeStatusProcess')) {
-            $model->afterChangeStatusProcess();
+        if (method_exists($model, 'afterStatusChange')) {
+            $model->afterStatusChange();
         }
 
         return $model;
@@ -728,14 +728,14 @@ class Controller extends BaseController
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()->onlyTrashed()
-            ->when($this->restoreScopes, fn ($query) => $this->applyScopes($query, $this->restoreScopes))
+            ->when($this->restoreScopes, fn($query) => $this->applyScopes($query, $this->restoreScopes))
             ->findOrFail($id);
 
         try {
             DB::beginTransaction();
-            $this->beforeRestoreProcess($model);
+            $this->beforeRestore($model);
             $model->restore();
-            $this->afterRestoreProcess($model);
+            $this->afterRestore($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -749,15 +749,15 @@ class Controller extends BaseController
     /**
      * Hook for pre-restore logic on the model.
      *
-     * If the model defines a beforeRestoreProcess() method, it will be called.
+     * If the model defines a beforeRestore() method, it will be called.
      *
      * @param  Model  $model  The model instance about to be restored.
      * @return Model The model instance (possibly modified).
      */
-    protected function beforeRestoreProcess(Model $model): Model
+    protected function beforeRestore(Model $model): Model
     {
-        if (method_exists($model, 'beforeRestoreProcess')) {
-            $model->beforeRestoreProcess();
+        if (method_exists($model, 'beforeRestore')) {
+            $model->beforeRestore();
         }
 
         return $model;
@@ -766,15 +766,15 @@ class Controller extends BaseController
     /**
      * Hook for post-restore logic on the model.
      *
-     * If the model defines an afterRestoreProcess() method, it will be called.
+     * If the model defines an afterRestore() method, it will be called.
      *
      * @param  Model  $model  The model instance that was restoring.
      * @return Model The model instance (possibly modified).
      */
-    protected function afterRestoreProcess(Model $model): Model
+    protected function afterRestore(Model $model): Model
     {
-        if (method_exists($model, 'afterRestoreProcess')) {
-            $model->afterRestoreProcess();
+        if (method_exists($model, 'afterRestore')) {
+            $model->afterRestore();
         }
 
         return $model;
@@ -820,9 +820,9 @@ class Controller extends BaseController
 
         try {
             DB::beginTransaction();
-            $this->beforeForceDeleteProcess($model);
+            $this->beforeForceDelete($model);
             $model->forceDelete();
-            $this->afterForceDeleteProcess($model);
+            $this->afterForceDelete($model);
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -833,19 +833,19 @@ class Controller extends BaseController
         return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
     }
 
-    protected function beforeForceDeleteProcess(Model $model): Model
+    protected function beforeForceDelete(Model $model): Model
     {
-        if (method_exists($model, 'beforeForceDeleteProcess')) {
-            $model->beforeForceDeleteProcess();
+        if (method_exists($model, 'beforeForceDelete')) {
+            $model->beforeForceDelete();
         }
 
         return $model;
     }
 
-    protected function afterForceDeleteProcess(Model $model): Model
+    protected function afterForceDelete(Model $model): Model
     {
-        if (method_exists($model, 'afterForceDeleteProcess')) {
-            $model->afterForceDeleteProcess();
+        if (method_exists($model, 'afterForceDelete')) {
+            $model->afterForceDelete();
         }
 
         return $model;

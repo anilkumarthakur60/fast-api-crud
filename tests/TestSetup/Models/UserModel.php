@@ -108,7 +108,7 @@ class UserModel extends Authenticatable
         return $query->whereHas('posts');
     }
 
-    public function afterCreateProcess(): static
+    public function afterCreate(): static
     {
         $request = Request::instance();
         if ($request->has('post')) {

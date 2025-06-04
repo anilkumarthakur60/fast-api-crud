@@ -63,7 +63,7 @@ describe(description: 'user_model_class_unit_test', tests: function () {
 
     it(description: 'should_have_all_the_method_defined_in_the_model', closure: function () {
         expect(method_exists($this->userModel, 'posts'))->toBeTrue()
-            ->and(method_exists($this->userModel, 'afterCreateProcess'))->toBeTrue()
+            ->and(method_exists($this->userModel, 'afterCreate'))->toBeTrue()
             ->and(method_exists($this->userModel, 'scopeQueryFilter'))->toBeTrue()
             ->and(method_exists($this->userModel, 'scopeActive'))->toBeTrue()
             ->and(method_exists($this->userModel, 'scopeStatus'))->toBeTrue();

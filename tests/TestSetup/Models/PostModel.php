@@ -79,7 +79,7 @@ class PostModel extends Model
         );
     }
 
-    public function afterCreateProcess(): void
+    public function afterCreate(): void
     {
         $request = request();
         if ($request->filled('tag_ids')) {
@@ -87,7 +87,7 @@ class PostModel extends Model
         }
     }
 
-    public function afterUpdateProcess(): void
+    public function afterUpdate(): void
     {
         $request = request();
         if ($request->filled('tag_ids')) {
