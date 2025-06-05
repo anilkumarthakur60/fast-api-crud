@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PostModel extends Model
@@ -42,6 +43,14 @@ class PostModel extends Model
         );
     }
 
+    public function afterCreate(): void
+    {
+        $request = request();
+        if ($request->filled('tag_ids')) {
+            $this->tags()->sync((array) $request->input('tag_ids'));
+        }
+    }
+
     /**
      * The tags that belong to the post.
      *
@@ -58,14 +67,6 @@ class PostModel extends Model
             parentKey: 'id',
             relatedKey: 'id'
         );
-    }
-
-    public function afterCreate(): void
-    {
-        $request = request();
-        if ($request->filled('tag_ids')) {
-            $this->tags()->sync((array) $request->input('tag_ids'));
-        }
     }
 
     public function afterUpdate(): void
@@ -88,5 +89,16 @@ class PostModel extends Model
     public function scopeQueryFilter(Builder $query, string $value): Builder
     {
         return $query->likeWhere(['name', 'desc'], $value);
+    }
+
+    /**
+     * The photos that belong to the post.
+     *
+     * @return MorphMany<PhotoModel, PostModel>
+     */
+    public function photos(): MorphMany
+    {
+        /** @var MorphMany<PhotoModel, PostModel> */
+        return $this->morphMany(PhotoModel::class, 'imageable');
     }
 }

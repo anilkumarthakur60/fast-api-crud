@@ -13,6 +13,7 @@ class RoleModel extends Model
 {
     use HandlesDeleteEvents;
     use HasDateScopes;
+
     /** @use HasFactory<RoleModelFactory> */
     use HasFactory;
 

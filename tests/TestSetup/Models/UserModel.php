@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Request;
@@ -36,21 +38,6 @@ class UserModel extends Authenticatable
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return HasMany<PostModel,UserModel>
-     */
-    public function posts(): HasMany
-    {
-        /** @var HasMany<PostModel,UserModel> */
-        return $this->hasMany(
-            related: PostModel::class,
-            foreignKey: 'user_id',
-            localKey: 'id'
-        );
-    }
 
     /**
      * @param  Builder<UserModel>  $query
@@ -109,6 +96,29 @@ class UserModel extends Authenticatable
     }
 
     /**
+     * Get the attributes that should be cast.
+     *
+     * @return HasMany<PostModel,UserModel>
+     */
+    public function posts(): HasMany
+    {
+        /** @var HasMany<PostModel,UserModel> */
+        return $this->hasMany(
+            related: PostModel::class,
+            foreignKey: 'user_id',
+            localKey: 'id'
+        );
+    }
+
+    /**
+     * @param  list<string>  $permissions
+     */
+    public function hasPermissionTo(array $permissions): bool
+    {
+        return $this->permissions()->whereIn('name', $permissions)->exists();
+    }
+
+    /**
      * @return BelongsToMany<PermissionModel,UserModel>
      */
     public function permissions(): BelongsToMany
@@ -120,14 +130,6 @@ class UserModel extends Authenticatable
             foreignPivotKey: 'user_id',
             relatedPivotKey: 'permission_id'
         );
-    }
-
-    /**
-     * @param  list<string>  $permissions
-     */
-    public function hasPermissionTo(array $permissions): bool
-    {
-        return $this->permissions()->whereIn('name', $permissions)->exists();
     }
 
     /**
@@ -153,5 +155,27 @@ class UserModel extends Authenticatable
         $this->permissions()->detach($permissions);
 
         return $this;
+    }
+
+    /**
+     * The profile that belongs to the user.
+     *
+     * @return MorphOne<ProfileModel, UserModel>
+     */
+    public function profile(): MorphOne
+    {
+        /** @var MorphOne<ProfileModel, UserModel> */
+        return $this->morphOne(ProfileModel::class, 'profilable');
+    }
+
+    /**
+     * The comments that belong to the user.
+     *
+     * @return MorphMany<CommentModel, UserModel>
+     */
+    public function comments(): MorphMany
+    {
+        /** @var MorphMany<CommentModel, UserModel> */
+        return $this->morphMany(CommentModel::class, 'commentable');
     }
 }
