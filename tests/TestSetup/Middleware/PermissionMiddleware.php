@@ -14,7 +14,7 @@ class PermissionMiddleware
      * Handle an incoming request.
      *
      * @param  Closure(Request): (Response)  $next
-     * @param  array<int|string, string>  $permissions
+     * @param  string  ...$permissions
      * @return mixed|Response|void
      */
     public function handle(Request $request, Closure $next, ...$permissions)
@@ -25,7 +25,18 @@ class PermissionMiddleware
 
         /** @var UserModel $user */
         $user = Auth::user();
-        if ($user->hasPermissionTo($permissions)) {
+
+        // Flatten permissions array to ensure it's a list of strings
+        $flatPermissions = [];
+        foreach ($permissions as $permission) {
+            if (is_array($permission)) {
+                $flatPermissions = array_merge($flatPermissions, array_values($permission));
+            } else {
+                $flatPermissions[] = (string) $permission;
+            }
+        }
+
+        if ($user->hasPermissionTo($flatPermissions)) {
             return $next($request);
         }
         abort(403, 'Unauthorized');

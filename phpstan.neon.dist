@@ -19,3 +19,6 @@ parameters:
         
         # Ignore custom builder method like paginates()
         - '#.*::paginates\(\)#'
+        
+        # Ignore custom builder method like likeWhere()
+        - '#.*::likeWhere\(\)#'

@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @method Builder<PostModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
+ */
 class PostModel extends Model
 {
     /** @use HasFactory<PostModelFactory> */
@@ -82,8 +85,8 @@ class PostModel extends Model
     }
 
     /**
-     * @param  Builder<Model>  $query
-     * @return Builder<Model>
+     * @param  Builder<PostModel>  $query
+     * @return Builder<PostModel>
      */
     public function scopeQueryFilter(Builder $query, string $value): Builder
     {

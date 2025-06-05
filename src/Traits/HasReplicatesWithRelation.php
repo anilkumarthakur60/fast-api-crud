@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 
 /**
@@ -31,6 +32,7 @@ trait HasReplicatesWithRelation
      * - Throws an Exception for unsupported relation types (e.g., HasManyThrough).
      *
      * @return static The newly replicated model instance, with relations replicated.
+     *
      * @throws Exception
      */
     public function replicateWithRelations(): self
@@ -51,7 +53,7 @@ trait HasReplicatesWithRelation
                 continue;
             }
 
-            /** @var \Illuminate\Database\Eloquent\Relations\Relation<Model, Model> $relationInstance */
+            /** @var Relation<Model, Model, mixed> $relationInstance */
             $relationInstance = $this->{$relationName}();
 
             switch (true) {
@@ -60,40 +62,53 @@ trait HasReplicatesWithRelation
                 // ---------------------
                 case $relationInstance instanceof BelongsTo:
                 case $relationInstance instanceof MorphTo:
-                    /** @var Model&HasReplicatesWithRelation $relatedModel */
+                    /** @var Model $relatedModel */
                     $relatedModel = $relationValue;
-                    $replicatedParent = $relatedModel->replicateWithRelations();
+                    if (method_exists($relatedModel, 'replicateWithRelations')) {
+                        $replicatedParent = $relatedModel->replicateWithRelations();
+                    } else {
+                        $replicatedParent = $relatedModel->replicate();
+                        $replicatedParent->save();
+                    }
                     $newModel->{$relationName}()->associate($replicatedParent);
                     $newModel->save();
                     break;
 
-                // -------------
-                // HasOne / MorphOne
-                // -------------
+                    // -------------
+                    // HasOne / MorphOne
+                    // -------------
                 case $relationInstance instanceof HasOne:
                 case $relationInstance instanceof MorphOne:
-                    /** @var Model&HasReplicatesWithRelation $relatedModel */
+                    /** @var Model $relatedModel */
                     $relatedModel = $relationValue;
-                    $newRelated = $relatedModel->replicateWithRelations();
+                    if (method_exists($relatedModel, 'replicateWithRelations')) {
+                        $newRelated = $relatedModel->replicateWithRelations();
+                    } else {
+                        $newRelated = $relatedModel->replicate();
+                    }
                     $newModel->{$relationName}()->save($newRelated);
                     break;
 
-                // ---------------
-                // HasMany / MorphMany
-                // ---------------
+                    // ---------------
+                    // HasMany / MorphMany
+                    // ---------------
                 case $relationInstance instanceof HasMany:
                 case $relationInstance instanceof MorphMany:
-                    /** @var Collection<int, Model&HasReplicatesWithRelation> $relatedCollection */
+                    /** @var Collection<int, Model> $relatedCollection */
                     $relatedCollection = $relationValue;
                     foreach ($relatedCollection as $childModel) {
-                        $newChild = $childModel->replicateWithRelations();
+                        if (method_exists($childModel, 'replicateWithRelations')) {
+                            $newChild = $childModel->replicateWithRelations();
+                        } else {
+                            $newChild = $childModel->replicate();
+                        }
                         $newModel->{$relationName}()->save($newChild);
                     }
                     break;
 
-                // -------------------
-                // BelongsToMany / MorphToMany
-                // -------------------
+                    // -------------------
+                    // BelongsToMany / MorphToMany
+                    // -------------------
                 case $relationInstance instanceof BelongsToMany:
                 case $relationInstance instanceof MorphToMany:
                     /** @var Collection<int, Model> $relatedCollection */
@@ -104,18 +119,16 @@ trait HasReplicatesWithRelation
                     $newModel->{$relationName}()->sync($ids);
                     break;
 
-                // --------------
-                // HasOneThrough
-                // --------------
+                    // --------------
+                    // HasOneThrough
+                    // --------------
                 case $relationInstance instanceof HasOneThrough:
                     throw new Exception("HasOneThrough relationship '{$relationName}' is not supported for replication.");
-
                     // ---------------
                     // HasManyThrough
                     // ---------------
                 case $relationInstance instanceof HasManyThrough:
                     throw new Exception("HasManyThrough relationship '{$relationName}' is not supported for replication.");
-
                     // -----------------------
                     // Fallback for unknown relation types
                     // -----------------------
@@ -181,39 +194,31 @@ trait HasReplicatesWithRelation
      * - 'object'
      * - 'collection'
      *
-     * @param  int|float|string|bool|array|object  $value  The value to check.
-     * @param  string                                        $type   The normalized cast type.
-     * @return bool         True if $value can be considered castable to $type.
+     * @param  array<mixed>|int|float|string|bool|object  $value  The value to check.
+     * @param  string  $type  The normalized cast type.
+     * @return bool True if $value can be considered castable to $type.
      */
-    protected function isCastable(int|float|string|bool|array|object $value, string $type): bool
+    protected function isCastable(array|int|float|string|bool|object $value, string $type): bool
     {
         return match ($type) {
-            'int', 'integer' =>
-            is_numeric($value),
+            'int', 'integer' => is_numeric($value),
 
-            'real', 'float', 'double', 'decimal' =>
-            is_numeric($value)
+            'real', 'float', 'double', 'decimal' => is_numeric($value)
                 || (is_string($value) && preg_match('/^-?\d+(\.\d+)?$/', $value)),
 
-            'bool', 'boolean' =>
-            is_bool($value)
-                || in_array(strtolower((string) $value), ['1', 'true', 'yes'], true),
+            'bool', 'boolean' => is_bool($value)
+                || (is_string($value) ? in_array(strtolower($value), ['1', 'true', 'yes'], true) : false),
 
-            'string' =>
-            is_string($value),
+            'string' => is_string($value),
 
-            'array', 'json' =>
-            is_array($value)
+            'array', 'json' => is_array($value)
                 || (is_object($value) && method_exists($value, 'toArray')),
 
-            'object' =>
-            is_object($value),
+            'object' => is_object($value),
 
-            'collection' =>
-            $value instanceof Collection,
+            'collection' => $value instanceof Collection,
 
-            default =>
-            false,
+            default => false,
         };
     }
 }

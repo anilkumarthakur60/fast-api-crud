@@ -9,6 +9,14 @@ use Illuminate\Support\Carbon;
 
 /**
  * @mixin UserModel
+ *
+ * @property-read int $id
+ * @property-read string $name
+ * @property-read string $email
+ * @property-read int $status
+ * @property-read int $active
+ * @property-read string $created_at
+ * @property-read string $updated_at
  */
 class UserResource extends JsonResource
 {

@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Request;
 
-
+/**
+ * @method Builder<UserModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
+ */
 class UserModel extends Authenticatable
 {
     /** @use HasFactory<UserModelFactory> */
