@@ -317,7 +317,7 @@ class Controller extends BaseController
                 continue;
             }
 
-            $scopeMethod = 'scope' . ucfirst($scope);
+            $scopeMethod = 'scope'.ucfirst($scope);
 
             if (method_exists($query->getModel(), $scope)) {
                 $query->{$scope}(...$args);
@@ -405,10 +405,10 @@ class Controller extends BaseController
     public function show(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()
-            ->when($this->load, fn(Builder $query): Builder => $query->with($this->load))
-            ->when($this->loadCount, fn(Builder $query): Builder => $query->withCount($this->loadCount))
-            ->when($this->loadAggregate, fn(Builder $query): Builder => $this->applyLoadAggregate($query))
-            ->when($this->loadScopes, fn(Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
+            ->when($this->load, fn (Builder $query): Builder => $query->with($this->load))
+            ->when($this->loadCount, fn (Builder $query): Builder => $query->withCount($this->loadCount))
+            ->when($this->loadAggregate, fn (Builder $query): Builder => $this->applyLoadAggregate($query))
+            ->when($this->loadScopes, fn (Builder $query): Builder => $this->applyScopes($query, $this->loadScopes))
             ->findOrFail($id);
 
         return new $this->resource($model);
@@ -464,7 +464,7 @@ class Controller extends BaseController
     {
 
         $query = $this->model::query()
-            ->when(! empty($scopes), fn(Builder $query): Builder => $this->applyScopes($query, $scopes));
+            ->when(! empty($scopes), fn (Builder $query): Builder => $this->applyScopes($query, $scopes));
 
         return $query->findOrFail($id);
     }
@@ -500,7 +500,7 @@ class Controller extends BaseController
     {
         request()->validate([
             'delete_rows' => ['required', 'array'],
-            'delete_rows.*' => ['required', 'exists:' . (new $this->model)->getTable() . ',id'],
+            'delete_rows.*' => ['required', 'exists:'.(new $this->model)->getTable().',id'],
         ]);
 
         try {
@@ -575,7 +575,6 @@ class Controller extends BaseController
         return new $this->resource($model);
     }
 
-
     /**
      * Update a specific column for the specified resource.
      *
@@ -612,8 +611,6 @@ class Controller extends BaseController
 
         return new $this->resource($model);
     }
-
-
 
     /**
      * Validate that a given column is present in the model's fillable attributes.
@@ -681,6 +678,40 @@ class Controller extends BaseController
     {
         if (method_exists($model, 'beforeStatusChange')) {
             $model->beforeStatusChange();
+        }
+
+        return $model;
+    }
+
+    /**
+     * Hook for pre-column-update logic on the model.
+     *
+     * If the model defines a beforeColumnUpdate() method, it will be called.
+     *
+     * @param  Model  $model  The model instance whose column is about to be updated.
+     * @return Model The model instance (possibly modified).
+     */
+    protected function beforeColumnUpdate(Model $model): Model
+    {
+        if (method_exists($model, 'beforeColumnUpdate')) {
+            $model->beforeColumnUpdate();
+        }
+
+        return $model;
+    }
+
+    /**
+     * Hook for post-column-update logic on the model.
+     *
+     * If the model defines an afterColumnUpdate() method, it will be called.
+     *
+     * @param  Model  $model  The model instance whose column was updated.
+     * @return Model The model instance (possibly modified).
+     */
+    protected function afterColumnUpdate(Model $model): Model
+    {
+        if (method_exists($model, 'afterColumnUpdate')) {
+            $model->afterColumnUpdate();
         }
 
         return $model;
@@ -779,7 +810,7 @@ class Controller extends BaseController
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
         $model = $this->model::query()->initializer()->onlyTrashed()
-            ->when($this->restoreScopes, fn($query) => $this->applyScopes($query, $this->restoreScopes))
+            ->when($this->restoreScopes, fn ($query) => $this->applyScopes($query, $this->restoreScopes))
             ->findOrFail($id);
 
         try {
