@@ -2,7 +2,7 @@
 
 namespace Anil\FastApiCrud\Controller;
 
-use Anil\FastApiCrud\Traits\HasApiResponse;
+use Anil\FastApiCrud\Traits\ApiResponder;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -27,8 +27,8 @@ use Throwable;
  */
 class Controller extends BaseController
 {
+    use ApiResponder;
     use AuthorizesRequests;
-    use HasApiResponse;
     use ValidatesRequests;
 
     /**
@@ -209,12 +209,12 @@ class Controller extends BaseController
      * Set up permission middleware based on the model's permission slug (if defined).
      *
      * If the model has a getPermissionSlug() method, attaches middleware such as:
-     * - view-{slug}   to index()
-     * - store-{slug}  to store()
-     * - update-{slug} to update()
-     * - delete-{slug} to delete()
-     * - change-status-{slug} to changeStatus()
-     * - restore-{slug} to restoreTrashed()
+     * - view-{slug}            to index()
+     * - store-{slug}           to store()
+     * - update-{slug}          to update()
+     * - delete-{slug}          to delete() and forceDeleteTrashed()
+     * - change-status-{slug}   to changeStatus()
+     * - restore-{slug}         to restoreTrashed() and restoreAllTrashed()
      *
      * @throws Exception If any permission middleware cannot be attached (rare).
      */
@@ -228,10 +228,10 @@ class Controller extends BaseController
         if ($permissionSlug) {
             $this->middleware("permission:view-{$permissionSlug}")->only(['index']);
             $this->middleware("permission:store-{$permissionSlug}")->only(['store']);
-            $this->middleware("permission:update-{$permissionSlug}")->only(['update']);
-            $this->middleware("permission:delete-{$permissionSlug}")->only(['delete']);
+            $this->middleware("permission:update-{$permissionSlug}")->only(['update', 'columnUpdate']);
+            $this->middleware("permission:delete-{$permissionSlug}")->only(['delete', 'forceDeleteTrashed']);
             $this->middleware("permission:change-status-{$permissionSlug}")->only(['changeStatus']);
-            $this->middleware("permission:restore-{$permissionSlug}")->only(['restore']);
+            $this->middleware("permission:restore-{$permissionSlug}")->only(['restore', 'restoreAllTrashed']);
         }
     }
 

@@ -6,6 +6,7 @@ parameters:
     level: 9
     paths:
         - src/
+        - tests/TestSetup
 
     # Prevent false positives on PHPDoc types
     treatPhpDocTypesAsCertain: false
@@ -18,6 +19,3 @@ parameters:
         
         # Ignore custom builder method like paginates()
         - '#.*::paginates\(\)#'
-
-        # Ignore "is used zero times" (if it appears)
-        - '#is used zero times#'

@@ -7,14 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Symfony\Component\VarDumper\Caster\ScalarStub;
 use Symfony\Component\VarDumper\VarDumper;
 
 if (! function_exists('_dd')) {
     /**
-     * Dump.
+     * Custom debug dump that sends appropriate headers for CORS and API error response.
      *
-     * @param  mixed  ...$args
+     * Outputs the dumped content and stops execution, similar to Laravel's `dd()`,
+     * but includes headers for debugging in API contexts. Always returns a 500 status.
+     *
+     * @param  mixed  ...$args  Values to dump.
+     * @return never
      */
     function _dd(...$args): void
     {
@@ -29,7 +34,6 @@ if (! function_exists('_dd')) {
 
         if (! $args) {
             VarDumper::dump(new ScalarStub('🐛'));
-
             exit(1);
         }
 
@@ -48,7 +52,13 @@ if (! function_exists('_dd')) {
 
 if (! function_exists('getClassShortName')) {
     /**
-     * Get the short name of the class.
+     * Get the short name of a class by its fully qualified name.
+     *
+     * If the given class name resolves in the container, returns the reflection short name.
+     * Otherwise returns null.
+     *
+     * @param  string  $param  Fully qualified class name.
+     * @return string|null Class short name, or null if the class is not bound in the container.
      *
      * @throws ReflectionException
      */
@@ -62,7 +72,19 @@ if (! function_exists('getClassShortName')) {
         return $reflection->getShortName();
     }
 }
+
 if (! function_exists('parseTimeToSeconds')) {
+    /**
+     * Parse a time string (e.g., "01:30:00" or "30:45") into total seconds.
+     *
+     * Supports:
+     *  - "H:i:s" format (hours:minutes:seconds)
+     *  - "i:s" format (minutes:seconds)
+     *  - plain integer or numeric string representing seconds
+     *
+     * @param  string  $times  Time string to parse.
+     * @return int|float Number of seconds corresponding to the input.
+     */
     function parseTimeToSeconds(string $times): int|float
     {
         $time = explode(':', $times);
@@ -93,7 +115,14 @@ if (! function_exists('parseTimeToSeconds')) {
 
 if (! function_exists('formatDuration')) {
     /**
-     * Format formatDuration in hours and minutes.
+     * Convert a duration in seconds to a formatted string (e.g., "2h 15m").
+     *
+     * Uses CarbonInterval to cascade hours and minutes from total seconds.
+     *
+     * @param  int  $duration  Duration in seconds.
+     * @param  string  $format  Format string, where "%dh" is replaced by total hours and "%dm" by remaining minutes.
+     *                          Default: "%dh %dm"
+     * @return string Formatted time string.
      */
     function formatDuration(int $duration, string $format = '%dh %dm'): string
     {
@@ -105,7 +134,12 @@ if (! function_exists('formatDuration')) {
 
 if (! function_exists('diffForHumans')) {
     /**
-     * Get human-readable date difference.
+     * Get a human-readable difference between the given date and now.
+     *
+     * Returns null if the input date is null or invalid.
+     *
+     * @param  string|null  $date  A parsable date string.
+     * @return string|null A "diffForHumans" string, or null if input is null.
      */
     function diffForHumans(?string $date): ?string
     {
@@ -115,7 +149,13 @@ if (! function_exists('diffForHumans')) {
 
 if (! function_exists('ymdDate')) {
     /**
-     * Format date to specified format.
+     * Format a date string into a specified Y-m-d format.
+     *
+     * Returns null if the input date is null or cannot be parsed.
+     *
+     * @param  string|null  $date  A parsable date string.
+     * @param  string  $format  Desired output format (default: "Y-m-d").
+     * @return string|null Formatted date string or null.
      */
     function ymdDate(?string $date, string $format = 'Y-m-d'): ?string
     {
@@ -125,7 +165,14 @@ if (! function_exists('ymdDate')) {
 
 if (! function_exists('dateForReports')) {
     /**
-     * Format date for reports.
+     * Format a date/time string for reporting purposes.
+     *
+     * Attempts to parse the given date and format it according to the provided pattern.
+     * Returns null on parse failure.
+     *
+     * @param  string|null  $date  A parsable date/time string.
+     * @param  string  $format  Desired output format (default: "Y-m-d H:i").
+     * @return string|null Formatted date/time string or null if parsing fails.
      */
     function dateForReports(?string $date, string $format = 'Y-m-d H:i'): ?string
     {
@@ -139,14 +186,19 @@ if (! function_exists('dateForReports')) {
 
 if (! function_exists('getFilterByKey')) {
     /**
-     * Get filter value by key.
+     * Get a single filter value by key from the "filters" query parameter.
+     *
+     * Expects the request to include a "filters" parameter containing a JSON object.
+     * Returns the string value matching the given key, or null if not present or invalid.
+     *
+     * @param  string  $key  The filter key to retrieve (default: "date").
+     * @return string|null The filter value as a string, or null if not found/invalid.
      */
     function getFilterByKey(string $key = 'date'): ?string
     {
         $filters = Request::get('filters');
         $jsonData = is_string($filters) ? json_decode($filters, true) : [];
 
-        // Ensure $jsonData is an array before using collect
         if (! is_array($jsonData)) {
             return null;
         }
@@ -159,29 +211,39 @@ if (! function_exists('getFilterByKey')) {
 
 if (! function_exists('getArrayFilterByKey')) {
     /**
-     * Get array filter by key.
+     * Convert a JSON string or array into a filtered associative array.
      *
-     * @param  array<string, mixed>|string|null  $data
-     * @return array<string, mixed>
+     * Accepts:
+     *  - A JSON-encoded string representing an array.
+     *  - An actual PHP array.
+     *  - Null, which yields an empty array.
+     *
+     * Filters out any falsy or empty values, returning only keys with truthy entries.
+     *
+     * @param  string|array<string,mixed>|null  $data  Input data to decode/filter.
+     * @return array<string,mixed> Filtered array of data.
      */
-    function getArrayFilterByKey($data): array
+    function getArrayFilterByKey(array|string|null $data): array
     {
         if (is_string($data)) {
             $decoded = json_decode($data, true);
             $data = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : [];
         }
 
-        /** @var array<string, mixed> */
+        /** @var array<string,mixed> */
         return collect($data ?? [])->filter()->all();
     }
 }
 
 if (! function_exists('flatData')) {
     /**
-     * Flatten data.
+     * Flatten a nested array to a given depth.
      *
-     * @param  array<mixed>  $data
-     * @return array<mixed>
+     * Uses Laravel's Collection flatten method under the hood.
+     *
+     * @param  array<string,mixed>  $data  The nested array to flatten.
+     * @param  int  $depth  Depth level to flatten (default: 0, full flatten).
+     * @return array<string,mixed> Flattened array.
      */
     function flatData(array $data, int $depth = 0): array
     {
@@ -191,7 +253,11 @@ if (! function_exists('flatData')) {
 
 if (! function_exists('defaultOrder')) {
     /**
-     * Get default order direction.
+     * Determine the default sort order based on the "descending" query parameter.
+     *
+     * If "descending" is set to "true" (string), returns "ASC"; otherwise "DESC".
+     *
+     * @return string Either "ASC" or "DESC".
      */
     function defaultOrder(): string
     {
@@ -201,9 +267,14 @@ if (! function_exists('defaultOrder')) {
 
 if (! function_exists('defaultSort')) {
     /**
-     * Get default sort.
+     * Get the default sort key(s) from the "sort" request parameter.
      *
-     * @return array<string>|string|null
+     * Accepts:
+     *  - A string (single sort column).
+     *  - An array of strings (multiple sort columns).
+     *  - Anything else yields null.
+     *
+     * @return array<string>|string|null Sort key(s) or null if none provided.
      */
     function defaultSort(): array|string|null
     {
@@ -224,15 +295,19 @@ if (! function_exists('defaultSort')) {
 
 if (! function_exists('getClassMethod')) {
     /**
-     * Get class methods.
+     * Retrieve all public methods of an object that begin with "scope".
      *
-     * @return array<string>
+     * Useful for discovering Eloquent "scope" methods dynamically.
+     *
+     * @param  object  $class  Instance of a class to inspect.
+     * @return array<string> List of method names starting with "scope".
      */
     function getClassMethod(object $class): array
     {
-        $class = new ReflectionClass($class);
-        $methods = $class->getMethods(ReflectionMethod::IS_PUBLIC);
+        $reflection = new ReflectionClass($class);
+        $methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
         $scopeMethods = [];
+
         foreach ($methods as $method) {
             if (str_starts_with($method->getName(), 'scope')) {
                 $scopeMethods[] = $method->getName();
@@ -245,9 +320,15 @@ if (! function_exists('getClassMethod')) {
 
 if (! function_exists('getColumns')) {
     /**
-     * Get columns from a table.
+     * Get an ordered list of column names for a given table or Eloquent model.
      *
-     * @return array<string>
+     * - If provided a model class name, will instantiate it and use its table.
+     * - Excludes the "id" column and timestamp columns ("created_at", "updated_at", "deleted_at")
+     *   from the middle; then merges them back so the final array is:
+     *   ["id", ...other columns (sorted), "created_at", "updated_at", "deleted_at"].
+     *
+     * @param  string|Model  $table  Table name or fully qualified Model class name.
+     * @return array<string> Ordered list of column names.
      */
     function getColumns(string|Model $table = 'users'): array
     {
@@ -273,75 +354,58 @@ if (! function_exists('getColumns')) {
     }
 }
 
-// if (! function_exists('describe') && version_compare(app()->version(), '10.0.0', '<')) {
-//     /**
-//      * Adds the given closure as a group of tests. The first argument
-//      * is the group description; the second argument is a closure
-//      * that contains the group tests.
-//      */
-//     function describe(string $description, Closure $tests): DescribeCall
-//     {
-//         $filename = Backtrace::testFile();
-
-//         return new DescribeCall(TestSuite::getInstance(), $filename, $description, $tests);
-//     }
-// }
-
 if (! function_exists('recursiveDatabaseClasses')) {
     /**
-     * Recursively scan a directory for PHP files and extract the fully qualified class names.
+     * Recursively find all PHP classes inside the database directory.
      *
-     * @param  array<string>  $excluding  An array of class names to exclude.
-     * @return array<int,string> An array of fully qualified class names.
+     * Scans /database by default or a given subdirectory under /database for ".php" files,
+     * extracts namespace and class name via regex, and returns fully qualified class names.
      *
-     * */
+     * @param  string|null  $directory  Relative directory under /database to scan (e.g., "migrations").
+     * @param  array<string>  $excluding  Fully qualified class names to exclude from results.
+     * @return array<int,string> List of fully qualified class names found.
+     */
     function recursiveDatabaseClasses(?string $directory = null, array $excluding = []): array
     {
-        // Determine base path, default to the database path if no directory is provided
+        // Determine base path; default to /database root if no subdirectory provided
         $basePath = $directory ? database_path($directory) : database_path();
-
-        // Initialize an empty array for classes
         $classes = [];
 
-        // Ensure the directory exists before proceeding
         if (! is_dir($basePath)) {
             return $classes;
         }
+
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($basePath));
-
         foreach ($files as $file) {
-            /**
-             * @var RecursiveDirectoryIterator $file
-             */
-            // Check if the current item is a PHP file
+            /** @var RecursiveDirectoryIterator $file */
             if ($file->isFile() && $file->getExtension() === 'php') {
-                // Get the content of the PHP file
                 $fileContent = file_get_contents($file->getPathname());
-
-                // Extract the namespace and class name using regular expressions
                 preg_match('/namespace\s+(.+?);/', (string) $fileContent, $namespaceMatch);
-                preg_match('/class\s+([a-zA-Z0-9_]+)/', (string) $fileContent, $classMatch);
+                preg_match('/class\s+([A-Za-z0-9_]+)/', (string) $fileContent, $classMatch);
 
-                // Assign the namespace and class name, if found
                 $namespace = $namespaceMatch[1] ?? null;
                 $className = $classMatch[1] ?? null;
-
-                // If both namespace and class name are present, add to the classes array
                 if ($namespace && $className) {
                     $classes[] = $namespace.'\\'.$className;
                 }
             }
         }
 
-        $classes = array_filter($classes, function ($model) use ($excluding) {
-            return ! in_array($model, $excluding);
-        });
+        $classes = array_filter($classes, fn ($model) => ! in_array($model, $excluding));
 
         return array_values($classes);
     }
 }
 
 if (! function_exists('toFormattedDateString')) {
+    /**
+     * Convert a date string into a formatted date (e.g., "January 1, 2025").
+     *
+     * Returns null if the input is null or cannot be parsed.
+     *
+     * @param  string|null  $date  A parsable date string.
+     * @return string|null Formatted date string or null if input is null.
+     */
     function toFormattedDateString(?string $date): ?string
     {
         return $date ? Carbon::parse($date)->toFormattedDateString() : null;
@@ -349,18 +413,33 @@ if (! function_exists('toFormattedDateString')) {
 }
 
 if (! function_exists('uuid')) {
-    function uuid(): Ramsey\Uuid\UuidInterface
+    /**
+     * Generate a UUID (version 4) using Laravel's Str::uuid().
+     *
+     * @return \Ramsey\Uuid\UuidInterface A newly generated UUID object.
+     */
+    function uuid(): \Ramsey\Uuid\UuidInterface
     {
         return Str::uuid();
     }
 }
 
 if (! function_exists('implodeFillable')) {
+    /**
+     * Get a comma-separated string of fillable attributes for a Model or database table.
+     *
+     * If provided a Model class (subclass of \Illuminate\Database\Eloquent\Model),
+     * instantiates it and retrieves its $fillable properties. Otherwise, assumes
+     * the string is a table name and retrieves all column names.
+     *
+     * @param  string  $model  Model class name or table name.
+     * @return string Comma-separated list of column names.
+     */
     function implodeFillable(string $model): string
     {
-        if (is_subclass_of($model, 'Illuminate\Database\Eloquent\Model')) {
-            $model = new $model;
-            $columns = $model->getFillable();
+        if (is_subclass_of($model, Model::class)) {
+            $instance = new $model;
+            $columns = $instance->getFillable();
         } else {
             $columns = \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($model);
         }
@@ -368,7 +447,18 @@ if (! function_exists('implodeFillable')) {
         return implode(',', $columns);
     }
 }
+
 if (! function_exists('implodeColumns')) {
+    /**
+     * Get a comma-separated string of column names for a Model or database table.
+     *
+     * Uses getColumns() under the hood, which orders columns as:
+     * ["id", ...other columns (sorted), "created_at", "updated_at", "deleted_at"].
+     *
+     * @param  string  $model  Model class name or table name.
+     * @param  string  $separator  Separator to use between column names (default: ",").
+     * @return string Concatenated column names string.
+     */
     function implodeColumns(string $model, string $separator = ','): string
     {
         $columns = getColumns($model);
@@ -378,6 +468,14 @@ if (! function_exists('implodeColumns')) {
 }
 
 if (! function_exists('toDateString')) {
+    /**
+     * Convert a date/time string into a "Y-m-d" date string.
+     *
+     * Returns null if the input is null or cannot be parsed.
+     *
+     * @param  string|null  $date  A parsable date/time string.
+     * @return string|null Date string in "Y-m-d" format, or null.
+     */
     function toDateString(?string $date): ?string
     {
         return $date ? Carbon::parse($date)->toDateString() : null;
@@ -385,6 +483,14 @@ if (! function_exists('toDateString')) {
 }
 
 if (! function_exists('toDateTimeString')) {
+    /**
+     * Convert a date/time string into a "Y-m-d H:i:s" datetime string.
+     *
+     * Returns null if the input is null or cannot be parsed.
+     *
+     * @param  string|null  $date  A parsable date/time string.
+     * @return string|null Datetime string in "Y-m-d H:i:s" format, or null.
+     */
     function toDateTimeString(?string $date): ?string
     {
         return $date ? Carbon::parse($date)->toDateTimeString() : null;
@@ -392,6 +498,14 @@ if (! function_exists('toDateTimeString')) {
 }
 
 if (! function_exists('toTimeString')) {
+    /**
+     * Convert a date/time string into an "H:i:s" time string.
+     *
+     * Returns null if the input is null or cannot be parsed.
+     *
+     * @param  string|null  $date  A parsable date/time string.
+     * @return string|null Time string in "H:i:s" format, or null.
+     */
     function toTimeString(?string $date): ?string
     {
         return $date ? Carbon::parse($date)->toTimeString() : null;
@@ -400,39 +514,32 @@ if (! function_exists('toTimeString')) {
 
 if (! function_exists('recursiveClasses')) {
     /**
-     * Get a list of classes in a directory path, with optional inclusion/exclusion filters
+     * Get a list of fully qualified class names in a given directory, with optional exclusions.
      *
-     * @param  string  $path  Base path to scan for classes
-     * @param  array<string>  $excluding  Classes to exclude from results
-     * @param  array<string>  $including  Classes to include in results
-     * @return array<int,string> Array of class names
+     * Scans the "app" directory by default (i.e., app_path('App')), or a subdirectory thereof,
+     * for PHP files, and returns class names by converting file paths to namespace\\ClassName.
+     *
+     * @param  string  $path  Base directory under app/ to scan (default: "App").
+     * @param  array<string>  $excluding  Class names to exclude from the result.
+     * @return array<int,string> Array of fully qualified class names.
      */
-    function recursiveClasses(string $path = 'App', array $excluding = [], array $including = []): array
+    function recursiveClasses(string $path = 'App', array $excluding = []): array
     {
-        $path = app_path($path);
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
+        $fullPath = app_path($path);
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($fullPath));
         $classes = [];
+
         foreach ($iterator as $file) {
-            /**
-             * @var RecursiveDirectoryIterator $file
-             */
+            /** @var RecursiveDirectoryIterator $file */
             if ($file->isFile() && $file->getExtension() === 'php') {
                 $relativePath = str_replace(app_path().'/', '', $file->getPathname());
                 $className = str_replace(['/', '.php'], ['\\', ''], $relativePath);
-                $classes[] = 'App\\'.$className;
+                $classes[] = "App\\{$className}";
             }
         }
 
         if (! empty($excluding)) {
-            $classes = array_filter($classes, function ($class) use ($excluding) {
-                return ! in_array($class, $excluding);
-            });
-        }
-
-        if (! empty($including)) {
-            $classes = array_filter($classes, function ($class) use ($including) {
-                return in_array($class, $including);
-            });
+            $classes = array_filter($classes, fn ($class) => ! in_array($class, $excluding));
         }
 
         return array_values($classes);
@@ -440,6 +547,14 @@ if (! function_exists('recursiveClasses')) {
 }
 
 if (! function_exists('slug')) {
+    /**
+     * Generate a URL-friendly "slug" from a given string.
+     *
+     * Uses Laravel's Str::slug() internally. Returns null if the input is null.
+     *
+     * @param  string|null  $text  Input text to convert to slug.
+     * @return string|null Slugified string or null if input is null.
+     */
     function slug(?string $text = null): ?string
     {
         return isset($text) ? Str::slug($text) : null;
@@ -447,7 +562,15 @@ if (! function_exists('slug')) {
 }
 
 if (! function_exists('pathRelativeToBase')) {
-    function getRelativePath(string $path): string
+    /**
+     * Get the relative path of a given absolute path with respect to the base application path.
+     *
+     * Strips the base_path() portion from the provided full path.
+     *
+     * @param  string  $path  Absolute file or directory path.
+     * @return string Relative path from the project root.
+     */
+    function pathRelativeToBase(string $path): string
     {
         $fullPath = $path;
         $basePath = base_path();

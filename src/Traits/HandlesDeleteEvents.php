@@ -4,7 +4,7 @@ namespace Anil\FastApiCrud\Traits;
 
 use Illuminate\Support\Facades\DB;
 
-trait HasDeleteEvent
+trait HandlesDeleteEvents
 {
     public static function bootDeleteEvent(): void
     {

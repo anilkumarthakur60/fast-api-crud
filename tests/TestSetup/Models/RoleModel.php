@@ -2,16 +2,16 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
-use Anil\FastApiCrud\Traits\HasDateFilters;
-use Anil\FastApiCrud\Traits\HasDeleteEvent;
+use Anil\FastApiCrud\Traits\HandlesDeleteEvents;
+use Anil\FastApiCrud\Traits\HasDateScopes;
 use Anil\FastApiCrud\Traits\HasReplicatesWithRelation;
 use Anil\FastApiCrud\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 
 class RoleModel extends Model
 {
-    use HasDateFilters;
-    use HasDeleteEvent;
+    use HandlesDeleteEvents;
+    use HasDateScopes;
     use HasReplicatesWithRelation;
     // use HasUuid;
 

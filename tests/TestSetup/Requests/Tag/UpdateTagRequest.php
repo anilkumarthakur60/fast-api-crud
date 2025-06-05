@@ -13,7 +13,9 @@ class UpdateTagRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id'); // Changed to use route() directly
+
+        /** @var int $id */
+        $id = $this->route()?->parameter('id');
 
         return [
             'name' => [
