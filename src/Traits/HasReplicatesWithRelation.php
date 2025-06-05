@@ -16,114 +16,106 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
 
+/**
+ * @mixin Model
+ */
 trait HasReplicatesWithRelation
 {
     /**
      * Replicate this model along with all of its loaded relations.
      *
-     * - For BelongsTo / MorphTo: replicates the parent model and associates it.
-     * - For HasOne / MorphOne: replicates the related model and saves it.
-     * - For HasMany / MorphMany: replicates each related model and saves them.
-     * - For BelongsToMany / MorphToMany: replicates the pivot associations (syncs related IDs).
-     * - Throws an Exception for unsupported relationship types (e.g., HasManyThrough).
+     * - BelongsTo / MorphTo: replicate the parent model and associate it.
+     * - HasOne / MorphOne: replicate the related model and save it.
+     * - HasMany / MorphMany: replicate each related model and save them.
+     * - BelongsToMany / MorphToMany: replicate the pivot associations (sync related IDs).
+     * - Throws an Exception for unsupported relation types (e.g., HasManyThrough).
      *
-     * @return static The newly replicated model instance (with relations replicated).
-     *
+     * @return static The newly replicated model instance, with relations replicated.
      * @throws Exception
      */
     public function replicateWithRelations(): self
     {
-        /** @var Model $this */
-        // First, replicate the base model (without relations).
+        /** @var static $newModel */
         $newModel = $this->replicate();
 
-        // If there are castable attributes that need special handling, copy them over.
-        foreach ($this->getMatchedCastableAttributes() as $attribute => $casts) {
-            $newModel->{$attribute} = $this->castAttribute($attribute, $this->{$attribute}, $casts);
+        // Copy over castable attributes (re-applying built-in casts)
+        foreach ($this->getMatchedCastableAttributes() as $attribute => $_castType) {
+            // The base Model::castAttribute method expects (string $key, mixed $value)
+            $newModel->{$attribute} = $this->castAttribute($attribute, $this->{$attribute});
         }
 
-        // Save the new model so that it has a primary key for relation associations.
         $newModel->save();
 
-        // Loop through each loaded relation on the original model.
         foreach ($this->getRelations() as $relationName => $relationValue) {
-            // Skip if the relation is null or empty.
             if (! $relationValue) {
                 continue;
             }
 
-            // Obtain the relation instance (not the loaded value).
+            /** @var \Illuminate\Database\Eloquent\Relations\Relation<Model, Model> $relationInstance */
             $relationInstance = $this->{$relationName}();
 
-            // Handle different relation types:
             switch (true) {
                 // ---------------------
                 // BelongsTo / MorphTo
                 // ---------------------
                 case $relationInstance instanceof BelongsTo:
                 case $relationInstance instanceof MorphTo:
-                    /** @var Model $relatedModel */
+                    /** @var Model&HasReplicatesWithRelation $relatedModel */
                     $relatedModel = $relationValue;
-                    // Recursively replicate the parent record (with its own relations).
                     $replicatedParent = $relatedModel->replicateWithRelations();
-                    // Associate to the new child model and save.
                     $newModel->{$relationName}()->associate($replicatedParent);
                     $newModel->save();
                     break;
 
-                    // -------------
-                    // HasOne / MorphOne
-                    // -------------
+                // -------------
+                // HasOne / MorphOne
+                // -------------
                 case $relationInstance instanceof HasOne:
                 case $relationInstance instanceof MorphOne:
-                    /** @var Model $relatedModel */
+                    /** @var Model&HasReplicatesWithRelation $relatedModel */
                     $relatedModel = $relationValue;
-                    // Recursively replicate the related model (and its relations).
                     $newRelated = $relatedModel->replicateWithRelations();
-                    // Save via the hasOne/morphOne relation on the new model.
                     $newModel->{$relationName}()->save($newRelated);
                     break;
 
-                    // ---------------
-                    // HasMany / MorphMany
-                    // ---------------
+                // ---------------
+                // HasMany / MorphMany
+                // ---------------
                 case $relationInstance instanceof HasMany:
                 case $relationInstance instanceof MorphMany:
-                    /** @var Collection<int, Model> $relatedCollection */
+                    /** @var Collection<int, Model&HasReplicatesWithRelation> $relatedCollection */
                     $relatedCollection = $relationValue;
                     foreach ($relatedCollection as $childModel) {
-                        // Recursively replicate each child model.
                         $newChild = $childModel->replicateWithRelations();
-                        // Save them via the hasMany/morphMany relation.
                         $newModel->{$relationName}()->save($newChild);
                     }
                     break;
 
-                    // -------------------
-                    // BelongsToMany / MorphToMany
-                    // -------------------
+                // -------------------
+                // BelongsToMany / MorphToMany
+                // -------------------
                 case $relationInstance instanceof BelongsToMany:
                 case $relationInstance instanceof MorphToMany:
                     /** @var Collection<int, Model> $relatedCollection */
                     $relatedCollection = $relationValue;
-                    // Gather IDs (keys) of related models to sync on the new model.
                     $ids = $relatedCollection->pluck(
                         $relationInstance->getRelated()->getKeyName()
                     )->toArray();
-                    // Sync pivot table: attach existing related records to the new model.
                     $newModel->{$relationName}()->sync($ids);
                     break;
 
-                    // --------------
-                    // HasOneThrough
-                    // --------------
+                // --------------
+                // HasOneThrough
+                // --------------
                 case $relationInstance instanceof HasOneThrough:
                     throw new Exception("HasOneThrough relationship '{$relationName}' is not supported for replication.");
+
                     // ---------------
                     // HasManyThrough
                     // ---------------
                 case $relationInstance instanceof HasManyThrough:
                     throw new Exception("HasManyThrough relationship '{$relationName}' is not supported for replication.");
+
                     // -----------------------
                     // Fallback for unknown relation types
                     // -----------------------
@@ -137,43 +129,40 @@ trait HasReplicatesWithRelation
     }
 
     /**
-     * Return an array of attribute => castType for scalar attributes that need re-applying casts.
+     * Return an array of attribute => normalized castType for scalar attributes that need re-applying casts.
      *
-     * Only includes those attributes whose cast configuration is one of:
-     *   - numeric: int, integer, real, float, double, decimal
-     *   - json: json, array, object, collection
-     *   - boolean: bool, boolean
-     *   - string
-     *   - object
-     *   - collection
+     * Only includes attributes whose cast type (from getCasts()) is one of:
+     * - numeric: int|integer|real|float|double|decimal
+     * - json: json|array|object|collection
+     * - boolean: bool|boolean
+     * - string
+     * - object
+     * - collection
      *
-     * And whose current value is actually of a type matching that cast.
+     * And only if the current attribute value is scalar and matches that normalized type.
      *
-     * @return array<string,string> Keyed by attribute name, value is castType ("numeric", "json", etc.)
+     * @return array<string,string> Attribute name => normalized cast type.
      */
     public function getMatchedCastableAttributes(): array
     {
         $matchedCastableAttributes = [];
 
         foreach ($this->getCasts() as $attribute => $castType) {
-            $castType = strtolower(trim((string) $castType));
+            $normalized = strtolower(trim((string) $castType));
 
-            // Normalize numeric casts
-            if (in_array($castType, ['int', 'integer', 'real', 'float', 'double', 'decimal'], true)) {
-                $castType = 'numeric';
+            if (in_array($normalized, ['int', 'integer', 'real', 'float', 'double', 'decimal'], true)) {
+                $normalized = 'numeric';
             }
-            // Normalize JSON-like casts
-            if (in_array($castType, ['json', 'array', 'object', 'collection'], true)) {
-                $castType = 'json';
+            if (in_array($normalized, ['json', 'array', 'object', 'collection'], true)) {
+                $normalized = 'json';
             }
 
-            // Only proceed if the attribute exists and is scalar/appropriate
             if (
                 isset($this->{$attribute})
                 && is_scalar($this->{$attribute})
-                && $this->isCastable($this->{$attribute}, $castType)
+                && $this->isCastable($this->{$attribute}, $normalized)
             ) {
-                $matchedCastableAttributes[$attribute] = $castType;
+                $matchedCastableAttributes[$attribute] = $normalized;
             }
         }
 
@@ -181,32 +170,50 @@ trait HasReplicatesWithRelation
     }
 
     /**
-     * Determine if a given value matches a particular cast type.
+     * Determine if a given value matches a particular normalized cast type.
      *
      * Supported $type values:
-     *  - 'int' | 'integer'
-     *  - 'real' | 'float' | 'double' | 'decimal'
-     *  - 'bool' | 'boolean'
-     *  - 'string'
-     *  - 'array' | 'json'
-     *  - 'object'
-     *  - 'collection'
+     * - 'int', 'integer'
+     * - 'real', 'float', 'double', 'decimal'
+     * - 'bool', 'boolean'
+     * - 'string'
+     * - 'array', 'json'
+     * - 'object'
+     * - 'collection'
      *
-     * @param  mixed  $value  The value to check.
-     * @param  string  $type  The normalized cast type to verify.
-     * @return bool True if the value can be considered castable to $type.
+     * @param  int|float|string|bool|array|object  $value  The value to check.
+     * @param  string                                        $type   The normalized cast type.
+     * @return bool         True if $value can be considered castable to $type.
      */
-    protected function isCastable(mixed $value, string $type): bool
+    protected function isCastable(int|float|string|bool|array|object $value, string $type): bool
     {
         return match ($type) {
-            'int', 'integer' => is_numeric($value),
-            'real', 'float', 'double', 'decimal' => is_numeric($value) || (is_string($value) && preg_match('/^-?\d+(\.\d+)?$/', $value)),
-            'bool', 'boolean' => is_bool($value) || in_array(strtolower((string) $value), ['1', 'true', 'yes'], true),
-            'string' => is_string($value),
-            'array', 'json' => is_array($value) || (is_object($value) && method_exists($value, 'toArray')),
-            'object' => is_object($value),
-            'collection' => $value instanceof Collection,
-            default => false,
+            'int', 'integer' =>
+            is_numeric($value),
+
+            'real', 'float', 'double', 'decimal' =>
+            is_numeric($value)
+                || (is_string($value) && preg_match('/^-?\d+(\.\d+)?$/', $value)),
+
+            'bool', 'boolean' =>
+            is_bool($value)
+                || in_array(strtolower((string) $value), ['1', 'true', 'yes'], true),
+
+            'string' =>
+            is_string($value),
+
+            'array', 'json' =>
+            is_array($value)
+                || (is_object($value) && method_exists($value, 'toArray')),
+
+            'object' =>
+            is_object($value),
+
+            'collection' =>
+            $value instanceof Collection,
+
+            default =>
+            false,
         };
     }
 }

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Request;
 
+
 class UserModel extends Authenticatable
 {
     /** @use HasFactory<UserModelFactory> */

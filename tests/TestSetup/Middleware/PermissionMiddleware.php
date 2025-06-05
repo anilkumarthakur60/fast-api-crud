@@ -14,7 +14,7 @@ class PermissionMiddleware
      * Handle an incoming request.
      *
      * @param  Closure(Request): (Response)  $next
-     * @param  list<string>  $permissions
+     * @param  array<int|string, string>  $permissions
      * @return mixed|Response|void
      */
     public function handle(Request $request, Closure $next, ...$permissions)
