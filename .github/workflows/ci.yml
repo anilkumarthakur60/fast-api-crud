@@ -28,7 +28,7 @@ jobs:
 
           - laravel: "^10.0"
             testbench: "8.*"
-            pest: "^2.0"
+            pest: "^3.0"
             permission: "^5.0"
 
     name: PHP ${{ matrix.php }} | Laravel ${{ matrix.laravel }}
