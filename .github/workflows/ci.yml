@@ -15,6 +15,7 @@ jobs:
       matrix:
         php: [8.2, 8.3, 8.4]
         laravel: ["^12.0", "^11.0", "^10.0"]
+
     name: PHP ${{ matrix.php }} | Laravel ${{ matrix.laravel }}
 
     services:
@@ -51,9 +52,19 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Install Laravel + Dependencies
+      - name: Install Laravel + Testbench
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-update --no-interaction
+
+          # Conditionally install correct testbench version
+          if [[ "${{ matrix.laravel }}" == "^10.0" ]]; then
+            composer require "orchestra/testbench:^8.5" --no-update --no-interaction
+          elif [[ "${{ matrix.laravel }}" == "^11.0" ]]; then
+            composer require "orchestra/testbench:^9.0" --no-update --no-interaction
+          else
+            composer require "orchestra/testbench:^10.0" --no-update --no-interaction
+          fi
+
           composer update --prefer-dist --no-interaction
 
       - name: Run Tests
