@@ -50,13 +50,13 @@ protected $middlewareAliases = [
 
 namespace App\Http\Controllers;
 
-use Anil\FastApiCrud\Controller\Controller;
+use Anil\FastApiCrud\Controller\CrudBaseController;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\Post\PostResource;
 use App\Models\Post;
 
-class PostControllerCrud extends Controller
+class PostControllerCrud extends CrudBaseController
 {
     public function __construct()
     {
@@ -163,104 +163,3 @@ act -l
 act -j test
 act -j test-ci
 ```
-
-To achieve **config-driven defaults** for permissions and allow **model-specific overrides**, here's a clean and flexible approach.
-
----
-
-## ✅ Step-by-Step Implementation
-
-### 1. **Define Default CRUD Permission Mapping in Config**
-
-Create or extend a config file, e.g., `config/permissions.php`:
-
-```php
-return [
-
-    // Default CRUD actions and their permission patterns
-    'crud_map' => [
-        'index'        => 'view-:slug',
-        'store'        => 'store-:slug',
-        'update'       => 'update-:slug',
-        'destroy'      => 'delete-:slug',
-        'changeStatus' => 'change-status-:slug',
-        'restore'      => 'restore-:slug',
-    ],
-
-];
-```
-
----
-
-### 2. **Controller Base Method with Config Fallback + Override Option**
-
-```php
-protected function applyCrudPermissions(string $slug, array $customMap = [])
-{
-    // Get default from config
-    $defaultMap = config('permissions.crud_map', []);
-
-    // Allow controller/model to override specific mappings
-    $map = array_merge($defaultMap, $customMap);
-
-    foreach ($map as $method => $permissionPattern) {
-        $permission = str_replace(':slug', $slug, $permissionPattern);
-        $this->middleware("permission:{$permission}")->only($method);
-    }
-}
-```
-
----
-
-### 3. **Example Usage in a Controller**
-
-**Without override (uses config only):**
-
-```php
-public function __construct()
-{
-    $this->applyCrudPermissions('post');
-}
-```
-
-**With custom override:**
-
-```php
-public function __construct()
-{
-    $this->applyCrudPermissions('post', [
-        'index' => 'read-post', // override default
-        'store' => 'create-post',
-    ]);
-}
-```
-
----
-
-### ✅ Bonus: Put This in a Trait for Reusability
-
-Create a `HasCrudPermissions` trait:
-
-```php
-namespace App\Traits;
-
-trait HasCrudPermissions
-{
-    protected function applyCrudPermissions(string $slug, array $customMap = [])
-    {
-        $defaultMap = config('permissions.crud_map', []);
-        $map = array_merge($defaultMap, $customMap);
-
-        foreach ($map as $method => $permissionPattern) {
-            $permission = str_replace(':slug', $slug, $permissionPattern);
-            $this->middleware("permission:{$permission}")->only($method);
-        }
-    }
-}
-```
-
-Then just `use HasCrudPermissions;` in your controllers.
-
----
-
-Would you like this scaffolding to be turned into a Laravel Artisan command or a boilerplate generator?
