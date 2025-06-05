@@ -11,6 +11,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class PostModelFactory extends Factory
 {
+    /**
+     * The name of the factory's corresponding model.
+     *
+     * @var class-string<PostModel>
+     */
     protected $model = PostModel::class;
 
     public function definition(): array

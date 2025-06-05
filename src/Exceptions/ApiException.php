@@ -5,7 +5,7 @@ namespace Anil\FastApiCrud\Exceptions;
 use Exception;
 use Illuminate\Http\JsonResponse;
 
-class ApiCrudException extends Exception
+class ApiException extends Exception
 {
     /**
      * Render the exception.

@@ -13,7 +13,8 @@ class UpdateUserFormRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route()->parameter('id');
+        /** @var int $id */
+        $id = $this->route()?->parameter('id');
 
         return [
             'name' => [

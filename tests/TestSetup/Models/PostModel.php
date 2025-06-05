@@ -9,26 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Carbon;
 
-/**
- * @property-read int $id
- * @property-read string $name
- * @property-read string $desc
- * @property-read int $user_id
- * @property-read int $status
- * @property-read int $active
- * @property-read Carbon $created_at
- * @property-read Carbon $updated_at
- * @property-read Carbon $deleted_at
- *
- * @method static Builder<PostModel> initializer(bool $orderBy = true)
- * @method static Builder<PostModel> paginates(int $perPage = 15)
- * @method static Builder<PostModel> simplePaginates(int $perPage = 15)
- * @method static Builder<PostModel> likeWhere(array $attributes, ?string $searchTerm = null)
- *
- * @mixin Builder<PostModel>
- */
 class PostModel extends Model
 {
     /** @use HasFactory<PostModelFactory> */
@@ -79,7 +60,7 @@ class PostModel extends Model
         );
     }
 
-    public function afterCreateProcess(): void
+    public function afterCreate(): void
     {
         $request = request();
         if ($request->filled('tag_ids')) {
@@ -87,7 +68,7 @@ class PostModel extends Model
         }
     }
 
-    public function afterUpdateProcess(): void
+    public function afterUpdate(): void
     {
         $request = request();
         if ($request->filled('tag_ids')) {

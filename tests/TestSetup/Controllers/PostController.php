@@ -2,14 +2,14 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Controllers;
 
-use Anil\FastApiCrud\Controller\CrudBaseController;
+use Anil\FastApiCrud\Controller\Controller;
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Requests\Post\StorePostRequest;
 use Anil\FastApiCrud\Tests\TestSetup\Requests\Post\UpdatePostRequest;
 use Anil\FastApiCrud\Tests\TestSetup\Resources\PostResource;
 use Exception;
 
-class PostController extends CrudBaseController
+class PostController extends Controller
 {
     /**
      * @throws Exception

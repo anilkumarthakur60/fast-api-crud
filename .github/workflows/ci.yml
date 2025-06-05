@@ -1,72 +1,64 @@
 name: CI
+
 on:
   push:
-    branches:
-      - "*"
+    branches: ["*"]
   pull_request:
-    branches:
-      - "*"
+    branches: ["*"]
+
 jobs:
   test:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
         php: [8.2, 8.3, 8.4]
         laravel: ["^12.0", "^11.0"]
-        dependency-version: [prefer-stable]
-        include:
-          - laravel: "^12.0"
-            testbench: 10.*
-            pest: ^3.0
-            permission: "^6.0"
-          - laravel: "^11.0"
-            testbench: 9.*
-            pest: ^3.0
-            permission: "^6.0"
-    name: PHP${{ matrix.php }} | Laravel${{ matrix.laravel }} | ${{ matrix.dependency-version }}
+
+    name: PHP ${{ matrix.php }} | Laravel ${{ matrix.laravel }}
 
     services:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_USER: root
           MYSQL_ROOT_PASSWORD: admin
           MYSQL_DATABASE: fast_api_crud
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -padmin"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: intl, zip, pdo, pdo_mysql, pcntl, bcmath, gd, soap, xsl, xml, xmlrpc, mbstring, curl, json, dom, iconv, simplexml, xmlwriter, xmlreader, phar, posix, ctype, tokenizer, session, fileinfo, filter, hash, openssl, pcre, SPL, Reflection, calendar, exif, gettext, sockets, standard, date, libxml, zlib
+          extensions: mbstring, pdo_mysql, zip, bcmath, curl, json, fileinfo
           coverage: none
 
-      - name: Cache Composer dependencies
+      - name: Cache Composer Dependencies
         uses: actions/cache@v4
         with:
           path: |
             ~/.composer/cache/files
             ~/.cache/composer/files
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+          restore-keys: ${{ runner.os }}-composer-
 
-      - name: Install dependencies
+      - name: Install Laravel + Testbench
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-          composer require "spatie/laravel-permission:${{ matrix.permission }}" --no-interaction --no-update
-          composer require "orchestra/testbench:${{ matrix.testbench }}" --dev --no-interaction --no-update
-          composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction
-          composer show
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-update --no-interaction
 
-      - name: Run php pest tests
+          composer update --prefer-dist --no-interaction
+
+      - name: Run Tests
         run: vendor/bin/pest
         env:
           DB_CONNECTION: mysql

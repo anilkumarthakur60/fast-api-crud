@@ -3,14 +3,19 @@ includes:
     - vendor/nesbot/carbon/extension.neon
 
 parameters:
-
-    tips:
-        treatPhpDocTypesAsCertain: false
+    level: 9
     paths:
         - src/
-    level: 9
+        - tests/TestSetup
+
+    # Prevent false positives on PHPDoc types
+    treatPhpDocTypesAsCertain: false
 
     excludePaths:
 
     ignoreErrors:
-          - '#.*::initializer\(\)#'
+        # Ignore custom builder method like initializer()
+        - '#.*::initializer\(\)#'
+        
+        # Ignore custom builder method like paginates()
+        - '#.*::paginates\(\)#'

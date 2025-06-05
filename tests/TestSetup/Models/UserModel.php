@@ -2,32 +2,15 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
+use Anil\FastApiCrud\Tests\TestSetup\Factories\UserModelFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Request;
 
-/**
- * @property-read int $id
- * @property-read string $name
- * @property-read string $email
- * @property-read int $status
- * @property-read int $active
- * @property-read Carbon $created_at
- * @property-read Carbon $updated_at
- * @property-read Carbon $deleted_at
- *
- * @method static Builder<Model> initializer(bool $orderBy = true)
- * @method static Builder<Model> paginates(int $perPage = 15)
- * @method static Builder<Model> simplePaginates(int $perPage = 15)
- * @method static Builder<Model> likeWhere(array<string> $attributes, ?string $searchTerm = null)
- *
- * @mixin Builder<UserModel>
- */
 class UserModel extends Authenticatable
 {
     /** @use HasFactory<UserModelFactory> */
@@ -108,7 +91,7 @@ class UserModel extends Authenticatable
         return $query->whereHas('posts');
     }
 
-    public function afterCreateProcess(): static
+    public function afterCreate(): static
     {
         $request = Request::instance();
         if ($request->has('post')) {

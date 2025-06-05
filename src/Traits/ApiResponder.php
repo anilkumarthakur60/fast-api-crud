@@ -5,7 +5,7 @@ namespace Anil\FastApiCrud\Traits;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-trait HasApiResponse
+trait ApiResponder
 {
     /**
      * Return a success response with given data and HTTP status code.

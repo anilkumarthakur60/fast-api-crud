@@ -45,13 +45,13 @@ describe(description: 'post_model_class_test', tests: function () {
     });
 
     it(description: 'it_should_sync_tags_after_create', closure: function () {
-        $this->postModel->afterCreateProcess();
+        $this->postModel->afterCreate();
         // Assuming the request has 'tag_ids' filled
         expect($this->postModel->tags()->count())->toBe(0); // Adjust based on actual test setup
     });
 
     it(description: 'it_should_sync_tags_after_update', closure: function () {
-        $this->postModel->afterUpdateProcess();
+        $this->postModel->afterUpdate();
         // Assuming the request has 'tag_ids' filled
         expect($this->postModel->tags()->count())->toBe(0); // Adjust based on actual test setup
     });

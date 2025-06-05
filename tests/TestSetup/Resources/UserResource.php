@@ -12,11 +12,6 @@ use Illuminate\Support\Carbon;
  */
 class UserResource extends JsonResource
 {
-    public function __construct(UserModel $resource)
-    {
-        parent::__construct($resource);
-    }
-
     /**
      * Transform the resource into an array.
      *
