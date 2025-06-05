@@ -37,17 +37,17 @@ class Controller extends BaseController
     public bool $isPaginate = true;
 
     /**
-     * @var list<string>|array<string, string|number|bool>
+     * @var array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>
      */
     public array $scopes = [];
 
     /**
-     * @var array<string>
+     * @var array<string>|array<string, \Closure>
      */
     public array $loadScopes = [];
 
     /**
-     * @var array<array-key, string|array<string, string|int|float|bool>|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)>
+     * @var array<array-key, string|array<string, string|int|float|bool>|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)|array<array-key, string|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)>>
      */
     public array $with = [];
 
@@ -62,7 +62,7 @@ class Controller extends BaseController
     public array $withAggregate = [];
 
     /**
-     * @var array<array-key, string|array<string, string|int|float|bool>|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)>
+     * @var array<array-key, string|array<string, string|int|float|bool>|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)|array<array-key, string|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)>>
      */
     public array $load = [];
 
@@ -286,14 +286,20 @@ class Controller extends BaseController
     /**
      * Apply both simple and parameterized scopes to the query builder.
      *
-     * Example of $scopes:
-     *  - ['active'] // calls scopeActive() with no arguments
-     *  - ['byUser' => 5] // calls scopeByUser(5)
-     *  - ['dateRange' => [$from, $to]] // calls scopeDateRange($from, $to)
+     * Each scope in the $scopes array can be:
+     *  - A string representing a scope with no parameters (e.g., 'active').
+     *  - A key-value pair where:
+     *      - The key is the scope name.
+     *      - The value is a single argument or an array of arguments to pass to the scope.
      *
-     * @param  Builder<Model>  $query  The Eloquent query builder.
-     * @param  array<int|string, string>  $scopes  An array of scopes to apply.
-     * @return Builder<Model> The modified query builder.
+     * Examples:
+     *  - ['active'] → calls $query->active()
+     *  - ['status' => 1] → calls $query->status(1)
+     *  - ['dateRange' => [$from, $to]] → calls $query->dateRange($from, $to)
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Model>  $query  The Eloquent query builder instance.
+     * @param  array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>  $scopes  The scopes to apply.
+     * @return \Illuminate\Database\Eloquent\Builder<Model> The modified query builder.
      */
     protected function applyScopes(Builder $query, array $scopes): Builder
     {
@@ -304,6 +310,11 @@ class Controller extends BaseController
             } else {
                 $scope = $key;
                 $args = is_array($value) ? $value : [$value];
+            }
+
+            // Ensure scope is a string before processing
+            if (! is_string($scope)) {
+                continue;
             }
 
             $scopeMethod = 'scope' . ucfirst($scope);
@@ -563,6 +574,46 @@ class Controller extends BaseController
 
         return new $this->resource($model);
     }
+
+
+    /**
+     * Update a specific column for the specified resource.
+     *
+     * Applies any changeStatusScopes, validates that the column is fillable, calls pre/post hooks,
+     * and updates the column inside a transaction.
+     *
+     * @param  int|string  $id  The primary key of the resource.
+     * @param  string  $column  The name of the status column (default 'status').
+     * @return JsonResource|JsonResponse The updated resource or JSON error response.
+     *
+     * @throws Throwable
+     */
+    public function columnUpdate(int|string $id, string $column = 'status'): JsonResource|JsonResponse
+    {
+        $model = $this->findModel($id, $this->changeStatusScopes, $this->changeStatusScopeWithValue);
+        $this->validateColumn($model, $column);
+
+        try {
+            DB::beginTransaction();
+            $this->beforeColumnUpdate($model);
+            if (Schema::hasColumn($model->getTable(), $column)) {
+
+                $model->update([$column => request()->{$column}]);
+            } else {
+                throw new Exception("{$column} column does not exist in the database.");
+            }
+            $this->afterColumnUpdate($model);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return $this->error($e->getMessage());
+        }
+
+        return new $this->resource($model);
+    }
+
+
 
     /**
      * Validate that a given column is present in the model's fillable attributes.
