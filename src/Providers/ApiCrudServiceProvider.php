@@ -2,26 +2,26 @@
 
 namespace Anil\FastApiCrud\Providers;
 
-use Anil\FastApiCrud\Commands\MakeAction;
-use Anil\FastApiCrud\Commands\MakeService;
-use Anil\FastApiCrud\Commands\MakeTrait;
 use Closure;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class ApiCrudServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/../config/fastApiCrud.php' => config_path('fastApiCrud.php'),
+            __DIR__.'/../../config/fast-api.php' => config_path('fast-api.php'),
         ], 'config');
 
         Builder::macro('likeWhere', function (array $attributes, ?string $searchTerm = null) {
+            /** @var Builder<Model> $this */
             if (empty($searchTerm)) {
                 return $this;
             }
@@ -29,11 +29,12 @@ class ApiCrudServiceProvider extends ServiceProvider
             return $this->where(function (Builder $query) use ($attributes, $searchTerm) {
                 foreach ($attributes as $attribute) {
                     $query->when(
-                        Str::contains($attribute, '.'),
+                        Str::contains($attribute, ':'),
                         function (Builder $query) use ($attribute, $searchTerm) {
-                            [$relationName, $relationAttribute] = explode('.', $attribute);
-                            $query->orWhereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm) {
-                                $query->where($relationAttribute, 'LIKE', "%{$searchTerm}%");
+                            [$relationName, $relationAttributes] = explode(':', $attribute);
+                            $relationAttributes = explode(',', $relationAttributes);
+                            $query->whereHas($relationName, function (Builder $builder) use ($relationAttributes, $searchTerm) {
+                                $builder->orWhereAny($relationAttributes, 'LIKE', "%{$searchTerm}%");
                             });
                         },
                         function (Builder $query) use ($attribute, $searchTerm) {
@@ -44,112 +45,173 @@ class ApiCrudServiceProvider extends ServiceProvider
             });
         });
 
-        Builder::macro('equalWhere', function (array $attributes, mixed $searchTerm = null) {
-            if (is_array($searchTerm) && count($searchTerm) === 0) {
+        /**
+         * Paginate the given query.
+         *
+         * @param  int|null|Closure  $perPage
+         * @param  array|string  $columns
+         * @param  string  $pageName
+         * @param  int|null  $page
+         * @param  Closure|int|null  $total
+         * @return Paginator
+         *
+         * @throws InvalidArgumentException
+         */
+        Builder::macro('paginates', function ($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null): Paginator {
+
+            /** @var Builder<Model> $this */
+            $validated = request()->all();
+            $rowsPerPage = $validated['rowsPerPage'] ?? 15;
+            $perPage = $rowsPerPage === 0 ? $this->count() : $rowsPerPage;
+            $perPage = (int) $perPage;
+
+            return $this->paginate($perPage, $columns, $pageName, $page, $total);
+        });
+
+        /**
+         * Paginate the given query into a simple paginator.
+         *
+         * @param  int|null  $perPage
+         * @param  array|string  $columns
+         * @param  string  $pageName
+         * @param  int|null  $page
+         * @return Paginator
+         */
+        Builder::macro('simplePaginates', function ($perPage = null, $columns = ['*'], $pageName = 'page', $page = null): Paginator {
+            /** @var Builder<Model> $this */
+            $validated = request()->all();
+            $rowsPerPage = $validated['rowsPerPage'] ?? 15;
+            $perPage = $rowsPerPage === 0 ? $this->count() : $rowsPerPage;
+            $perPage = (int) $perPage;
+
+            return $this->simplePaginate($perPage, $columns, $pageName, $page);
+        });
+
+        /**
+         * Macro to initialize the query builder with filters and sorting.
+         *
+         * @param  bool  $orderBy  Whether to apply ordering based on request parameters.
+         * @return Builder<Model> The initialized query builder.
+         */
+        Builder::macro('initializer', function (bool $orderBy = true): Builder {
+            /** @var Builder<Model> $this */
+            $request = request();
+            $filters = [];
+
+            if ($request->filled('filters')) {
+                $filtersInput = $request->query('filters', '{}');
+
+                if (is_string($filtersInput)) {
+                    $decodedFilters = json_decode($filtersInput, true);
+
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decodedFilters)) {
+                        $filters = $decodedFilters;
+                    }
+                }
+            }
+
+            if (! empty($filters)) {
+                foreach (collect($filters) as $filter => $value) {
+                    if (isset($value) && method_exists($this->getModel(), 'scope'.Str::studly($filter))) {
+                        $this->{$filter}($value);
+                    }
+                }
+            }
+
+            $sortBy = $request->query('sortBy', 'id');
+            $desc = $request->boolean('descending', true);
+
+            if ($orderBy) {
+                if ($sortBy && method_exists($this->getModel(), 'sortByDefaults')) {
+                    // @phpstan-ignore-next-line
+                    $sortByDefaults = $this->sortByDefaults();
+                    if (
+                        isset($sortByDefaults['sortBy']) && is_string($sortByDefaults['sortBy']) &&
+                        isset($sortByDefaults['sortByDesc']) && is_bool($sortByDefaults['sortByDesc'])
+                    ) {
+                        $sortBy = $sortByDefaults['sortBy'];
+                        $desc = $sortByDefaults['sortByDesc'];
+                    }
+                }
+                if (is_string($sortBy)) {
+                    $desc ? $this->latest($sortBy) : $this->oldest($sortBy);
+                }
+            }
+
+            return $this;
+        });
+        /**
+         * Macro to add aggregates to the query.
+         *
+         * @param  array<string, array<string>|string>  $aggregates
+         * @return Builder<Model>
+         */
+        Builder::macro('withAggregates', function (array $aggregates) {
+            /** @var Builder<Model> $this */
+            if (! count($aggregates)) {
                 return $this;
             }
-            if (!is_array($searchTerm) && !isset($searchTerm)) {
-                return $this;
-            }
-
-            return $this->where(function (Builder $query) use ($attributes, $searchTerm) {
-                foreach ($attributes as $attribute) {
-                    $query->when(
-                        Str::contains($attribute, '.'),
-                        function (Builder $query) use ($attribute, $searchTerm) {
-                            $relationName = Str::beforeLast($attribute, '.');
-                            $relationAttribute = Str::afterLast($attribute, '.');
-                            $relation = $this->getRelationWithoutConstraints($relationName);
-                            $table = $relation->getModel()->getTable();
-                            $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm, $table) {
-                                if (is_array($searchTerm)) {
-                                    $query->whereIn($table.'.'.$relationAttribute, $searchTerm);
-                                } else {
-                                    $query->where($table.'.'.$relationAttribute, $searchTerm);
-                                }
-                            });
-                        },
-                        function (Builder $query) use ($attribute, $searchTerm) {
-                            if (is_array($searchTerm)) {
-                                $query->whereIn($attribute, $searchTerm);
-                            } else {
-                                $query->where($attribute, $searchTerm);
-                            }
-                        }
-                    );
-                }
-            });
-        });
-
-        Builder::macro('paginates', function ($perPage = null, $columns = ['*'], $pageName = 'page', ?int $page = null) {
-            request()->validate(['rowsPerPage' => 'nullable|numeric|gte:0|lte:100000']);
-
-            $page = $page ?: Paginator::resolveCurrentPage($pageName);
-
-            $total = func_num_args() === 5 ? value(func_get_arg(4)) : $this->toBase()->getCountForPagination();
-
-            $perPage = (
-                $perPage instanceof Closure
-                ? $perPage($total)
-                : $perPage
-            ) ?: $this->model->getPerPage();
-
-            if (request()->filled('rowsPerPage') && !($perPage instanceof Closure)) {
-                if ((int) request('rowsPerPage') === 0) {
-                    $perPage = $total === 0 ? 15 : $total;
+            foreach ($aggregates as $relation => $value) {
+                // Check if $value is an array (for multiple parameters)
+                if (is_array($value)) {
+                    $column = $value[0]; // First element is the column
+                    $function = isset($value[1]) && is_string($value[1]) ? $value[1] : null; // Second element is the optional function
                 } else {
-                    $perPage = (int) request('rowsPerPage');
+                    $column = $value; // Single string column
+                    $function = null; // No function provided
                 }
+                $this->withAggregate($relation, $column, $function);
             }
 
-            $results = $total
-                ? $this->forPage($page, $perPage)->get($columns)
-                : $this->model->newCollection();
-
-            return $this->paginator($results, $total, $perPage, $page, [
-                'path'     => Paginator::resolveCurrentPath(),
-                'pageName' => $pageName,
-            ]);
-        });
-        Builder::macro('simplePaginates', function (?int $perPage = null, $columns = ['*'], $pageName = 'page', $page = null) {
-            request()->validate(['rowsPerPage' => 'nullable|numeric|gte:0|lte:10000']);
-            if (request()->filled('rowsPerPage')) {
-                if ((int) request('rowsPerPage') === 0) {
-                    $perPage = $this->count();
-                } else {
-                    $perPage = (int) request('rowsPerPage');
-                }
-            }
-            $page = $page ?: Paginator::resolveCurrentPage($pageName);
-
-            $this->offset(($page - 1) * $perPage)->limit($perPage + 1);
-
-            return $this->simplePaginator($this->get($columns), $perPage, $page, [
-                'path'     => Paginator::resolveCurrentPath(),
-                'pageName' => $pageName,
-            ]);
+            return $this;
         });
 
-        Builder::macro('toRawSql', function (): string {
-            $bindings = [];
-            foreach ($this->getBindings() as $value) {
-                if (is_string($value)) {
-                    $bindings[] = "'{$value}'";
-                } else {
-                    $bindings[] = $value;
-                }
-            }
+        /**
+         * Macro to add a conditional withCount based on a relationship.
+         *
+         * @param  string  $relation
+         * @param  Closure|null  $callback
+         * @param  string  $operator
+         * @param  int  $count
+         * @return Builder<Model>
+         */
+        Builder::macro('withCountWhereHas', function ($relation, ?Closure $callback = null, $operator = '>=', $count = 1): Builder {
+            /** @var Builder<Model> $this */
+            $this->whereHas(Str::before($relation, ':'), $callback, $operator, $count)
+                ->withCount(relations: $callback ? [$relation => fn ($query) => $callback($query)] : $relation);
 
-            return Str::replaceArray('?', $bindings, $this->toSql());
+            return $this;
         });
 
-        Builder::macro('getSqlQuery', function () {
-            $query = str_replace(['?'], ['\'%s\''], $this->toSql());
+        /**
+         * Macro to add an OR conditional withCount based on a relationship.
+         *
+         * @param  string  $relation
+         * @param  Closure|null  $callback
+         * @param  string  $operator
+         * @param  int  $count
+         * @return Builder<Model>
+         */
+        Builder::macro('orWithCountWhereHas', function ($relation, ?Closure $callback = null, $operator = '>=', $count = 1) {
+            /** @var Builder<Model> $this */
+            $this->orWhereHas(Str::before($relation, ':'), $callback, $operator, $count)
+                ->withCount(relations: $callback ? [$relation => fn ($query) => $callback($query)] : $relation);
 
-            return vsprintf($query, $this->getBindings());
+            return $this;
         });
 
-        Collection::macro('paginates', function ($perPage = 15, $total = null, $page = null, $pageName = 'page') {
+        /**
+         * Paginate collection
+         *
+         * @param  int  $perPage
+         * @param  int  $total
+         * @param  int  $page
+         * @param  string  $pageName
+         * @return Paginator
+         */
+        Collection::macro('paginate', function ($perPage, $total = null, $page = null, $pageName = 'page'): Paginator {
+            /** @var Collection $this */
+            // @phpstan-ignore-next-line
             $page = $page ?: LengthAwarePaginator::resolveCurrentPage($pageName);
 
             return new LengthAwarePaginator(
@@ -158,74 +220,51 @@ class ApiCrudServiceProvider extends ServiceProvider
                 $perPage,
                 $page,
                 [
-                    'path'     => LengthAwarePaginator::resolveCurrentPath(),
+                    'path' => LengthAwarePaginator::resolveCurrentPath(),
                     'pageName' => $pageName,
                 ]
             );
-        });
-
-        Builder::macro('initializer', function (bool $orderBy = true) {
-            $request = request();
-            $filters = [];
-            if ($request->filled('filters')) {
-                $filters = json_decode($request->query('filters'), true);
-            }
-            if (method_exists($this->model, 'initializeModel')) {
-                $model = $this->model->initializeModel();
-            } else {
-                $model = $this->newQuery();
-            }
-            foreach (collect($filters) as $filter => $value) {
-                if (isset($value) && method_exists($this->model, 'scope'.ucfirst($filter))) {
-                    $model->$filter($value);
-                }
-            }
-            $sortBy = (string) $request->query('sortBy', 'id');
-            $desc = $request->boolean('descending', true);
-            if ($orderBy) {
-                if ($sortBy && method_exists($this->model, 'sortByDefaults')) {
-                    $sortByDefaults = $this->model->sortByDefaults();
-                    $sortBy = $sortByDefaults['sortBy'];
-                    $desc = $sortByDefaults['sortByDesc'];
-                }
-                $desc === true ? $model->latest($sortBy) : $model->oldest($sortBy);
-            }
-
-            return $model;
-        });
-
-        Builder::macro('withAggregates', function (array $aggregates) {
-            if (!count($aggregates)) {
-                return $this;
-            }
-            foreach ($aggregates as $relation => $columns) {
-                $columns = is_array($columns) ? $columns : [$columns];
-                foreach ($columns as $column) {
-                    $this->withAggregate($relation, $column);
-                }
-            }
-
-            return $this;
-        });
-
-        Builder::macro('withCountWhereHas', function ($relation, Closure $callback = null, $operator = '>=', $count = 1) {
-            $this->whereHas(Str::before($relation, ':'), $callback, $operator, $count)
-                ->withCount(relations: $callback ? [$relation => fn ($query) => $callback($query)] : $relation);
-
-            return $this;
-        });
-
-        Builder::macro('orWithCountWhereHas', function ($relation, Closure $callback = null, $operator = '>=', $count = 1) {
-            $this->orWhereHas(Str::before($relation, ':'), $callback, $operator, $count)
-                ->withCount(relations: $callback ? [$relation => fn ($query) => $callback($query)] : $relation);
-
-            return $this;
         });
     }
 
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/fastApiCrud.php', 'fastApiCrud');
-        $this->commands([MakeAction::class, MakeService::class, MakeTrait::class]);
+        $this->mergeConfigFrom(__DIR__.'/../../config/fast-api.php', 'fast-api');
     }
 }
+
+//        Builder::macro('equalWhere', function (array $attributes, mixed $searchTerm = null) {
+//            if (is_array($searchTerm) && count($searchTerm) === 0) {
+//                return $this;
+//            }
+//            if (! is_array($searchTerm) && ! isset($searchTerm)) {
+//                return $this;
+//            }
+//            return $this->where(function (Builder $query) use ($attributes, $searchTerm) {
+//                foreach ($attributes as $attribute) {
+//                    $query->when(
+//                        Str::contains($attribute, '.'),
+//                        function (Builder $query) use ($attribute, $searchTerm) {
+//                            $relationName = Str::beforeLast($attribute, '.');
+//                            $relationAttribute = Str::afterLast($attribute, '.');
+//                            $relation = $this->getRelationWithoutConstraints($relationName);
+//                            $table = $relation->getModel()->getTable();
+//                            $query->whereHas($relationName, function (Builder $query) use ($relationAttribute, $searchTerm, $table) {
+//                                if (is_array($searchTerm)) {
+//                                    $query->whereIn($table.'.'.$relationAttribute, $searchTerm);
+//                                } else {
+//                                    $query->where($table.'.'.$relationAttribute, $searchTerm);
+//                                }
+//                            });
+//                        },
+//                        function (Builder $query) use ($attribute, $searchTerm) {
+//                            if (is_array($searchTerm)) {
+//                                $query->whereIn($attribute, $searchTerm);
+//                            } else {
+//                                $query->where($attribute, $searchTerm);
+//                            }
+//                        }
+//                    );
+//                }
+//            });
+//        });

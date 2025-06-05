@@ -1,6 +1,7 @@
 <?php
 
 use Anil\FastApiCrud\Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
 /*
@@ -15,8 +16,10 @@ use Illuminate\Support\Facades\DB;
 */
 
 uses(
-    TestCase::class
+    TestCase::class,
+    RefreshDatabase::class
 )->in(__DIR__);
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

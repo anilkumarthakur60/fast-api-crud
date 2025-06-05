@@ -3,41 +3,87 @@
 namespace Anil\FastApiCrud\Tests;
 
 use Anil\FastApiCrud\Providers\ApiCrudServiceProvider;
-use Anil\FastApiCrud\Tests\TestClasses\Controllers\PostController;
-use Anil\FastApiCrud\Tests\TestClasses\Controllers\TagController;
-use Anil\FastApiCrud\Tests\TestClasses\Controllers\UserController;
-use Anil\FastApiCrud\Tests\TestClasses\Models\PostModel;
-use Anil\FastApiCrud\Tests\TestClasses\Models\TagModel;
-use Anil\FastApiCrud\Tests\TestClasses\Models\UserModel;
+use Anil\FastApiCrud\Tests\TestSetup\Controllers\PostController;
+use Anil\FastApiCrud\Tests\TestSetup\Controllers\TagController;
+use Anil\FastApiCrud\Tests\TestSetup\Controllers\UserController;
+use Anil\FastApiCrud\Tests\TestSetup\Middleware\PermissionMiddleware;
+use Anil\FastApiCrud\Tests\TestSetup\Models\PermissionModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Router;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
-    use DatabaseMigrations;
+    // use DatabaseMigrations;
+    use RefreshDatabase;
 
+    protected Permission $testClientPermission;
+
+    protected Role $testClientRole;
+
+    /**
+     * @throws BindingResolutionException
+     */
     protected function setUp(): void
     {
         parent::setUp();
-        $this->setUpDatabase($this->app);
+
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Anil\FastApiCrud\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            function (string $modelName): string {
+                return 'Anil\FastApiCrud\\Tests\\TestSetup\\Factories\\'.class_basename($modelName).'Factory';
+            }
         );
+        /** @var Application $app */
+        $app = $this->app;
+        $app['config']->set('auth.guards.web', [
+            'driver' => 'session',
+            'provider' => 'users',
+        ]);
+
+        $app['config']->set('auth.providers.users', [
+            'driver' => 'eloquent',
+            'model' => UserModel::class,
+        ]);
+
+        $app['config']->set('auth.defaults.guard', 'web');
+        $app['config']->set('permission.guard_name', 'web');
+        $this->setUpDatabase();
+        $this->setupMiddleware();
     }
 
-    protected function setUpDatabase(Application $app): void
+    protected function setUpDatabase(): void
     {
-        $this->userMigration($app);
-        $this->tagMigration($app);
-        $this->postMigration($app);
+        $schema = $this->app['db']->connection()->getSchemaBuilder();
+        if (! $schema->hasTable('users')) {
+            $this->userMigration();
+        }
+        if (! $schema->hasTable('tags')) {
+            $this->tagMigration();
+        }
+        if (! $schema->hasTable('posts')) {
+            $this->postMigration();
+        }
+        if (! $schema->hasTable('permissions')) {
+            $this->permissionMigration();
+        }
     }
 
-    protected function userMigration(Application $app)
+    protected function userMigration(): void
     {
+
+        /** @var Application $app */
+        $app = $this->app;
         $app['db']->connection()
             ->getSchemaBuilder()
             ->create('users', function (Blueprint $table) {
@@ -54,8 +100,11 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    protected function tagMigration(Application $app)
+    protected function tagMigration(): void
     {
+
+        /** @var Application $app */
+        $app = $this->app;
         $app['db']->connection()
             ->getSchemaBuilder()
             ->create('tags', function (Blueprint $table) {
@@ -71,8 +120,10 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    protected function postMigration(Application $app)
+    protected function postMigration(): void
     {
+        /** @var Application $app */
+        $app = $this->app;
         $app['db']->connection()
             ->getSchemaBuilder()
             ->create('posts', function (Blueprint $table) {
@@ -102,19 +153,56 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
+    protected function permissionMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('permissions', function (Blueprint $table) {
+                $table->id();
+                $table->string(column: 'name');
+                $table->timestamps();
+            });
+
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('user_permission', function (Blueprint $table) {
+                $table->id();
+                $table->foreignIdFor(UserModel::class, 'user_id')
+                    ->constrained('users')
+                    ->cascadeOnDelete();
+                $table->foreignIdFor(PermissionModel::class, 'permission_id')
+                    ->constrained('permissions')
+                    ->cascadeOnDelete();
+            });
+    }
+
+    /**
+     * @throws BindingResolutionException
+     */
+    private function setupMiddleware(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+        $router = $app->make(Router::class);
+        // $router->aliasMiddleware('role', RoleMiddleware::class);
+        $router->aliasMiddleware('permission', PermissionMiddleware::class);
+        // $router->aliasMiddleware('role_or_permission', RoleOrPermissionMiddleware::class);
+    }
+
     protected function getPackageProviders($app): array
     {
         return [
             ApiCrudServiceProvider::class,
+            PermissionServiceProvider::class,
         ];
     }
 
     /**
      * Define routes setup.
      *
-     * @param Router $router
-     *
-     * @return void
+     * @param  Router  $router
      */
     protected function defineRoutes($router): void
     {
@@ -174,6 +262,8 @@ abstract class TestCase extends OrchestraTestCase
         $router->delete('tags/{id}', [TagController::class, 'destroy'])
             ->name('tags.destroy');
     }
+
+    // spatie permission
 
     private function userRoutes(Router $router): void
     {
