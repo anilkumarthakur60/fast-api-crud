@@ -15,22 +15,6 @@ jobs:
       matrix:
         php: [8.2, 8.3, 8.4]
         laravel: ["^12.0", "^11.0", "^10.0"]
-        include:
-          - laravel: "^12.0"
-            testbench: "10.*"
-            pest: "^3.0"
-            permission: "^6.0"
-
-          - laravel: "^11.0"
-            testbench: "9.*"
-            pest: "^3.0"
-            permission: "^6.0"
-
-          - laravel: "^10.0"
-            testbench: "8.*"
-            pest: "^3.0"
-            permission: "^5.0"
-
     name: PHP ${{ matrix.php }} | Laravel ${{ matrix.laravel }}
 
     services:
@@ -70,9 +54,6 @@ jobs:
       - name: Install Laravel + Dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-update --no-interaction
-          composer require "spatie/laravel-permission:${{ matrix.permission }}" --no-update --no-interaction
-          composer require "orchestra/testbench:${{ matrix.testbench }}" --dev --no-update --no-interaction
-          composer require "pestphp/pest:${{ matrix.pest }}" --dev --no-update --no-interaction
           composer update --prefer-dist --no-interaction
 
       - name: Run Tests
