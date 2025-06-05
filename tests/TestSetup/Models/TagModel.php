@@ -2,16 +2,13 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
-use Anil\FastApiCrud\Database\Factories\TagModelFactory;
+use Anil\FastApiCrud\Tests\TestSetup\Factories\TagModelFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-/**
- * @method Builder<TagModel> likeWhere(array<string> $attributes, ?string $searchTerm = null)
- */
 class TagModel extends Model
 {
     /** @use HasFactory<TagModelFactory> */

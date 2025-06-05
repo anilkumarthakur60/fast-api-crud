@@ -45,7 +45,9 @@
   "authors": [
     {
       "name": "Anil Kumar Thakur",
-      "email": "anilkumarthakur60@gmail.com"
+      "email": "anilkumarthakur60@gmail.com",
+      "role": "Developer",
+      "homepage": "https://anilkumarthakur.com.np"
     }
   ],
   "extra": {
