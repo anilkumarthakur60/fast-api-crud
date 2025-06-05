@@ -7,6 +7,8 @@ use Anil\FastApiCrud\Tests\TestSetup\Controllers\PostController;
 use Anil\FastApiCrud\Tests\TestSetup\Controllers\TagController;
 use Anil\FastApiCrud\Tests\TestSetup\Controllers\UserController;
 use Anil\FastApiCrud\Tests\TestSetup\Middleware\PermissionMiddleware;
+use Anil\FastApiCrud\Tests\TestSetup\Models\CountryModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\OwnerModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\PermissionModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
@@ -72,6 +74,10 @@ abstract class TestCase extends OrchestraTestCase
     {
         $schema = $this->app['db']->connection()->getSchemaBuilder();
 
+        // countries
+        if (! $schema->hasTable('countries')) {
+            $this->countryMigration();
+        }
         // 1) users' table
         if (! $schema->hasTable('users')) {
             $this->userMigration();
@@ -92,6 +98,127 @@ abstract class TestCase extends OrchestraTestCase
         if (! $schema->hasTable('permissions')) {
             $this->permissionMigration();
         }
+
+        // 5) parents & children tables
+        if (! $schema->hasTable('parents')) {
+            $this->parentMigration();
+        }
+
+        if (! $schema->hasTable('children')) {
+            $this->childMigration();
+        }
+        // owners
+        if (! $schema->hasTable('owners')) {
+            $this->ownerMigration();
+        }
+
+        // photos
+        if (! $schema->hasTable('photos')) {
+            $this->photoMigration();
+        }
+
+        // pets
+        if (! $schema->hasTable('pets')) {
+            $this->petMigration();
+        }
+
+        // comments
+        if (! $schema->hasTable('comments')) {
+            $this->commentMigration();
+        }
+
+        // profiles
+        if (! $schema->hasTable('profiles')) {
+            $this->profileMigration();
+        }
+    }
+
+    protected function countryMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('countries', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->timestamps();
+            });
+    }
+
+    protected function profileMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('profiles', function (Blueprint $table) {
+                $table->id();
+                $table->morphs('profilable');
+                $table->text('bio')->nullable();
+                $table->timestamps();
+            });
+    }
+
+    protected function commentMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('comments', function (Blueprint $table) {
+                $table->id();
+                $table->morphs('commentable');
+                $table->text('body')->nullable();
+                $table->timestamps();
+            });
+    }
+
+    protected function ownerMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('owners', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->timestamps();
+            });
+    }
+
+    protected function petMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('pets', function (Blueprint $table) {
+                $table->id();
+                $table->foreignIdFor(OwnerModel::class, 'owner_id')->nullable()->constrained('owners')->cascadeOnDelete();
+                $table->string('name')->nullable();
+                $table->timestamps();
+            });
+    }
+
+    protected function photoMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('photos', function (Blueprint $table) {
+                $table->id();
+                $table->morphs('imageable');
+                $table->string('path')->nullable();
+                $table->timestamps();
+            });
     }
 
     /**
@@ -110,6 +237,7 @@ abstract class TestCase extends OrchestraTestCase
                 $table->string('password');
                 $table->boolean('active')->default(true);
                 $table->boolean('status')->default(true);
+                $table->foreignIdFor(CountryModel::class, 'country_id')->nullable()->constrained('countries')->cascadeOnDelete();
                 $table->timestamps();
                 $table->softDeletes();
             });
@@ -171,6 +299,35 @@ abstract class TestCase extends OrchestraTestCase
                 $table->foreignIdFor(TagModel::class, 'tag_id')
                     ->constrained('tags')
                     ->cascadeOnDelete();
+            });
+    }
+
+    protected function parentMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('parents', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->nullable();
+                $table->timestamps();
+            });
+    }
+
+    protected function childMigration(): void
+    {
+        /** @var Application $app */
+        $app = $this->app;
+
+        $app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('children', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('parent_id')->nullable()->constrained('parents')->onDelete('cascade');
+                $table->string('title')->nullable();
+                $table->timestamps();
             });
     }
 

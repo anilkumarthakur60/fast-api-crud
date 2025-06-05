@@ -15,7 +15,9 @@ class ParentModel extends Model
 
     protected $table = 'parents';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+    ];
 
     /**
      * Get all children for this parent.

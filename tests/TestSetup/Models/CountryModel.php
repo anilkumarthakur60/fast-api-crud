@@ -16,7 +16,7 @@ class CountryModel extends Model
 
     protected $table = 'countries';
 
-    protected $guarded = [];
+    protected $fillable = [];
 
     /**
      * The users that belong to the country.

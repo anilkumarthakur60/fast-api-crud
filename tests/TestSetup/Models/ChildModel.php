@@ -15,7 +15,10 @@ class ChildModel extends Model
 
     protected $table = 'children';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'parent_id',
+        'title',
+    ];
 
     /**
      * Get the parent that this child belongs to.

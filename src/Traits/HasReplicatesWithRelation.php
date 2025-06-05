@@ -31,7 +31,6 @@ trait HasReplicatesWithRelation
      * - BelongsToMany / MorphToMany: replicate the pivot associations (sync related IDs).
      * - Throws an Exception for unsupported relation types (e.g., HasManyThrough).
      *
-     * @return static The newly replicated model instance, with relations replicated.
      *
      * @throws Exception
      */

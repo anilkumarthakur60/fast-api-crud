@@ -9,7 +9,7 @@ class PhotoModel extends Model
 {
     protected $table = 'photos';
 
-    protected $guarded = [];
+    protected $fillable = [];
 
     /**
      * The model that this photo belongs to.

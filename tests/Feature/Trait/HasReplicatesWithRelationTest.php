@@ -10,113 +10,14 @@ use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\ProfileModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Schema;
-
-beforeEach(function () {
-    // Create tables needed for testing
-
-    Schema::create('parents', function (Blueprint $table) {
-        $table->id();
-        $table->string('name')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('children', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('parent_id')->nullable()->constrained('parents')->onDelete('cascade');
-        $table->string('title')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('owners', function (Blueprint $table) {
-        $table->id();
-        $table->string('name')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('pets', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('owner_id')->nullable()->constrained('owners')->onDelete('cascade');
-        $table->string('pet_name')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('posts', function (Blueprint $table) {
-        $table->id();
-        $table->string('post_title')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('tags', function (Blueprint $table) {
-        $table->id();
-        $table->string('tag_name')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('post_tag', function (Blueprint $table) {
-        $table->foreignId('post_id')->constrained('posts')->onDelete('cascade');
-        $table->foreignId('tag_id')->constrained('tags')->onDelete('cascade');
-    });
-
-    Schema::create('users', function (Blueprint $table) {
-        $table->id();
-        $table->string('username')->nullable();
-        $table->foreignId('country_id')->nullable()->constrained('countries')->onDelete('cascade');
-        $table->timestamps();
-    });
-
-    Schema::create('countries', function (Blueprint $table) {
-        $table->id();
-        $table->string('country_name')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('profiles', function (Blueprint $table) {
-        $table->id();
-        $table->morphs('profilable');
-        $table->text('bio')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('comments', function (Blueprint $table) {
-        $table->id();
-        $table->morphs('commentable');
-        $table->text('body')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('photos', function (Blueprint $table) {
-        $table->id();
-        $table->morphs('imageable');
-        $table->string('path')->nullable();
-        $table->timestamps();
-    });
-});
-
-afterEach(function () {
-    // Drop tables in reverse order to avoid foreign key conflicts
-    Schema::dropIfExists('photos');
-    Schema::dropIfExists('comments');
-    Schema::dropIfExists('profiles');
-    Schema::dropIfExists('users');
-    Schema::dropIfExists('countries');
-    Schema::dropIfExists('post_tag');
-    Schema::dropIfExists('tags');
-    Schema::dropIfExists('posts');
-    Schema::dropIfExists('pets');
-    Schema::dropIfExists('owners');
-    Schema::dropIfExists('children');
-    Schema::dropIfExists('parents');
-});
 
 /** @test */
 test('it replicates a model with no relations', function () {
     $parent = ParentModel::create(['name' => 'Original Parent']);
     $replicated = $parent->replicateWithRelations();
 
-    // New parent exists with same data but different ID
+    // New parent exists with the same data but different ID
     expect($replicated->id)->not->toBe($parent->id);
     $this->assertDatabaseHas('parents', [
         'id' => $replicated->id,
@@ -143,7 +44,7 @@ test('it replicates has_many and belongs_to relations', function () {
         'name' => 'Parent A',
     ]);
 
-    // Each child is replicated and attached to new parent
+    // Each child is replicated and attached to a new parent
     $this->assertDatabaseHas('children', [
         'title' => 'Child 1',
         'parent_id' => $replicatedParent->id,
@@ -312,8 +213,8 @@ test('it replicates morph_many and morph_to relations on child', function () {
 /** @test */
 test('it throws exception for has_one_through and has_many_through relations', function () {
     $country = CountryModel::create(['country_name' => 'Utopia']);
-    $user = UserModel::create(['username' => 'dave', 'country_id' => $country->id]);
-    $post = PostModel::create(['post_title' => 'Through Post']);
+    $user = UserModel::create(['name' => 'dave', 'country_id' => $country->id]);
+    $post = PostModel::create(['title' => 'Through Post']);
     $user->posts()->save($post);
 
     // Load the hasManyThrough relation before replicating

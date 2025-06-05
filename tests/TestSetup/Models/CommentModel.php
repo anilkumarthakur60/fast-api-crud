@@ -12,7 +12,7 @@ class CommentModel extends Model
 
     protected $table = 'comments';
 
-    protected $guarded = [];
+    protected $fillable = [];
 
     /**
      * The model that this comment belongs to.

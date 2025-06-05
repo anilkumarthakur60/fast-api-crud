@@ -12,7 +12,10 @@ class PetModel extends Model
 
     protected $table = 'owners';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'owner_id',
+        'pet_name',
+    ];
 
     /**
      * The owner that belongs to the pet.

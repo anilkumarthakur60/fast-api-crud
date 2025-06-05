@@ -12,7 +12,7 @@ class ProfileModel extends Model
 
     protected $table = 'profiles';
 
-    protected $guarded = [];
+    protected $fillable = [];
 
     /**
      * The model that this profile belongs to.
