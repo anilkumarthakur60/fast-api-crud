@@ -20,6 +20,12 @@ class ApiCrudServiceProvider extends ServiceProvider
             __DIR__.'/../../config/fast-api.php' => config_path('fast-api.php'),
         ], 'config');
 
+        /**
+         * Macro to add a "like" condition to the query for multiple attributes.
+         *
+         * @param  bool  $orderBy  Whether to apply ordering based on request parameters.
+         * @return Builder<static> The initialized query builder.
+         */
         Builder::macro('likeWhere', function (array $attributes, ?string $searchTerm = null) {
             /** @var Builder<Model> $this */
             if (empty($searchTerm)) {
