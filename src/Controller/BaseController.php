@@ -816,7 +816,9 @@ class BaseController extends Controller
         try {
             DB::beginTransaction();
             $this->beforeRestore($model);
-            $model->restore();
+            if (method_exists(new $model, 'restore')) {
+                $model->restore();
+            }
             $this->afterRestore($model);
             DB::commit();
         } catch (Exception $e) {
