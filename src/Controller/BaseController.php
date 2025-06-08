@@ -297,9 +297,9 @@ class BaseController extends Controller
      *  - ['status' => 1] → calls $query->status(1)
      *  - ['dateRange' => [$from, $to]] → calls $query->dateRange($from, $to)
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<Model>  $query  The Eloquent query builder instance.
+     * @param  Builder<Model>  $query  The Eloquent query builder instance.
      * @param  array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>  $scopes  The scopes to apply.
-     * @return \Illuminate\Database\Eloquent\Builder<Model> The modified query builder.
+     * @return Builder<Model> The modified query builder.
      */
     protected function applyScopes(Builder $query, array $scopes): Builder
     {
@@ -725,6 +725,8 @@ class BaseController extends Controller
      *
      * @param  int|string  $id  The primary key of the resource.
      * @return JsonResource|JsonResponse The updated resource or JSON error response.
+     *
+     * @throws Throwable
      */
     public function update(int|string $id): JsonResource|JsonResponse
     {
@@ -809,6 +811,7 @@ class BaseController extends Controller
      */
     public function restoreTrashed(int|string $id): JsonResource|JsonResponse
     {
+        /** @var Model $model */
         $model = $this->model::query()->initializer()->onlyTrashed()
             ->when($this->restoreScopes, fn ($query) => $this->applyScopes($query, $this->restoreScopes))
             ->findOrFail($id);
