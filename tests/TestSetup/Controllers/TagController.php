@@ -2,14 +2,14 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Controllers;
 
-use Anil\FastApiCrud\Controller\Controller;
+use Anil\FastApiCrud\Controller\BaseController;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Requests\Tag\StoreTagRequest;
 use Anil\FastApiCrud\Tests\TestSetup\Requests\Tag\UpdateTagRequest;
 use Anil\FastApiCrud\Tests\TestSetup\Resources\TagResource;
 use Exception;
 
-class TagController extends Controller
+class TagController extends BaseController
 {
     /**
      * @throws Exception

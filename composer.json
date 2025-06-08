@@ -14,18 +14,18 @@
   ],
   "type": "library",
   "require": {
-    "illuminate/auth": "^10.0||^11.0||^12.0",
-    "illuminate/database": "^10.0||^11.0||^12.0",
-    "illuminate/http": "^10.0||^11.0||^12.0",
-    "illuminate/pagination": "^10.0||^11.0||^12.0",
-    "illuminate/routing": "^10.0||^11.0||^12.0",
-    "illuminate/support": "^10.0||^11.0||^12.0",
+    "illuminate/auth": "^11.0||^12.0",
+    "illuminate/database": "^11.0||^12.0",
+    "illuminate/http": "^11.0||^12.0",
+    "illuminate/pagination": "^11.0||^12.0",
+    "illuminate/routing": "^11.0||^12.0",
+    "illuminate/support": "^11.0||^12.0",
     "spatie/laravel-permission": "^5.0||^6.0"
   },
   "require-dev": {
-    "larastan/larastan": "^2.0||3.0",
+    "larastan/larastan": "^2.0||^3.0",
     "laravel/pint": "^1.0",
-    "orchestra/testbench": "^8.0||^9.0||^10.0",
+    "orchestra/testbench": "^9.0||^10.0",
     "pestphp/pest": "^2.0||^3.0"
   },
   "license": "MIT",
