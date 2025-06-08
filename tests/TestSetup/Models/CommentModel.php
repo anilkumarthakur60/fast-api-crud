@@ -12,7 +12,11 @@ class CommentModel extends Model
 
     protected $table = 'comments';
 
-    protected $fillable = [];
+    protected $fillable = [
+        'commentable_id',
+        'commentable_type',
+        'body',
+    ];
 
     /**
      * The model that this comment belongs to.

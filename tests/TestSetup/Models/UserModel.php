@@ -3,6 +3,7 @@
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
 use Anil\FastApiCrud\Tests\TestSetup\Factories\UserModelFactory;
+use Anil\FastApiCrud\Traits\HasReplicatesWithRelation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Request;
 class UserModel extends Authenticatable
 {
     /** @use HasFactory<UserModelFactory> */
-    use HasFactory;
+    use HasFactory, HasReplicatesWithRelation;
 
     use SoftDeletes;
 

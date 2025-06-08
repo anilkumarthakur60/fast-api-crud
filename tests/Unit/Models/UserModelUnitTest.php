@@ -59,6 +59,7 @@ describe(description: 'user_model_class_unit_test', tests: function () {
             'deleted_at',
             'email',
             'id',
+            'country_id',
             'name',
             'password',
             'status',

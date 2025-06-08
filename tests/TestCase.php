@@ -20,17 +20,11 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Router;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
     use RefreshDatabase;
-
-    protected Permission $testClientPermission;
-
-    protected Role $testClientRole;
 
     /**
      * @throws BindingResolutionException
@@ -40,15 +34,12 @@ abstract class TestCase extends OrchestraTestCase
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            function (string $modelName): string {
-                return 'Anil\FastApiCrud\\Tests\\TestSetup\\Factories\\'.class_basename($modelName).'Factory';
-            }
+            fn (string $modelName): string => 'Anil\FastApiCrud\\Tests\\TestSetup\\Factories\\'.class_basename($modelName)
         );
 
-        /** @var Application $app */
         $app = $this->app;
 
-        // Configure auth to use our UserModel
+        // Configure authentication to use UserModel
         $app['config']->set('auth.guards.web', [
             'driver' => 'session',
             'provider' => 'users',
@@ -60,85 +51,67 @@ abstract class TestCase extends OrchestraTestCase
         $app['config']->set('auth.defaults.guard', 'web');
         $app['config']->set('permission.guard_name', 'web');
 
-        // Run our custom migrations first
-        $this->setUpDatabase();
+        // Create all necessary tables before running tests
+        $this->runMigrations();
 
-        // Then wire up our "permission" middleware alias
-        $this->setupMiddleware();
+        // Register "permission" middleware alias
+        $this->registerMiddleware();
     }
 
     /**
-     * Create all the tables needed for tests (users, tags, posts, permissions, pivot tables, etc.).
+     * Create all tables required by tests.
      */
-    protected function setUpDatabase(): void
+    protected function runMigrations(): void
     {
         $schema = $this->app['db']->connection()->getSchemaBuilder();
 
-        // countries
         if (! $schema->hasTable('countries')) {
-            $this->countryMigration();
+            $this->createCountriesTable();
         }
-        // 1) users' table
         if (! $schema->hasTable('users')) {
-            $this->userMigration();
+            $this->createUsersTable();
         }
-
-        // 2) tag table
-        if (! $schema->hasTable('tags')) {
-            $this->tagMigration();
-        }
-
-        // 3) posts & post_tag tables
-        if (! $schema->hasTable('posts')) {
-            $this->postMigration();
-        }
-
-        // 4) permissions & user_permission tables (our minimal version)
-        //    Note: Spatie’s own tables (roles, model_has_permissions, etc.) come from the PermissionServiceProvider.
-        if (! $schema->hasTable('permissions')) {
-            $this->permissionMigration();
-        }
-
-        // 5) parents & children tables
-        if (! $schema->hasTable('parents')) {
-            $this->parentMigration();
-        }
-
-        if (! $schema->hasTable('children')) {
-            $this->childMigration();
-        }
-        // owners
-        if (! $schema->hasTable('owners')) {
-            $this->ownerMigration();
-        }
-
-        // photos
-        if (! $schema->hasTable('photos')) {
-            $this->photoMigration();
-        }
-
-        // pets
-        if (! $schema->hasTable('pets')) {
-            $this->petMigration();
-        }
-
-        // comments
-        if (! $schema->hasTable('comments')) {
-            $this->commentMigration();
-        }
-
-        // profiles
         if (! $schema->hasTable('profiles')) {
-            $this->profileMigration();
+            $this->createProfilesTable();
+        }
+        if (! $schema->hasTable('comments')) {
+            $this->createCommentsTable();
+        }
+        if (! $schema->hasTable('owners')) {
+            $this->createOwnersTable();
+        }
+        if (! $schema->hasTable('pets')) {
+            $this->createPetsTable();
+        }
+        if (! $schema->hasTable('photos')) {
+            $this->createPhotosTable();
+        }
+        if (! $schema->hasTable('tags')) {
+            $this->createTagsTable();
+        }
+        if (! $schema->hasTable('posts')) {
+            $this->createPostsTable();
+        }
+        if (! $schema->hasTable('post_tag')) {
+            $this->createPostTagTable();
+        }
+        if (! $schema->hasTable('parents')) {
+            $this->createParentsTable();
+        }
+        if (! $schema->hasTable('children')) {
+            $this->createChildrenTable();
+        }
+        if (! $schema->hasTable('permissions')) {
+            $this->createPermissionsTable();
+        }
+        if (! $schema->hasTable('user_permission')) {
+            $this->createUserPermissionTable();
         }
     }
 
-    protected function countryMigration(): void
+    private function createCountriesTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('countries', function (Blueprint $table) {
                 $table->id();
@@ -147,12 +120,29 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    protected function profileMigration(): void
+    private function createUsersTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
+        $this->app['db']->connection()
+            ->getSchemaBuilder()
+            ->create('users', function (Blueprint $table) {
+                $table->id();
+                $table->string('username')->unique();
+                $table->string('email')->unique();
+                $table->string('password')->nullable();
+                $table->boolean('active')->default(true);
+                $table->boolean('status')->default(true);
+                $table->foreignIdFor(CountryModel::class, 'country_id')
+                    ->nullable()
+                    ->constrained('countries')
+                    ->cascadeOnDelete();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+    }
 
-        $app['db']->connection()
+    private function createProfilesTable(): void
+    {
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('profiles', function (Blueprint $table) {
                 $table->id();
@@ -162,12 +152,9 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    protected function commentMigration(): void
+    private function createCommentsTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('comments', function (Blueprint $table) {
                 $table->id();
@@ -177,12 +164,9 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    protected function ownerMigration(): void
+    private function createOwnersTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('owners', function (Blueprint $table) {
                 $table->id();
@@ -191,27 +175,24 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    protected function petMigration(): void
+    private function createPetsTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('pets', function (Blueprint $table) {
                 $table->id();
-                $table->foreignIdFor(OwnerModel::class, 'owner_id')->nullable()->constrained('owners')->cascadeOnDelete();
-                $table->string('name')->nullable();
+                $table->string('pet_name');
+                $table->foreignIdFor(OwnerModel::class, 'owner_id')
+                    ->nullable()
+                    ->constrained('owners')
+                    ->cascadeOnDelete();
                 $table->timestamps();
             });
     }
 
-    protected function photoMigration(): void
+    private function createPhotosTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('photos', function (Blueprint $table) {
                 $table->id();
@@ -221,40 +202,13 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    /**
-     * Create the "users" table.
-     */
-    protected function userMigration(): void
+    private function createTagsTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-        $app['db']->connection()
-            ->getSchemaBuilder()
-            ->create('users', function (Blueprint $table) {
-                $table->id();
-                $table->string('name');
-                $table->string('email')->unique();
-                $table->string('password');
-                $table->boolean('active')->default(true);
-                $table->boolean('status')->default(true);
-                $table->foreignIdFor(CountryModel::class, 'country_id')->nullable()->constrained('countries')->cascadeOnDelete();
-                $table->timestamps();
-                $table->softDeletes();
-            });
-    }
-
-    /**
-     * Create the "tags" table.
-     */
-    protected function tagMigration(): void
-    {
-        /** @var Application $app */
-        $app = $this->app;
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('tags', function (Blueprint $table) {
                 $table->id();
-                $table->string('name');
+                $table->string('tag_name');
                 $table->longText('desc')->nullable();
                 $table->boolean('status')->default(true);
                 $table->boolean('active')->default(true);
@@ -263,33 +217,27 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    /**
-     * Create the "posts" table and its pivot "post_tag".
-     */
-    protected function postMigration(): void
+    private function createPostsTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-
-        // 3.1) posts table
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('posts', function (Blueprint $table) {
                 $table->id();
-                $table->string('name');
+                $table->string('post_title');
                 $table->longText('desc')->nullable();
                 $table->boolean('status')->default(true);
                 $table->boolean('active')->default(true);
-                // foreign key to users
                 $table->foreignIdFor(UserModel::class, 'user_id')
                     ->constrained('users')
                     ->cascadeOnDelete();
                 $table->timestamps();
                 $table->softDeletes();
             });
+    }
 
-        // 3.2) post_tag pivot table
-        $app['db']->connection()
+    private function createPostTagTable(): void
+    {
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('post_tag', function (Blueprint $table) {
                 $table->id();
@@ -302,56 +250,47 @@ abstract class TestCase extends OrchestraTestCase
             });
     }
 
-    protected function parentMigration(): void
+    private function createParentsTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('parents', function (Blueprint $table) {
                 $table->id();
                 $table->string('name')->nullable();
                 $table->timestamps();
+                $table->softDeletes();
             });
     }
 
-    protected function childMigration(): void
+    private function createChildrenTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('children', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('parent_id')->nullable()->constrained('parents')->onDelete('cascade');
+                $table->foreignId('parent_id')
+                    ->nullable()
+                    ->constrained('parents')
+                    ->cascadeOnDelete();
                 $table->string('title')->nullable();
                 $table->timestamps();
             });
     }
 
-    /**
-     * Create a minimal "permissions" table and a pivot "user_permission".
-     * (Spatie’s own tables—roles, model_has_permissions, etc.—will be loaded
-     * by the PermissionServiceProvider.)
-     */
-    protected function permissionMigration(): void
+    private function createPermissionsTable(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-
-        // 4.1) permissions table
-        $app['db']->connection()
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('permissions', function (Blueprint $table) {
                 $table->id();
                 $table->string('name')->unique();
                 $table->timestamps();
             });
+    }
 
-        // 4.2) user_permission pivot table
-        $app['db']->connection()
+    private function createUserPermissionTable(): void
+    {
+        $this->app['db']->connection()
             ->getSchemaBuilder()
             ->create('user_permission', function (Blueprint $table) {
                 $table->id();
@@ -365,17 +304,13 @@ abstract class TestCase extends OrchestraTestCase
     }
 
     /**
-     * Register our custom "permission" middleware alias.
+     * Register “permission” middleware alias.
      *
      * @throws BindingResolutionException
      */
-    private function setupMiddleware(): void
+    private function registerMiddleware(): void
     {
-        /** @var Application $app */
-        $app = $this->app;
-        $router = $app->make(Router::class);
-
-        // Alias "permission" to our test middleware
+        $router = $this->app->make(Router::class);
         $router->aliasMiddleware('permission', PermissionMiddleware::class);
     }
 
@@ -389,23 +324,23 @@ abstract class TestCase extends OrchestraTestCase
     {
         return [
             ApiCrudServiceProvider::class,
-            PermissionServiceProvider::class, // Spatie’s Provider registers its own migrations
+            PermissionServiceProvider::class,
         ];
     }
 
     /**
-     * Define routes for Posts, Tags, and Users.
+     * Define application routes for tests.
      *
      * @param  Router  $router
      */
     protected function defineRoutes($router): void
     {
-        $this->postRoutes($router);
-        $this->tagRoutes($router);
-        $this->userRoutes($router);
+        $this->registerPostRoutes($router);
+        $this->registerTagRoutes($router);
+        $this->registerUserRoutes($router);
     }
 
-    private function postRoutes(Router $router): void
+    private function registerPostRoutes(Router $router): void
     {
         $router->get('posts', [PostController::class, 'index'])->name('posts.index');
         $router->post('posts', [PostController::class, 'store'])->name('posts.store');
@@ -425,7 +360,7 @@ abstract class TestCase extends OrchestraTestCase
         $router->delete('posts/{id}', [PostController::class, 'destroy'])->name('posts.destroy');
     }
 
-    private function tagRoutes(Router $router): void
+    private function registerTagRoutes(Router $router): void
     {
         $router->get('tags', [TagController::class, 'index'])->name('tags.index');
         $router->post('tags', [TagController::class, 'store'])->name('tags.store');
@@ -438,13 +373,14 @@ abstract class TestCase extends OrchestraTestCase
         $router->put('tags/{id}', [TagController::class, 'update'])->name('tags.update');
         $router->put('tags/{id}/status-change/{column}', [TagController::class, 'changeStatusOtherColumn'])
             ->name('tags.changeStatusOtherColumn');
-        $router->put('tags/{id}/status-change', [TagController::class, 'changeStatus'])->name('tags.changeStatus');
+        $router->put('tags/{id}/status-change', [TagController::class, 'changeStatus'])
+            ->name('tags.changeStatus');
         $router->put('tags/{id}/restore-trashed', [TagController::class, 'restoreTrashed'])
             ->name('tags.restoreTrashed');
         $router->delete('tags/{id}', [TagController::class, 'destroy'])->name('tags.destroy');
     }
 
-    private function userRoutes(Router $router): void
+    private function registerUserRoutes(Router $router): void
     {
         $router->get('users', [UserController::class, 'index'])->name('users.index');
         $router->post('users', [UserController::class, 'store'])->name('users.store');

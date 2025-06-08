@@ -2,7 +2,7 @@
 
 namespace Anil\FastApiCrud\Controller;
 
-class SampleController extends Controller
+class SampleController extends BaseController
 {
     public function __construct()
     {

@@ -9,7 +9,11 @@ class PhotoModel extends Model
 {
     protected $table = 'photos';
 
-    protected $fillable = [];
+    protected $fillable = [
+        'imageable_id',
+        'imageable_type',
+        'path',
+    ];
 
     /**
      * The model that this photo belongs to.
