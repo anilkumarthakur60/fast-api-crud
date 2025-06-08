@@ -12,7 +12,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use ReflectionException;
@@ -25,7 +25,7 @@ use Throwable;
  * A base controller providing standard CRUD operations (index, show, store, update, delete, restore, etc.)
  * for Eloquent models, with support for scopes, eager loading, aggregates, permissions, and API responses.
  */
-class Controller extends BaseController
+class BaseController extends Controller
 {
     use ApiResponder;
     use AuthorizesRequests;
