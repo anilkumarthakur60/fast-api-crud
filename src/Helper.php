@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Carbon\CarbonInterval;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Request;
@@ -115,20 +114,92 @@ if (! function_exists('parseTimeToSeconds')) {
 
 if (! function_exists('formatDuration')) {
     /**
-     * Convert a duration in seconds to a formatted string (e.g., "2h 15m").
+     * Format a duration in seconds into a custom or default human-readable string.
      *
-     * Uses CarbonInterval to cascade hours and minutes from total seconds.
+     * Approximates:
+     *   1 year   = 365 days
+     *   1 month  = 30 days
+     *   1 day    = 24 hours
+     *   1 hour   = 60 minutes
+     *   1 minute = 60 seconds
      *
-     * @param  int  $duration  Duration in seconds.
-     * @param  string  $format  Format string, where "%dh" is replaced by total hours and "%dm" by remaining minutes.
-     *                          Default: "%dh %dm"
-     * @return string Formatted time string.
+     * Placeholders:
+     *   %y  = years
+     *   %mo = months
+     *   %d  = days
+     *   %h  = hours
+     *   %m  = minutes
+     *   %s  = seconds
+     *
+     * @param  int|float  $duration  Negative or float OK; will be floored to abs().
+     * @param  string|null  $format  Space-separated list of placeholders (with literals).
+     * @param  string  $separator  How to join the parts (default: a single space).
      */
-    function formatDuration(int $duration, string $format = '%dh %dm'): string
+    function formatDuration(int|float $duration, ?string $format = '%y %mo %d %h %m %s', string $separator = ' '): string
     {
-        $interval = CarbonInterval::seconds($duration)->cascade();
+        // absolute, floored to integer seconds
+        $total = (int) abs($duration);
 
-        return sprintf($format, $interval->totalHours, $interval->minutes);
+        // fixed conversion factors
+        $secPerMin = 60;
+        $secPerHour = 60 * $secPerMin;
+        $secPerDay = 24 * $secPerHour;
+        $secPerMonth = 30 * $secPerDay;
+        $secPerYear = 365 * $secPerDay;
+
+        // break down
+        $years = intdiv($total, $secPerYear);
+        $total %= $secPerYear;
+        $months = intdiv($total, $secPerMonth);
+        $total %= $secPerMonth;
+        $days = intdiv($total, $secPerDay);
+        $total %= $secPerDay;
+        $hours = intdiv($total, $secPerHour);
+        $total %= $secPerHour;
+        $minutes = intdiv($total, $secPerMin);
+        $seconds = $total % $secPerMin;
+
+        $units = [
+            '%y' => ['value' => $years,   'label' => 'yr'],
+            '%mo' => ['value' => $months,  'label' => 'mo'],
+            '%d' => ['value' => $days,    'label' => 'd'],
+            '%h' => ['value' => $hours,   'label' => 'h'],
+            '%m' => ['value' => $minutes, 'label' => 'm'],
+            '%s' => ['value' => $seconds, 'label' => 's'],
+        ];
+
+        $parts = [];
+
+        // custom‐format path
+        if ($format !== null) {
+            foreach (preg_split('/\s+/', $format) as $token) {
+                if (str_starts_with($token, '%')) {
+                    // known placeholder?
+                    if (isset($units[$token]) && $units[$token]['value'] > 0) {
+                        $parts[] = $units[$token]['value'].$units[$token]['label'];
+                    }
+                    // unknown % token → skip
+                } else {
+                    // literal text
+                    $parts[] = $token;
+                }
+            }
+
+            return $parts
+                ? implode($separator, $parts)
+                : '0s';
+        }
+
+        // default path: list all non‐zero units
+        foreach ($units as $u) {
+            if ($u['value'] > 0) {
+                $parts[] = $u['value'].$u['label'];
+            }
+        }
+
+        return $parts
+            ? implode($separator, $parts)
+            : '0s';
     }
 }
 

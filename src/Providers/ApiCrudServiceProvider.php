@@ -94,10 +94,11 @@ class ApiCrudServiceProvider extends ServiceProvider
         });
 
         /**
-         * Macro to initialize the query builder with filters and sorting.
+         * @template TModel of Model
          *
-         * @param  bool  $orderBy  Whether to apply ordering based on request parameters.
-         * @return Builder<Model> The initialized query builder.
+         * @this \Illuminate\Database\Eloquent\Builder<TModel>
+         *
+         * @return Builder<TModel>
          */
         Builder::macro('initializer', function (bool $orderBy = true): Builder {
             /** @var Builder<Model> $this */
