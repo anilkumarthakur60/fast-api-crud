@@ -131,12 +131,16 @@ if (! function_exists('formatDuration')) {
      *   %m  = minutes
      *   %s  = seconds
      *
-     * @param  int|float  $duration  Negative or float OK; will be floored to abs().
+     * @param  int|float|null  $duration  Negative or float OK; will be floored to abs().
      * @param  string|null  $format  Space-separated list of placeholders (with literals).
      * @param  string  $separator  How to join the parts (default: a single space).
      */
-    function formatDuration(int|float $duration, ?string $format = '%y %mo %d %h %m %s', string $separator = ' '): string
+    function formatDuration(int|float|null $duration, ?string $format = '%y %mo %d %h %m %s', string $separator = ' '): string
     {
+        if ($duration === null || $duration === 0) {
+            return '0s';
+        }
+
         // absolute, floored to integer seconds
         $total = (int) abs($duration);
 
