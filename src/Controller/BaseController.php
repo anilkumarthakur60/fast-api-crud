@@ -304,26 +304,19 @@ class BaseController extends Controller
     protected function applyScopes(Builder $query, array $scopes): Builder
     {
         foreach ($scopes as $key => $value) {
-            if (is_int($key)) {
-                $scope = $value;
-                $args = [];
-            } else {
-                $scope = $key;
-                $args = is_array($value) ? $value : [$value];
-            }
+            $scope = is_int($key) ? $value : $key;
+            $args = is_int($key) ? [] : (is_array($value) ? $value : [$value]);
 
-            // Ensure scope is a string before processing
-            if (! is_string($scope)) {
+            if (! is_string($scope) || ! method_exists($query, $scope)) {
                 continue;
             }
 
-            $scopeMethod = 'scope'.ucfirst($scope);
-
-            if (method_exists($query->getModel(), $scope)) {
+            if (method_exists($query, $scope)) {
                 $query->{$scope}(...$args);
-            } elseif (method_exists($query->getModel(), $scopeMethod)) {
+            } elseif (method_exists($query->getModel(), 'scope'.ucfirst($scope))) {
                 $query->{$scope}(...$args);
             }
+
         }
 
         return $query;
