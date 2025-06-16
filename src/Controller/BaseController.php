@@ -313,7 +313,7 @@ class BaseController extends Controller
 
             if (method_exists($query, $scope)) {
                 $query->{$scope}(...$args);
-            } elseif (method_exists($query->getModel(), 'scope'.ucfirst($scope))) {
+            } elseif (method_exists($query, 'scope'.ucfirst($scope))) {
                 $query->{$scope}(...$args);
             }
 
