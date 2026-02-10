@@ -17,7 +17,7 @@ class ApiCrudServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/../../config/fast-api.php' => config_path('fast-api.php'),
+            __DIR__ . '/../../config/fast-api.php' => config_path('fast-api.php'),
         ], 'config');
 
         /**
@@ -117,9 +117,12 @@ class ApiCrudServiceProvider extends ServiceProvider
                 }
             }
 
-            if (! empty($filters)) {
+            if (!empty($filters)) {
                 foreach (collect($filters) as $filter => $value) {
-                    if (isset($value) && method_exists($this->getModel(), 'scope'.Str::studly($filter))) {
+                    if (isset($value) && method_exists($this->getModel(), 'scope' . Str::studly($filter))) {
+                        $this->{$filter}($value);
+                    }
+                    if (isset($value) && method_exists($this->getModel(), Str::studly($filter))) {
                         $this->{$filter}($value);
                     }
                 }
@@ -155,7 +158,7 @@ class ApiCrudServiceProvider extends ServiceProvider
          */
         Builder::macro('withAggregates', function (array $aggregates) {
             /** @var Builder<Model> $this */
-            if (! count($aggregates)) {
+            if (!count($aggregates)) {
                 return $this;
             }
             foreach ($aggregates as $relation => $value) {
@@ -185,7 +188,7 @@ class ApiCrudServiceProvider extends ServiceProvider
         Builder::macro('withCountWhereHas', function ($relation, ?Closure $callback = null, $operator = '>=', $count = 1): Builder {
             /** @var Builder<Model> $this */
             $this->whereHas(Str::before($relation, ':'), $callback, $operator, $count)
-                ->withCount(relations: $callback ? [$relation => fn ($query) => $callback($query)] : $relation);
+                ->withCount(relations: $callback ? [$relation => fn($query) => $callback($query)] : $relation);
 
             return $this;
         });
@@ -202,7 +205,7 @@ class ApiCrudServiceProvider extends ServiceProvider
         Builder::macro('orWithCountWhereHas', function ($relation, ?Closure $callback = null, $operator = '>=', $count = 1) {
             /** @var Builder<Model> $this */
             $this->orWhereHas(Str::before($relation, ':'), $callback, $operator, $count)
-                ->withCount(relations: $callback ? [$relation => fn ($query) => $callback($query)] : $relation);
+                ->withCount(relations: $callback ? [$relation => fn($query) => $callback($query)] : $relation);
 
             return $this;
         });
@@ -236,7 +239,7 @@ class ApiCrudServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../../config/fast-api.php', 'fast-api');
+        $this->mergeConfigFrom(__DIR__ . '/../../config/fast-api.php', 'fast-api');
     }
 }
 
