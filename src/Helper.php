@@ -164,10 +164,10 @@ if (! function_exists('formatDuration')) {
         $seconds = $total % $secPerMin;
 
         $units = [
-            '%y' => ['value' => $years,   'label' => 'yr'],
-            '%mo' => ['value' => $months,  'label' => 'mo'],
-            '%d' => ['value' => $days,    'label' => 'd'],
-            '%h' => ['value' => $hours,   'label' => 'h'],
+            '%y' => ['value' => $years, 'label' => 'yr'],
+            '%mo' => ['value' => $months, 'label' => 'mo'],
+            '%d' => ['value' => $days, 'label' => 'd'],
+            '%h' => ['value' => $hours, 'label' => 'h'],
             '%m' => ['value' => $minutes, 'label' => 'm'],
             '%s' => ['value' => $seconds, 'label' => 's'],
         ];
@@ -176,7 +176,7 @@ if (! function_exists('formatDuration')) {
 
         // custom‐format path
         if ($format !== null) {
-            foreach (preg_split('/\s+/', $format) as $token) {
+            foreach (preg_split('/\s+/', $format) ?: [] as $token) {
                 if (str_starts_with($token, '%')) {
                     // known placeholder?
                     if (isset($units[$token]) && $units[$token]['value'] > 0) {
