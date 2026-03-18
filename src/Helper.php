@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\VarDumper\Caster\ScalarStub;
 use Symfony\Component\VarDumper\VarDumper;
 
@@ -253,7 +255,7 @@ if (! function_exists('dateForReports')) {
     {
         try {
             return Carbon::parse($date)->format($format);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return null;
         }
     }
@@ -491,9 +493,9 @@ if (! function_exists('uuid')) {
     /**
      * Generate a UUID (version 4) using Laravel's Str::uuid().
      *
-     * @return \Ramsey\Uuid\UuidInterface A newly generated UUID object.
+     * @return UuidInterface A newly generated UUID object.
      */
-    function uuid(): \Ramsey\Uuid\UuidInterface
+    function uuid(): UuidInterface
     {
         return Str::uuid();
     }
@@ -516,7 +518,7 @@ if (! function_exists('fillableCsv')) {
             $instance = new $model;
             $columns = $instance->getFillable();
         } else {
-            $columns = \Illuminate\Support\Facades\DB::getSchemaBuilder()->getColumnListing($model);
+            $columns = DB::getSchemaBuilder()->getColumnListing($model);
         }
 
         return implode(',', $columns);
