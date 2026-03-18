@@ -18,6 +18,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Router;
+use Illuminate\Testing\TestResponse;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -27,6 +28,13 @@ abstract class TestCase extends OrchestraTestCase
 {
     // use DatabaseMigrations;
     use RefreshDatabase;
+
+    /**
+     * The latest response.
+     *
+     * @var TestResponse|null
+     */
+    public static $latestResponse;
 
     protected Permission $testClientPermission;
 

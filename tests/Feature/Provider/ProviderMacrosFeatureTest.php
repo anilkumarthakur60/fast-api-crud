@@ -53,7 +53,6 @@ describe('ProviderMacrosFeatureTest', function () {
     });
 
     it('adds the initializer macro to Builder with filters and sorting', function () {
-
         PostModel::factory(5)->create();
         // Simulate a request with filters and sorting
         request()->merge([

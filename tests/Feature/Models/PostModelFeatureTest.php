@@ -6,7 +6,6 @@ use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 
 describe(description: 'testing_post_model_factory', tests: function () {
-
     beforeEach(function () {
         $this->user = UserModel::factory()->create();
         $this->actingAs($this->user);
@@ -241,7 +240,6 @@ describe(description: 'testing_post_model_factory', tests: function () {
         );
     });
     it(description: 'can_post_a_post_with_tags_ids', closure: function () {
-
         $this->user->givePermissionTo(['store-posts']);
         $tagIds = TagModel::factory(2)
             ->create()
