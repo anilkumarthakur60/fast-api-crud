@@ -219,20 +219,20 @@ abstract class TestCase extends OrchestraTestCase
             ->name('posts.store');
         $router->post('posts/delete', [PostController::class, 'delete'])
             ->name('posts.delete');
-        $router->post('posts/restore-all-trashed', [PostController::class, 'restoreAllTrashed'])
-            ->name('posts.restore-all-trashed');
-        $router->post('posts/force-delete-trashed', [PostController::class, 'forceDeleteTrashed'])
-            ->name('posts.force-delete-trashed');
+        $router->post('posts/restore-all-trashed', [PostController::class, 'restoreAll'])
+            ->name('posts.restoreAll');
+        $router->post('posts/force-delete-trashed', [PostController::class, 'permanentDelete'])
+            ->name('posts.permanentDelete');
         $router->get('posts/{id}', [PostController::class, 'show'])
             ->name('posts.show');
         $router->put('posts/{id}', [PostController::class, 'update'])
             ->name('posts.update');
-        $router->put('posts/{id}/status-change/{column}', [PostController::class, 'changeStatusOtherColumn'])
-            ->name('posts.changeStatusOtherColumn');
+        $router->put('posts/{id}/status-change/{column}', [PostController::class, 'updateColumn'])
+            ->name('posts.updateColumn');
         $router->put('posts/{id}/status-change', [PostController::class, 'changeStatus'])
             ->name('posts.changeStatus');
-        $router->put('posts/{id}/restore-trashed', [PostController::class, 'restoreTrashed'])
-            ->name('posts.restoreTrashed');
+        $router->put('posts/{id}/restore-trashed', [PostController::class, 'restore'])
+            ->name('posts.restore');
         $router->delete('posts/{id}', [PostController::class, 'destroy'])
             ->name('posts.destroy');
     }
@@ -245,20 +245,20 @@ abstract class TestCase extends OrchestraTestCase
             ->name('tags.store');
         $router->post('tags/delete', [TagController::class, 'delete'])
             ->name('tags.delete');
-        $router->post('tags/restore-all-trashed', [TagController::class, 'restoreAllTrashed'])
-            ->name('tags.restore-all-trashed');
-        $router->delete('tags/force-delete-trashed/{id}', [TagController::class, 'forceDeleteTrashed'])
-            ->name('tags.force-delete-trashed');
+        $router->post('tags/restore-all-trashed', [TagController::class, 'restoreAll'])
+            ->name('tags.restoreAll');
+        $router->delete('tags/force-delete-trashed/{id}', [TagController::class, 'permanentDelete'])
+            ->name('tags.permanentDelete');
         $router->get('tags/{id}', [TagController::class, 'show'])
             ->name('tags.show');
         $router->put('tags/{id}', [TagController::class, 'update'])
             ->name('tags.update');
-        $router->put('tags/{id}/status-change/{column}', [TagController::class, 'changeStatusOtherColumn'])
-            ->name('tags.changeStatusOtherColumn');
+        $router->put('tags/{id}/status-change/{column}', [TagController::class, 'updateColumn'])
+            ->name('tags.updateColumn');
         $router->put('tags/{id}/status-change', [TagController::class, 'changeStatus'])
             ->name('tags.changeStatus');
-        $router->put('tags/{id}/restore-trashed', [TagController::class, 'restoreTrashed'])
-            ->name('tags.restoreTrashed');
+        $router->put('tags/{id}/restore-trashed', [TagController::class, 'restore'])
+            ->name('tags.restore');
         $router->delete('tags/{id}', [TagController::class, 'destroy'])
             ->name('tags.destroy');
     }
@@ -273,20 +273,20 @@ abstract class TestCase extends OrchestraTestCase
             ->name('users.store');
         $router->post('users/delete', [UserController::class, 'delete'])
             ->name('users.delete');
-        $router->post('users/restore-all-trashed', [UserController::class, 'restoreAllTrashed'])
-            ->name('users.restore-all-trashed');
-        $router->post('users/force-delete-trashed', [UserController::class, 'forceDeleteTrashed'])
-            ->name('users.force-delete-trashed');
+        $router->post('users/restore-all-trashed', [UserController::class, 'restoreAll'])
+            ->name('users.restoreAll');
+        $router->post('users/force-delete-trashed', [UserController::class, 'permanentDelete'])
+            ->name('users.permanentDelete');
         $router->get('users/{id}', [UserController::class, 'show'])
             ->name('users.show');
         $router->put('users/{id}', [UserController::class, 'update'])
             ->name('users.update');
-        $router->put('users/{id}/status-change/{column}', [UserController::class, 'changeStatusOtherColumn'])
-            ->name('users.changeStatusOtherColumn');
+        $router->put('users/{id}/status-change/{column}', [UserController::class, 'updateColumn'])
+            ->name('users.updateColumn');
         $router->put('users/{id}/status-change', [UserController::class, 'changeStatus'])
             ->name('users.changeStatus');
-        $router->put('users/{id}/restore-trashed', [UserController::class, 'restoreTrashed'])
-            ->name('users.restoreTrashed');
+        $router->put('users/{id}/restore-trashed', [UserController::class, 'restore'])
+            ->name('users.restore');
         $router->delete('users/{id}', [UserController::class, 'destroy'])
             ->name('users.destroy');
     }

@@ -49,7 +49,7 @@ if (! function_exists('_dd')) {
     }
 }
 
-if (! function_exists('getClassShortName')) {
+if (! function_exists('classShortName')) {
     /**
      * Get the short name of a class by its fully qualified name.
      *
@@ -61,7 +61,7 @@ if (! function_exists('getClassShortName')) {
      *
      * @throws ReflectionException
      */
-    function getClassShortName(string $param): ?string
+    function classShortName(string $param): ?string
     {
         if (! app($param)) {
             return null;
@@ -81,23 +81,23 @@ if (! function_exists('parseTimeToSeconds')) {
      *  - "i:s" format (minutes:seconds)
      *  - plain integer or numeric string representing seconds
      *
-     * @param  string  $times  Time string to parse.
+     * @param  string  $timeString  Time string to parse.
      * @return int|float Number of seconds corresponding to the input.
      */
-    function parseTimeToSeconds(string $times): int|float
+    function parseTimeToSeconds(string $timeString): int|float
     {
-        $time = explode(':', $times);
+        $parts = explode(':', $timeString);
         $seconds = 0;
 
-        if (count($time) >= 3) {
-            $carbon = Carbon::createFromFormat('H:i:s', $times);
+        if (count($parts) >= 3) {
+            $carbon = Carbon::createFromFormat('H:i:s', $timeString);
             $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
 
             if ($carbon && $reference) {
                 $seconds = $carbon->diffInSeconds($reference);
             }
-        } elseif (count($time) === 2) {
-            $minSec = "00:{$times}";
+        } elseif (count($parts) === 2) {
+            $minSec = "00:{$timeString}";
             $carbon = Carbon::createFromFormat('H:i:s', $minSec);
             $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
 
@@ -105,7 +105,7 @@ if (! function_exists('parseTimeToSeconds')) {
                 $seconds = $carbon->diffInSeconds($reference);
             }
         } else {
-            $seconds = (int) $times;
+            $seconds = (int) $timeString;
         }
 
         return $seconds;
@@ -259,7 +259,7 @@ if (! function_exists('dateForReports')) {
     }
 }
 
-if (! function_exists('getFilterByKey')) {
+if (! function_exists('filterValue')) {
     /**
      * Get a single filter value by key from the "filters" query parameter.
      *
@@ -269,7 +269,7 @@ if (! function_exists('getFilterByKey')) {
      * @param  string  $key  The filter key to retrieve (default: "date").
      * @return string|null The filter value as a string, or null if not found/invalid.
      */
-    function getFilterByKey(string $key = 'date'): ?string
+    function filterValue(string $key = 'date'): ?string
     {
         $filters = Request::get('filters');
         $jsonData = is_string($filters) ? json_decode($filters, true) : [];
@@ -284,7 +284,7 @@ if (! function_exists('getFilterByKey')) {
     }
 }
 
-if (! function_exists('getArrayFilterByKey')) {
+if (! function_exists('arrayFilters')) {
     /**
      * Convert a JSON string or array into a filtered associative array.
      *
@@ -298,7 +298,7 @@ if (! function_exists('getArrayFilterByKey')) {
      * @param  string|array<string,mixed>|null  $data  Input data to decode/filter.
      * @return array<string,mixed> Filtered array of data.
      */
-    function getArrayFilterByKey(array|string|null $data): array
+    function arrayFilters(array|string|null $data): array
     {
         if (is_string($data)) {
             $decoded = json_decode($data, true);
@@ -310,7 +310,7 @@ if (! function_exists('getArrayFilterByKey')) {
     }
 }
 
-if (! function_exists('flatData')) {
+if (! function_exists('flattenArray')) {
     /**
      * Flatten a nested array to a given depth.
      *
@@ -320,13 +320,13 @@ if (! function_exists('flatData')) {
      * @param  int  $depth  Depth level to flatten (default: 0, full flatten).
      * @return array<string,mixed> Flattened array.
      */
-    function flatData(array $data, int $depth = 0): array
+    function flattenArray(array $data, int $depth = 0): array
     {
         return collect($data)->flatten($depth)->toArray();
     }
 }
 
-if (! function_exists('defaultOrder')) {
+if (! function_exists('sortDirection')) {
     /**
      * Determine the default sort order based on the "descending" query parameter.
      *
@@ -334,13 +334,13 @@ if (! function_exists('defaultOrder')) {
      *
      * @return string Either "ASC" or "DESC".
      */
-    function defaultOrder(): string
+    function sortDirection(): string
     {
         return request()->query('descending') === 'true' ? 'ASC' : 'DESC';
     }
 }
 
-if (! function_exists('defaultSort')) {
+if (! function_exists('sortBy')) {
     /**
      * Get the default sort key(s) from the "sort" request parameter.
      *
@@ -351,7 +351,7 @@ if (! function_exists('defaultSort')) {
      *
      * @return array<string>|string|null Sort key(s) or null if none provided.
      */
-    function defaultSort(): array|string|null
+    function sortBy(): array|string|null
     {
         $sort = request('sort');
 
@@ -368,7 +368,7 @@ if (! function_exists('defaultSort')) {
     }
 }
 
-if (! function_exists('getClassMethod')) {
+if (! function_exists('scopeMethods')) {
     /**
      * Retrieve all public methods of an object that begin with "scope".
      *
@@ -377,7 +377,7 @@ if (! function_exists('getClassMethod')) {
      * @param  object  $class  Instance of a class to inspect.
      * @return array<string> List of method names starting with "scope".
      */
-    function getClassMethod(object $class): array
+    function scopeMethods(object $class): array
     {
         $reflection = new ReflectionClass($class);
         $methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
@@ -393,7 +393,7 @@ if (! function_exists('getClassMethod')) {
     }
 }
 
-if (! function_exists('getColumns')) {
+if (! function_exists('tableColumns')) {
     /**
      * Get an ordered list of column names for a given table or Eloquent model.
      *
@@ -405,7 +405,7 @@ if (! function_exists('getColumns')) {
      * @param  string|Model  $table  Table name or fully qualified Model class name.
      * @return array<string> Ordered list of column names.
      */
-    function getColumns(string|Model $table = 'users'): array
+    function tableColumns(string|Model $table = 'users'): array
     {
         if (is_string($table)) {
             if (is_subclass_of($table, Model::class)) {
@@ -429,7 +429,7 @@ if (! function_exists('getColumns')) {
     }
 }
 
-if (! function_exists('recursiveDatabaseClasses')) {
+if (! function_exists('databaseClasses')) {
     /**
      * Recursively find all PHP classes inside the database directory.
      *
@@ -440,7 +440,7 @@ if (! function_exists('recursiveDatabaseClasses')) {
      * @param  array<string>  $excluding  Fully qualified class names to exclude from results.
      * @return array<int,string> List of fully qualified class names found.
      */
-    function recursiveDatabaseClasses(?string $directory = null, array $excluding = []): array
+    function databaseClasses(?string $directory = null, array $excluding = []): array
     {
         // Determine base path; default to /database root if no subdirectory provided
         $basePath = $directory ? database_path($directory) : database_path();
@@ -499,7 +499,7 @@ if (! function_exists('uuid')) {
     }
 }
 
-if (! function_exists('implodeFillable')) {
+if (! function_exists('fillableCsv')) {
     /**
      * Get a comma-separated string of fillable attributes for a Model or database table.
      *
@@ -510,7 +510,7 @@ if (! function_exists('implodeFillable')) {
      * @param  string  $model  Model class name or table name.
      * @return string Comma-separated list of column names.
      */
-    function implodeFillable(string $model): string
+    function fillableCsv(string $model): string
     {
         if (is_subclass_of($model, Model::class)) {
             $instance = new $model;
@@ -523,20 +523,20 @@ if (! function_exists('implodeFillable')) {
     }
 }
 
-if (! function_exists('implodeColumns')) {
+if (! function_exists('columnsCsv')) {
     /**
      * Get a comma-separated string of column names for a Model or database table.
      *
-     * Uses getColumns() under the hood, which orders columns as:
+     * Uses tableColumns() under the hood, which orders columns as:
      * ["id", ...other columns (sorted), "created_at", "updated_at", "deleted_at"].
      *
      * @param  string  $model  Model class name or table name.
      * @param  string  $separator  Separator to use between column names (default: ",").
      * @return string Concatenated column names string.
      */
-    function implodeColumns(string $model, string $separator = ','): string
+    function columnsCsv(string $model, string $separator = ','): string
     {
-        $columns = getColumns($model);
+        $columns = tableColumns($model);
 
         return implode($separator, $columns);
     }
@@ -587,7 +587,7 @@ if (! function_exists('toTimeString')) {
     }
 }
 
-if (! function_exists('recursiveClasses')) {
+if (! function_exists('appClasses')) {
     /**
      * Get a list of fully qualified class names in a given directory, with optional exclusions.
      *
@@ -598,7 +598,7 @@ if (! function_exists('recursiveClasses')) {
      * @param  array<string>  $excluding  Class names to exclude from the result.
      * @return array<int,string> Array of fully qualified class names.
      */
-    function recursiveClasses(string $path = 'App', array $excluding = []): array
+    function appClasses(string $path = 'App', array $excluding = []): array
     {
         $fullPath = app_path($path);
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($fullPath));
@@ -636,7 +636,7 @@ if (! function_exists('slug')) {
     }
 }
 
-if (! function_exists('pathRelativeToBase')) {
+if (! function_exists('relativePath')) {
     /**
      * Get the relative path of a given absolute path with respect to the base application path.
      *
@@ -645,7 +645,7 @@ if (! function_exists('pathRelativeToBase')) {
      * @param  string  $path  Absolute file or directory path.
      * @return string Relative path from the project root.
      */
-    function pathRelativeToBase(string $path): string
+    function relativePath(string $path): string
     {
         $fullPath = $path;
         $basePath = base_path();

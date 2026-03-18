@@ -2,18 +2,46 @@
 
 namespace Anil\FastApiCrud\Traits;
 
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
+/**
+ * Anonymizes unique column values on soft delete to prevent unique constraint
+ * violations when the record is later restored.
+ *
+ * Each unique column gets _{timestamp} appended on delete.
+ * Requires the model to use SoftDeletes.
+ *
+ * Configurable via fast-api.soft_delete.anonymize_unique_columns (default: true).
+ */
 trait HandlesDeleteEvents
 {
-    public static function bootDeleteEvent(): void
+    public static function bootHandlesDeleteEvents(): void
     {
-        static::deleting(function ($model) {
+        static::deleting(function (self $model): void {
+            if (! config('fast-api.soft_delete.anonymize_unique_columns', true)) {
+                return;
+            }
+
             $table = $model->getTable();
-            $columns = DB::select("SHOW INDEXES FROM `{$table}` WHERE NOT Non_unique AND Key_Name <> 'PRIMARY'");
-            foreach ($columns as $column) {
-                $model->{$column->Column_name} = $model->{$column->Column_name}.'_'.time();
-                $model->save();
+            $indexes = Schema::getIndexes($table);
+            $timestamp = time();
+            $changed = false;
+
+            foreach ($indexes as $index) {
+                if (! $index['unique'] || $index['primary']) {
+                    continue;
+                }
+
+                foreach ($index['columns'] as $column) {
+                    if (isset($model->{$column})) {
+                        $model->{$column} = $model->{$column}.'_'.$timestamp;
+                        $changed = true;
+                    }
+                }
+            }
+
+            if ($changed) {
+                $model->saveQuietly();
             }
         });
     }

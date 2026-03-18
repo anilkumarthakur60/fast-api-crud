@@ -38,7 +38,7 @@ trait HasReplicatesWithRelation
         $newModel = $this->replicate();
 
         // If there are castable attributes that need special handling, copy them over.
-        foreach ($this->getMatchedCastableAttributes() as $attribute => $casts) {
+        foreach ($this->matchingCastableAttributes() as $attribute => $casts) {
             $newModel->{$attribute} = $this->castAttribute($attribute, $this->{$attribute}, $casts);
         }
 
@@ -151,7 +151,7 @@ trait HasReplicatesWithRelation
      *
      * @return array<string,string> Keyed by attribute name, value is castType ("numeric", "json", etc.)
      */
-    public function getMatchedCastableAttributes(): array
+    public function matchingCastableAttributes(): array
     {
         $matchedCastableAttributes = [];
 

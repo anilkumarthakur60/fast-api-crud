@@ -15,7 +15,10 @@ trait ApiResponder
      */
     public function success(array $data = [], int $code = ResponseAlias::HTTP_OK): JsonResponse
     {
-        return response()->json(['data' => $data], $code);
+        $cfg = config('fast-api.response.success_key', 'data');
+        $key = is_string($cfg) ? $cfg : 'data';
+
+        return response()->json([$key => $data], $code);
     }
 
     /**
@@ -27,7 +30,12 @@ trait ApiResponder
      */
     public function error(string $message = 'Something went wrong', array $data = [], int $status = ResponseAlias::HTTP_BAD_REQUEST): JsonResponse
     {
-        return response()->json(['errors' => $data, 'message' => $message], $status);
+        $errCfg = config('fast-api.response.error_key', 'errors');
+        $msgCfg = config('fast-api.response.message_key', 'message');
+        $errorKey = is_string($errCfg) ? $errCfg : 'errors';
+        $messageKey = is_string($msgCfg) ? $msgCfg : 'message';
+
+        return response()->json([$errorKey => $data, $messageKey => $message], $status);
     }
 
     // Informational responses (1xx)

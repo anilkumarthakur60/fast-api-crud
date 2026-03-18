@@ -7,17 +7,12 @@ parameters:
     paths:
         - src/
 
-    # Prevent false positives on PHPDoc types
     treatPhpDocTypesAsCertain: false
 
-    excludePaths:
-
     ignoreErrors:
-        # Ignore custom builder method like initializer()
+        # Custom Eloquent builder macros registered at runtime
         - '#.*::initializer\(\)#'
-
-        # Ignore custom builder method like paginates()
         - '#.*::paginates\(\)#'
 
-        # Ignore unused traits in package (not a real issue)
+        # Traits not directly used by the package itself (used by consumers)
         - identifier: trait.unused
