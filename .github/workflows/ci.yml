@@ -22,7 +22,7 @@ jobs:
           - php: "8.2"
             laravel: "^13.0"
 
-    name: PHP ${{ matrix.php }} | Laravel ${{ matrix.laravel }} | ${{ matrix.dependency-version }}
+    name: Laravel ${{ matrix.laravel }} | PHP ${{ matrix.php }} | ${{ matrix.dependency-version }}
 
     services:
       mysql:
