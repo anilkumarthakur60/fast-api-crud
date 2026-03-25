@@ -1,6 +1,5 @@
 <?php
 
-use Anil\FastApiCrud\Controller\Controller;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Support\Facades\Schema;
 
@@ -15,7 +14,6 @@ describe(description: 'user_model_class_unit_test', tests: function () {
     // });
 
     it(description: 'it_should_have_correct_fillable_attributes', closure: function () {
-
         $fillableKeys = array_keys($this->userModel->getFillable());
         sort($fillableKeys);
         $expectedKeys = array_keys([

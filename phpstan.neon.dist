@@ -3,21 +3,19 @@ includes:
     - vendor/nesbot/carbon/extension.neon
 
 parameters:
-    level: 9
+    level: 10
     paths:
         - src/
 
-    # Prevent false positives on PHPDoc types
     treatPhpDocTypesAsCertain: false
 
-    excludePaths:
-
     ignoreErrors:
-        # Ignore custom builder method like initializer()
         - '#.*::initializer\(\)#'
-
-        # Ignore custom builder method like paginates()
         - '#.*::paginates\(\)#'
-
-        # Ignore unused traits in package (not a real issue)
-        - identifier: trait.unused
+        - '#.*::simplePaginates\(\)#'
+        - '#.*::cursorPaginates\(\)#'
+        - '#.*::likeWhere\(\)#'
+        - '#.*::onlyTrashed\(\)#'
+        - '#.*::restore\(\)#'
+        -
+            identifier: trait.unused

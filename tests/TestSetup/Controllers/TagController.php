@@ -2,7 +2,7 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Controllers;
 
-use Anil\FastApiCrud\Controller\BaseController;
+use Anil\FastApiCrud\Http\Controllers\BaseController;
 use Anil\FastApiCrud\Tests\TestSetup\Models\TagModel;
 use Anil\FastApiCrud\Tests\TestSetup\Requests\Tag\StoreTagRequest;
 use Anil\FastApiCrud\Tests\TestSetup\Requests\Tag\UpdateTagRequest;

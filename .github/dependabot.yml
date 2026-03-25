@@ -5,13 +5,22 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: thursday
-      time: "12:00"
+    groups:
+      composer:
+        patterns:
+          - "*"
     labels:
       - "dependencies"
-    open-pull-requests-limit: 10
+      - "php"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: weekly
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "actions"

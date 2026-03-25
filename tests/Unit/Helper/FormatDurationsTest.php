@@ -1,7 +1,6 @@
 <?php
 
 describe('formatDuration', function () {
-
     it('formats durations with default separator and placeholders', function () {
         expect(formatDuration(10000, '%y %mo %d %h %m %s'))->toBe('2h 46m 40s');
         expect(formatDuration(1000, '%y %mo %d %h %m %s'))->toBe('16m 40s');
