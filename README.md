@@ -502,9 +502,6 @@ return [
 # Generate complete scaffold for one or more models
 php artisan fast-api:make-all Post
 php artisan fast-api:make-all Post,Tag,User
-
-# Skip controller generation
-php artisan fast-api:make-all Post --without-controller
 ```
 
 ## License

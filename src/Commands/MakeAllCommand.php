@@ -10,8 +10,7 @@ use Illuminate\Support\Str;
 class MakeAllCommand extends Command
 {
     protected $signature = 'fast-api:make-all
-        {name : Comma-separated model name(s), e.g. Post or Post,Tag,User}
-        {--without-controller : Skip generating the BaseController-based controller}';
+        {name : Comma-separated model name(s), e.g. Post or Post,Tag,User}';
 
     protected $description = 'Generate model, migration, factory, seeder, controller (extending BaseController), resource, and requests for one or more models';
 
@@ -35,7 +34,6 @@ class MakeAllCommand extends Command
     {
         $this->info("Generating scaffold for: {$modelName}");
         $table = Str::snake(Str::pluralStudly(class_basename($modelName)));
-
         $this->call('make:model', ['name' => $modelName]);
         $this->call('make:migration', ['name' => "create_{$table}_table", '--create' => $table]);
         $this->call('make:factory', ['name' => "{$modelName}Factory"]);
@@ -43,11 +41,7 @@ class MakeAllCommand extends Command
         $this->call('make:resource', ['name' => "{$modelName}/{$modelName}Resource"]);
         $this->call('make:request', ['name' => "{$modelName}/Store{$modelName}Request"]);
         $this->call('make:request', ['name' => "{$modelName}/Update{$modelName}Request"]);
-
-        if (! $this->option('without-controller')) {
-            $this->generateController($modelName);
-        }
-
+        $this->generateController($modelName);
         $this->info("Scaffold for {$modelName} generated successfully.");
         $this->newLine();
     }
