@@ -1,12 +1,14 @@
 <?php
 
-namespace Anil\FastApiCrud\Traits;
+declare(strict_types=1);
+
+namespace Anil\FastApiCrud\Concerns;
 
 use Illuminate\Support\Facades\Schema;
 
 /**
  * Anonymizes unique column values on soft delete to prevent unique constraint
- * violations when the record is later restored.
+ * violations when a new record is created with the same value.
  *
  * Each unique column gets _{timestamp} appended on delete.
  * Requires the model to use SoftDeletes.

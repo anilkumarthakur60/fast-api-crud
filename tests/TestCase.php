@@ -2,7 +2,7 @@
 
 namespace Anil\FastApiCrud\Tests;
 
-use Anil\FastApiCrud\Providers\ApiCrudServiceProvider;
+use Anil\FastApiCrud\FastApiCrudServiceProvider;
 use Anil\FastApiCrud\Tests\TestSetup\Controllers\PostController;
 use Anil\FastApiCrud\Tests\TestSetup\Controllers\TagController;
 use Anil\FastApiCrud\Tests\TestSetup\Controllers\UserController;
@@ -202,7 +202,7 @@ abstract class TestCase extends OrchestraTestCase
     protected function getPackageProviders($app): array
     {
         return [
-            ApiCrudServiceProvider::class,
+            FastApiCrudServiceProvider::class,
             PermissionServiceProvider::class,
         ];
     }

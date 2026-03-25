@@ -2,7 +2,7 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Controllers;
 
-use Anil\FastApiCrud\Controller\BaseController;
+use Anil\FastApiCrud\Http\Controllers\BaseController;
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Requests\Post\StorePostRequest;
 use Anil\FastApiCrud\Tests\TestSetup\Requests\Post\UpdatePostRequest;

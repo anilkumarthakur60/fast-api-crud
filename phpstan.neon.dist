@@ -13,6 +13,9 @@ parameters:
         # Custom Eloquent builder macros registered at runtime
         - '#.*::initializer\(\)#'
         - '#.*::paginates\(\)#'
+        - '#.*::simplePaginates\(\)#'
+        - '#.*::cursorPaginates\(\)#'
+        - '#.*::likeWhere\(\)#'
 
         # Traits not directly used by the package itself (used by consumers)
         - identifier: trait.unused

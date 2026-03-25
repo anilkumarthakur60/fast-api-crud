@@ -1,145 +1,150 @@
 <?php
 
-namespace Anil\FastApiCrud\Controller;
+declare(strict_types=1);
 
-use Anil\FastApiCrud\Traits\ApiResponder;
+namespace Anil\FastApiCrud\Http\Controllers;
+
+use Anil\FastApiCrud\Concerns\ApiResponder;
+use Anil\FastApiCrud\Contracts\HasPermissionSlug;
+use Anil\FastApiCrud\Contracts\Searchable;
+use Anil\FastApiCrud\Enums\CrudAction;
+use Anil\FastApiCrud\Enums\PaginationType;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Controller;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use ReflectionException;
-use Symfony\Component\HttpFoundation\Response as ResponseAlias;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 /**
- * Base controller providing standard CRUD operations for Eloquent models.
+ * Abstract base controller providing standard CRUD operations for Eloquent models.
  *
  * Supports: index, show, store, update, destroy, bulk delete, changeStatus,
  * updateColumn, restore, restoreAll, permanentDelete.
  *
- * Each operation supports lifecycle hooks on the model (beforeCreate, afterCreate, etc.)
- * and configurable scopes per operation.
+ * Each operation supports lifecycle hooks (override in child controller or define on model).
  */
-class BaseController extends Controller
+abstract class BaseController extends Controller
 {
     use ApiResponder;
     use AuthorizesRequests;
-    use ValidatesRequests;
 
     /**
-     * Whether to paginate the index results.
+     * Pagination strategy for index results.
      */
-    public bool $paginate = true;
+    protected PaginationType $paginationType = PaginationType::LengthAware;
 
     /**
      * Scopes applied to the index query.
      *
      * Supports simple names ['active'] and parameterized ['status' => 1].
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
      */
-    public array $scopes = [];
+    protected array $scopes = [];
 
     /**
      * Scopes applied to the show (single resource) query.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
      */
-    public array $loadScopes = [];
+    protected array $loadScopes = [];
 
     /**
      * Eager load relationships in index.
      *
      * @var array<array-key, string|array<string, string|int|float|bool>|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)|array<array-key, string|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)>>
      */
-    public array $with = [];
+    protected array $with = [];
 
     /**
      * Relationships to count in index.
      *
      * @var array<string>
      */
-    public array $withCount = [];
+    protected array $withCount = [];
 
     /**
-     * Aggregate functions to apply in index. Format: ['relation' => 'column'] or ['relation' => ['column', 'fn']].
+     * Aggregate functions to apply in index.
+     *
+     * Format: ['relation' => 'column'] or ['relation' => ['column', 'function']].
      *
      * @var array<string, string>
      */
-    public array $withAggregate = [];
+    protected array $withAggregate = [];
 
     /**
      * Eager load relationships in show.
      *
      * @var array<array-key, string|array<string, string|int|float|bool>|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)|array<array-key, string|(\Closure(\Illuminate\Database\Eloquent\Relations\Relation<*,*,*>): mixed)>>
      */
-    public array $load = [];
+    protected array $load = [];
 
     /**
      * Relationships to count in show.
      *
      * @var array<string>
      */
-    public array $loadCount = [];
+    protected array $loadCount = [];
 
     /**
      * Aggregate functions to apply in show.
      *
      * @var array<string, string>
      */
-    public array $loadAggregate = [];
+    protected array $loadAggregate = [];
 
     /**
      * Force permanent deletion instead of soft delete.
      */
-    public bool $forceDelete = false;
+    protected bool $forceDelete = false;
 
     /**
      * Scopes applied when finding a record for deletion.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
      */
-    public array $deleteScopes = [];
+    protected array $deleteScopes = [];
 
     /**
      * Scopes applied when finding a record for status change or column update.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
      */
-    public array $columnScopes = [];
+    protected array $columnScopes = [];
 
     /**
      * Scopes applied when finding a trashed record for restore.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
      */
-    public array $restoreScopes = [];
+    protected array $restoreScopes = [];
 
     /**
      * Scopes applied when finding a record for update.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
      */
-    public array $updateScopes = [];
+    protected array $updateScopes = [];
 
-    public Model $model;
-
-    /** @var class-string<FormRequest> */
-    protected string $storeRequest;
+    protected readonly Model $model;
 
     /** @var class-string<FormRequest> */
-    protected string $updateRequest;
+    protected readonly string $storeRequest;
+
+    /** @var class-string<FormRequest> */
+    protected readonly string $updateRequest;
 
     /** @var class-string<JsonResource> */
-    protected string $resource;
+    protected readonly string $resource;
 
     /**
      * @param  class-string<Model>  $model
@@ -147,146 +152,107 @@ class BaseController extends Controller
      * @param  class-string<FormRequest>  $updateRequest
      * @param  class-string<JsonResource>  $resource
      *
-     * @throws ReflectionException
      * @throws Exception
      */
-    public function __construct(string $model, string $storeRequest, string $updateRequest, string $resource)
-    {
-        $this->validateModel($model);
-        $this->validateRequest($storeRequest, 'StoreRequest');
-        $this->validateRequest($updateRequest, 'UpdateRequest');
-        $this->validateResource($resource);
-        $this->setupPermissions();
+    public function __construct(
+        string $model,
+        string $storeRequest,
+        string $updateRequest,
+        string $resource,
+    ) {
+        $this->model = $this->resolveModel($model);
+        $this->storeRequest = $this->resolveFormRequest($storeRequest, 'storeRequest');
+        $this->updateRequest = $this->resolveFormRequest($updateRequest, 'updateRequest');
+        $this->resource = $this->resolveResource($resource);
+        $this->registerPermissionMiddleware();
     }
 
+    // -------------------------------------------------------------------------
+    // Permission middleware helper
+    // -------------------------------------------------------------------------
+
     /**
-     * @param  class-string<Model>  $modelClass
+     * Generate Spatie permission middleware definitions for a given slug.
      *
-     * @throws Exception
-     */
-    protected function validateModel(string $modelClass): void
-    {
-        if (! is_subclass_of($modelClass, Model::class)) {
-            throw new Exception('Model is not instance of Model', ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
-        }
-        $this->model = resolve($modelClass);
-    }
-
-    /**
-     * @param  class-string<FormRequest>  $request
+     * Use this in child controllers implementing HasMiddleware:
      *
-     * @throws Exception
-     */
-    protected function validateRequest(string $request, string $requestName): void
-    {
-        if (! is_subclass_of($request, FormRequest::class)) {
-            throw new Exception("{$requestName} is not instance of FormRequest", ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
-        }
-        if ($requestName === 'StoreRequest') {
-            $this->storeRequest = $request;
-        } else {
-            $this->updateRequest = $request;
-        }
-    }
-
-    /**
-     * @param  class-string<JsonResource>  $resource
+     *     public static function middleware(): array
+     *     {
+     *         return self::permissionMiddleware('posts');
+     *     }
      *
-     * @throws Exception
+     * @return array<int, Middleware>
      */
-    protected function validateResource(string $resource): void
+    protected static function permissionMiddleware(string $permissionSlug): array
     {
-        if (! is_subclass_of($resource, JsonResource::class)) {
-            throw new Exception('Resource is not instance of JsonResource', ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
-        }
-        $this->resource = $resource;
+        return [
+            new Middleware('permission:'.CrudAction::View->value."-{$permissionSlug}", only: ['index', 'show']),
+            new Middleware('permission:'.CrudAction::Store->value."-{$permissionSlug}", only: ['store']),
+            new Middleware('permission:'.CrudAction::Update->value."-{$permissionSlug}", only: ['update', 'updateColumn']),
+            new Middleware('permission:'.CrudAction::Delete->value."-{$permissionSlug}", only: ['destroy', 'delete', 'permanentDelete']),
+            new Middleware('permission:'.CrudAction::ChangeStatus->value."-{$permissionSlug}", only: ['changeStatus']),
+            new Middleware('permission:'.CrudAction::Restore->value."-{$permissionSlug}", only: ['restore', 'restoreAll']),
+        ];
     }
 
-    /**
-     * Register Spatie permission middleware if the model defines getPermissionSlug()
-     * and fast-api.permissions.enabled is true.
-     */
-    protected function setupPermissions(): void
-    {
-        if (! config('fast-api.permissions.enabled', true)) {
-            return;
-        }
-
-        $permissionSlug = null;
-        if (method_exists($this->model, 'getPermissionSlug')) {
-            $permissionSlug = $this->model->getPermissionSlug();
-        }
-
-        if (! $permissionSlug) {
-            return;
-        }
-
-        $this->middleware("permission:view-{$permissionSlug}")->only(['index', 'show']);
-        $this->middleware("permission:store-{$permissionSlug}")->only(['store']);
-        $this->middleware("permission:update-{$permissionSlug}")->only(['update', 'updateColumn']);
-        $this->middleware("permission:delete-{$permissionSlug}")->only(['destroy', 'delete', 'permanentDelete']);
-        $this->middleware("permission:change-status-{$permissionSlug}")->only(['changeStatus']);
-        $this->middleware("permission:restore-{$permissionSlug}")->only(['restore', 'restoreAll']);
-    }
+    // -------------------------------------------------------------------------
+    // CRUD operations
+    // -------------------------------------------------------------------------
 
     /**
-     * List all records, applying scopes, eager loads, counts, aggregates, and pagination.
+     * List all records, applying scopes, eager loads, counts, aggregates, search and pagination.
      */
     public function index(): AnonymousResourceCollection
     {
         /** @var Builder<Model> $query */
         $query = $this->model::query()->initializer();
 
-        if (! empty($this->with)) {
+        if ($this->with !== []) {
             $query->with($this->with);
         }
 
-        if (! empty($this->withCount)) {
+        if ($this->withCount !== []) {
             $query->withCount($this->withCount);
         }
 
-        if (! empty($this->withAggregate)) {
+        if ($this->withAggregate !== []) {
             $this->applyAggregates($query, $this->withAggregate);
         }
 
-        if (! empty($this->scopes)) {
+        if ($this->scopes !== []) {
             $this->applyScopes($query, $this->scopes);
         }
 
-        if ($this->paginate) {
-            return $this->resource::collection($query->paginates());
-        }
+        $this->applySearch($query);
 
-        return $this->resource::collection($query->get());
+        return $this->resource::collection($this->paginateQuery($query));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(int|string $id): JsonResource|JsonResponse
+    public function show(int|string $id): JsonResource
     {
         /** @var Builder<Model> $query */
         $query = $this->model::query()->initializer();
 
-        if (! empty($this->load)) {
+        if ($this->load !== []) {
             $query->with($this->load);
         }
 
-        if (! empty($this->loadCount)) {
+        if ($this->loadCount !== []) {
             $query->withCount($this->loadCount);
         }
 
-        if (! empty($this->loadAggregate)) {
+        if ($this->loadAggregate !== []) {
             $this->applyAggregates($query, $this->loadAggregate);
         }
 
-        if (! empty($this->loadScopes)) {
+        if ($this->loadScopes !== []) {
             $this->applyScopes($query, $this->loadScopes);
         }
 
-        $model = $query->findOrFail($id);
-
-        return new $this->resource($model);
+        return new $this->resource($query->findOrFail($id));
     }
 
     /**
@@ -296,11 +262,14 @@ class BaseController extends Controller
      */
     public function store(): JsonResponse
     {
-        $data = resolve($this->storeRequest)->safe()->only((new $this->model)->getFillable());
+        $data = resolve($this->storeRequest)->safe()->only($this->model->getFillable());
 
         try {
             DB::beginTransaction();
-            $model = $this->model::create($data);
+            $model = $this->model->newInstance();
+            $model->fill($data);
+            $this->beforeCreate($model);
+            $model->save();
             $this->afterCreate($model);
             DB::commit();
         } catch (Exception $e) {
@@ -311,18 +280,17 @@ class BaseController extends Controller
 
         return (new $this->resource($model))
             ->toResponse(request())
-            ->setStatusCode(ResponseAlias::HTTP_CREATED);
+            ->setStatusCode(Response::HTTP_CREATED);
     }
 
     /**
      * Update the specified resource.
      *
-     *
      * @throws Throwable
      */
     public function update(int|string $id): JsonResource|JsonResponse
     {
-        $data = resolve($this->updateRequest)->safe()->only((new $this->model)->getFillable());
+        $data = resolve($this->updateRequest)->safe()->only($this->model->getFillable());
         $model = $this->findModel($id, $this->updateScopes);
 
         try {
@@ -343,7 +311,6 @@ class BaseController extends Controller
     /**
      * Remove the specified resource (soft delete or force delete).
      *
-     *
      * @throws Throwable
      */
     public function destroy(int|string $id): JsonResponse
@@ -362,7 +329,7 @@ class BaseController extends Controller
             return $this->error($e->getMessage());
         }
 
-        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: Response::HTTP_NO_CONTENT);
     }
 
     /**
@@ -372,7 +339,7 @@ class BaseController extends Controller
      */
     public function delete(): JsonResponse
     {
-        $keyName = (new $this->model)->getKeyName();
+        $keyName = $this->model->getKeyName();
 
         request()->validate([
             'delete_rows' => ['required', 'array'],
@@ -397,19 +364,22 @@ class BaseController extends Controller
             return $this->error($e->getMessage());
         }
 
-        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: Response::HTTP_NO_CONTENT);
     }
+
+    // -------------------------------------------------------------------------
+    // Extended operations
+    // -------------------------------------------------------------------------
 
     /**
      * Toggle a boolean status column between 0 and 1.
-     *
      *
      * @throws Throwable
      */
     public function changeStatus(int|string $id, string $column = 'status'): JsonResource|JsonResponse
     {
         $model = $this->findModel($id, $this->columnScopes);
-        $this->validateColumn($model, $column);
+        $this->assertFillableColumn($model, $column);
 
         try {
             DB::beginTransaction();
@@ -429,13 +399,12 @@ class BaseController extends Controller
     /**
      * Update a specific fillable column with the request value.
      *
-     *
      * @throws Throwable
      */
     public function updateColumn(int|string $id, string $column = 'status'): JsonResource|JsonResponse
     {
         $model = $this->findModel($id, $this->columnScopes);
-        $this->validateColumn($model, $column);
+        $this->assertFillableColumn($model, $column);
 
         try {
             DB::beginTransaction();
@@ -455,7 +424,6 @@ class BaseController extends Controller
     /**
      * Restore a single soft-deleted resource.
      *
-     *
      * @throws Throwable
      */
     public function restore(int|string $id): JsonResource|JsonResponse
@@ -463,7 +431,7 @@ class BaseController extends Controller
         /** @var Builder<Model> $query */
         $query = $this->model::query()->initializer()->onlyTrashed();
 
-        if (! empty($this->restoreScopes)) {
+        if ($this->restoreScopes !== []) {
             $this->applyScopes($query, $this->restoreScopes);
         }
 
@@ -503,12 +471,11 @@ class BaseController extends Controller
             return $this->error($e->getMessage());
         }
 
-        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: Response::HTTP_NO_CONTENT);
     }
 
     /**
      * Permanently delete a soft-deleted resource.
-     *
      *
      * @throws Throwable
      */
@@ -528,128 +495,109 @@ class BaseController extends Controller
             return $this->error($e->getMessage());
         }
 
-        return $this->success(code: ResponseAlias::HTTP_NO_CONTENT);
+        return $this->success(code: Response::HTTP_NO_CONTENT);
     }
 
     // -------------------------------------------------------------------------
-    // Lifecycle hooks – override in child controller or define on the model
+    // Lifecycle hooks - override in child controller or define on the model
     // -------------------------------------------------------------------------
 
-    protected function afterCreate(Model $model): Model
+    protected function beforeCreate(Model $model): void
+    {
+        if (method_exists($model, 'beforeCreate')) {
+            $model->beforeCreate();
+        }
+    }
+
+    protected function afterCreate(Model $model): void
     {
         if (method_exists($model, 'afterCreate')) {
             $model->afterCreate();
         }
-
-        return $model;
     }
 
-    protected function beforeUpdate(Model $model): Model
+    protected function beforeUpdate(Model $model): void
     {
         if (method_exists($model, 'beforeUpdate')) {
             $model->beforeUpdate();
         }
-
-        return $model;
     }
 
-    protected function afterUpdate(Model $model): Model
+    protected function afterUpdate(Model $model): void
     {
         if (method_exists($model, 'afterUpdate')) {
             $model->afterUpdate();
         }
-
-        return $model;
     }
 
-    protected function beforeDelete(Model $model): Model
+    protected function beforeDelete(Model $model): void
     {
         if (method_exists($model, 'beforeDelete')) {
             $model->beforeDelete();
         }
-
-        return $model;
     }
 
-    protected function afterDelete(Model $model): Model
+    protected function afterDelete(Model $model): void
     {
         if (method_exists($model, 'afterDelete')) {
             $model->afterDelete();
         }
-
-        return $model;
     }
 
-    protected function beforeStatusChange(Model $model): Model
+    protected function beforeStatusChange(Model $model): void
     {
         if (method_exists($model, 'beforeStatusChange')) {
             $model->beforeStatusChange();
         }
-
-        return $model;
     }
 
-    protected function afterStatusChange(Model $model): Model
+    protected function afterStatusChange(Model $model): void
     {
         if (method_exists($model, 'afterStatusChange')) {
             $model->afterStatusChange();
         }
-
-        return $model;
     }
 
-    protected function beforeColumnUpdate(Model $model): Model
+    protected function beforeColumnUpdate(Model $model): void
     {
         if (method_exists($model, 'beforeColumnUpdate')) {
             $model->beforeColumnUpdate();
         }
-
-        return $model;
     }
 
-    protected function afterColumnUpdate(Model $model): Model
+    protected function afterColumnUpdate(Model $model): void
     {
         if (method_exists($model, 'afterColumnUpdate')) {
             $model->afterColumnUpdate();
         }
-
-        return $model;
     }
 
-    protected function beforeRestore(Model $model): Model
+    protected function beforeRestore(Model $model): void
     {
         if (method_exists($model, 'beforeRestore')) {
             $model->beforeRestore();
         }
-
-        return $model;
     }
 
-    protected function afterRestore(Model $model): Model
+    protected function afterRestore(Model $model): void
     {
         if (method_exists($model, 'afterRestore')) {
             $model->afterRestore();
         }
-
-        return $model;
     }
 
-    protected function beforeForceDelete(Model $model): Model
+    protected function beforeForceDelete(Model $model): void
     {
         if (method_exists($model, 'beforeForceDelete')) {
             $model->beforeForceDelete();
         }
-
-        return $model;
     }
 
-    protected function afterForceDelete(Model $model): Model
+    protected function afterForceDelete(Model $model): void
     {
         if (method_exists($model, 'afterForceDelete')) {
             $model->afterForceDelete();
         }
-
-        return $model;
     }
 
     // -------------------------------------------------------------------------
@@ -657,15 +605,81 @@ class BaseController extends Controller
     // -------------------------------------------------------------------------
 
     /**
-     * Find a model by primary key with optional scopes applied.
+     * @param  class-string<Model>  $modelClass
      *
-     * @param  array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>  $scopes
+     * @throws Exception
      */
-    protected function findModel(int|string $id, array $scopes = []): Model
+    private function resolveModel(string $modelClass): Model
+    {
+        if (! is_subclass_of($modelClass, Model::class)) {
+            throw new Exception("[{$modelClass}] must extend ".Model::class);
+        }
+
+        return resolve($modelClass);
+    }
+
+    /**
+     * @param  class-string<FormRequest>  $requestClass
+     * @return class-string<FormRequest>
+     *
+     * @throws Exception
+     */
+    private function resolveFormRequest(string $requestClass, string $paramName): string
+    {
+        if (! is_subclass_of($requestClass, FormRequest::class)) {
+            throw new Exception("[{$requestClass}] ({$paramName}) must extend ".FormRequest::class);
+        }
+
+        return $requestClass;
+    }
+
+    /**
+     * @param  class-string<JsonResource>  $resourceClass
+     * @return class-string<JsonResource>
+     *
+     * @throws Exception
+     */
+    private function resolveResource(string $resourceClass): string
+    {
+        if (! is_subclass_of($resourceClass, JsonResource::class)) {
+            throw new Exception("[{$resourceClass}] must extend ".JsonResource::class);
+        }
+
+        return $resourceClass;
+    }
+
+    private function registerPermissionMiddleware(): void
+    {
+        if (! config('fast-api.permissions.enabled', true)) {
+            return;
+        }
+
+        if (! $this->model instanceof HasPermissionSlug) {
+            return;
+        }
+
+        $slug = $this->model->getPermissionSlug();
+
+        if ($slug === '') {
+            return;
+        }
+
+        $this->middleware('permission:'.CrudAction::View->value."-{$slug}")->only(['index', 'show']);
+        $this->middleware('permission:'.CrudAction::Store->value."-{$slug}")->only(['store']);
+        $this->middleware('permission:'.CrudAction::Update->value."-{$slug}")->only(['update', 'updateColumn']);
+        $this->middleware('permission:'.CrudAction::Delete->value."-{$slug}")->only(['destroy', 'delete', 'permanentDelete']);
+        $this->middleware('permission:'.CrudAction::ChangeStatus->value."-{$slug}")->only(['changeStatus']);
+        $this->middleware('permission:'.CrudAction::Restore->value."-{$slug}")->only(['restore', 'restoreAll']);
+    }
+
+    /**
+     * @param  array<int, string>|array<string, scalar|array<scalar>|\Closure>  $scopes
+     */
+    private function findModel(int|string $id, array $scopes = []): Model
     {
         $query = $this->model::query();
 
-        if (! empty($scopes)) {
+        if ($scopes !== []) {
             $this->applyScopes($query, $scopes);
         }
 
@@ -673,18 +687,11 @@ class BaseController extends Controller
     }
 
     /**
-     * Apply named and parameterized scopes to a query.
-     *
-     * Supports:
-     *   ['active']           → $query->active()
-     *   ['status' => 1]      → $query->status(1)
-     *   ['range' => [1, 10]] → $query->range(1, 10)
-     *
      * @param  Builder<Model>  $query
-     * @param  array<int, string>|array<string, scalar|array<scalar>>|array<string, \Closure>  $scopes
+     * @param  array<int, string>|array<string, scalar|array<scalar>|\Closure>  $scopes
      * @return Builder<Model>
      */
-    protected function applyScopes(Builder $query, array $scopes): Builder
+    private function applyScopes(Builder $query, array $scopes): Builder
     {
         foreach ($scopes as $key => $value) {
             if (is_int($key)) {
@@ -714,7 +721,7 @@ class BaseController extends Controller
      * @param  array<string, string>  $aggregates
      * @return Builder<Model>
      */
-    protected function applyAggregates(Builder $query, array $aggregates): Builder
+    private function applyAggregates(Builder $query, array $aggregates): Builder
     {
         foreach ($aggregates as $relation => $column) {
             $query->withAggregate($relation, $column);
@@ -724,18 +731,47 @@ class BaseController extends Controller
     }
 
     /**
-     * Assert that a column exists in the model's table and is fillable.
-     *
-     * @throws Exception
+     * @param  Builder<Model>  $query
      */
-    protected function validateColumn(Model $model, string $column): void
+    private function applySearch(Builder $query): void
     {
-        if (! Schema::hasColumn($model->getTable(), $column)) {
-            throw new Exception("{$column} column does not exist in the database.");
+        if (! $this->model instanceof Searchable) {
+            return;
         }
 
-        if (! in_array($column, Schema::getColumnListing($model->getTable()), true)) {
-            throw new Exception("{$column} column not found in table");
+        $searchTerm = request()->query('search');
+
+        if (! is_string($searchTerm) || $searchTerm === '') {
+            return;
+        }
+
+        $query->likeWhere($this->model->searchableColumns(), $searchTerm);
+    }
+
+    /**
+     * @param  Builder<Model>  $query
+     */
+    private function paginateQuery(Builder $query): mixed
+    {
+        return match ($this->paginationType) {
+            PaginationType::LengthAware => $query->paginates(),
+            PaginationType::Simple => $query->simplePaginates(),
+            PaginationType::Cursor => $query->cursorPaginates(),
+            PaginationType::None => $query->get(),
+        };
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function assertFillableColumn(Model $model, string $column): void
+    {
+        if (! Schema::hasColumn($model->getTable(), $column)) {
+            throw new Exception("Column [{$column}] does not exist on table [{$model->getTable()}].");
+        }
+
+        if (! in_array($column, $model->getFillable(), true)) {
+            throw new Exception("Column [{$column}] is not fillable on model [".get_class($model).'].');
         }
     }
 }

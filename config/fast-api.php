@@ -1,25 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     /*
     |--------------------------------------------------------------------------
     | Pagination Configuration
     |--------------------------------------------------------------------------
+    |
+    | Configure how the package handles pagination for index endpoints.
+    | The "type" option determines the default pagination strategy used
+    | by BaseController (can be overridden per controller).
+    |
     */
     'pagination' => [
         'default_per_page' => 15,
         'max_per_page' => 100,
-        'allow_all' => true, // allow rowsPerPage=0 to return all records
+        'allow_all' => true,
     ],
 
     /*
     |--------------------------------------------------------------------------
     | Soft Delete Configuration
     |--------------------------------------------------------------------------
+    |
+    | When anonymize_unique_columns is true, unique column values get
+    | _{timestamp} appended on soft delete to prevent constraint violations
+    | when a new record is created with the same value.
+    |
     */
     'soft_delete' => [
-        // Append _{timestamp} to unique column values on soft delete
-        // to prevent unique constraint violations on restore
         'anonymize_unique_columns' => true,
     ],
 
@@ -27,6 +37,9 @@ return [
     |--------------------------------------------------------------------------
     | Response Configuration
     |--------------------------------------------------------------------------
+    |
+    | Customize the JSON response envelope keys used by the ApiResponder trait.
+    |
     */
     'response' => [
         'success_key' => 'data',
@@ -38,10 +51,13 @@ return [
     |--------------------------------------------------------------------------
     | Permissions Configuration
     |--------------------------------------------------------------------------
+    |
+    | When enabled, BaseController automatically registers Spatie permission
+    | middleware for models that implement the HasPermissionSlug contract.
+    | Requires spatie/laravel-permission to be installed.
+    |
     */
     'permissions' => [
-        // Automatically register Spatie permission middleware when model
-        // defines getPermissionSlug(). Requires spatie/laravel-permission.
         'enabled' => true,
     ],
 ];

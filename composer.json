@@ -1,40 +1,44 @@
 {
   "name": "anil/fast-api-crud",
-  "description": "Laravel Fast API CRUD with ease controller",
+  "description": "A powerful Laravel package for building RESTful API CRUD operations with minimal boilerplate. Features pagination, filtering, sorting, soft deletes, permissions, lifecycle hooks, and more.",
   "keywords": [
-    "anil",
     "laravel",
     "api",
     "crud",
+    "rest",
     "controller",
-    "fast",
-    "api-crud",
-    "api-crud-controller",
-    "fast-api-crud"
+    "eloquent",
+    "pagination",
+    "filter",
+    "sort",
+    "soft-delete",
+    "permissions",
+    "spatie"
   ],
   "type": "library",
+  "license": "MIT",
   "require": {
+    "php": "^8.2",
     "illuminate/auth": "^11.0||^12.0||^13.0",
     "illuminate/database": "^11.0||^12.0||^13.0",
     "illuminate/http": "^11.0||^12.0||^13.0",
     "illuminate/pagination": "^11.0||^12.0||^13.0",
     "illuminate/routing": "^11.0||^12.0||^13.0",
     "illuminate/support": "^11.0||^12.0||^13.0",
-    "spatie/laravel-permission": "^5.0||^6.0||^7.0"
+    "spatie/laravel-permission": "^6.0||^7.0"
   },
   "require-dev": {
-    "larastan/larastan": "^2.0||^3.0",
+    "larastan/larastan": "^3.0",
     "laravel/pint": "^1.0",
-    "orchestra/testbench": "^9.0||^10.0 ||^11.0",
-    "pestphp/pest": "^2.0||^3.0||^4.0"
+    "orchestra/testbench": "^9.0||^10.0||^11.0",
+    "pestphp/pest": "^3.0||^4.0"
   },
-  "license": "MIT",
   "autoload": {
     "psr-4": {
       "Anil\\FastApiCrud\\": "src/"
     },
     "files": [
-      "src/Helper.php"
+      "src/Support/Helpers.php"
     ]
   },
   "autoload-dev": {
@@ -51,7 +55,7 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Anil\\FastApiCrud\\Providers\\ApiCrudServiceProvider"
+        "Anil\\FastApiCrud\\FastApiCrudServiceProvider"
       ]
     }
   },
@@ -65,9 +69,9 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "scripts": {
-    "pest": "vendor/bin/pest --parallel",
-    "pest-coverage": "vendor/bin/pest --coverage",
-    "pest-type": "vendor/bin/pest --type-coverage",
-    "pint": "vendor/bin/pint"
+    "analyse": "vendor/bin/phpstan analyse",
+    "lint": "vendor/bin/pint",
+    "test": "vendor/bin/pest --parallel",
+    "test-coverage": "vendor/bin/pest --coverage"
   }
 }

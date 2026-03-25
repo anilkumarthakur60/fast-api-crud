@@ -1,6 +1,8 @@
 <?php
 
-namespace Anil\FastApiCrud\Traits;
+declare(strict_types=1);
+
+namespace Anil\FastApiCrud\Concerns;
 
 use Illuminate\Support\Str;
 

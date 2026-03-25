@@ -1,6 +1,6 @@
 <?php
 
-use Anil\FastApiCrud\Traits\ApiResponder;
+use Anil\FastApiCrud\Concerns\ApiResponder;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -265,7 +265,7 @@ describe('HasApiResponse Trait', function () {
                 ->and($response->getStatusCode())->toBe(ResponseAlias::HTTP_PERMANENTLY_REDIRECT)
                 ->and($response->getContent())->toBeJson()
                 ->and(json_decode($response->getContent(), true))->toEqual([
-                    'data' => ['message' => 'Permanent Redirect'],
+                    'data' => [],
                 ]);
         });
     });

@@ -1,6 +1,5 @@
 <?php
 
-use Anil\FastApiCrud\Controller\Controller;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Support\Facades\Schema;
 
