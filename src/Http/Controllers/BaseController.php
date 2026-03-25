@@ -262,7 +262,7 @@ abstract class BaseController extends Controller
      */
     public function store(): JsonResponse
     {
-        $data = resolve($this->storeRequest)->safe()->only($this->model->getFillable());
+        $data = $this->resolveValidatedData($this->storeRequest);
 
         try {
             DB::beginTransaction();
@@ -290,7 +290,7 @@ abstract class BaseController extends Controller
      */
     public function update(int|string $id): JsonResource|JsonResponse
     {
-        $data = resolve($this->updateRequest)->safe()->only($this->model->getFillable());
+        $data = $this->resolveValidatedData($this->updateRequest);
         $model = $this->findModel($id, $this->updateScopes);
 
         try {
@@ -384,7 +384,8 @@ abstract class BaseController extends Controller
         try {
             DB::beginTransaction();
             $this->beforeStatusChange($model);
-            $model->update([$column => $model->{$column} === 1 ? 0 : 1]);
+            $currentValue = $model->getAttribute($column);
+            $model->update([$column => $currentValue === 1 ? 0 : 1]);
             $this->afterStatusChange($model);
             DB::commit();
         } catch (Exception $e) {
@@ -428,8 +429,9 @@ abstract class BaseController extends Controller
      */
     public function restore(int|string $id): JsonResource|JsonResponse
     {
-        /** @var Builder<Model> $query */
-        $query = $this->model::query()->initializer()->onlyTrashed();
+        $query = $this->model::query();
+        $query->initializer();
+        $query->onlyTrashed();
 
         if ($this->restoreScopes !== []) {
             $this->applyScopes($query, $this->restoreScopes);
@@ -463,7 +465,10 @@ abstract class BaseController extends Controller
     {
         try {
             DB::beginTransaction();
-            $this->model::query()->initializer()->onlyTrashed()->restore();
+            $query = $this->model::query();
+            $query->initializer();
+            $query->onlyTrashed();
+            $query->restore();
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -481,7 +486,10 @@ abstract class BaseController extends Controller
      */
     public function permanentDelete(int|string $id): JsonResponse
     {
-        $model = $this->model::query()->initializer()->onlyTrashed()->findOrFail($id);
+        $query = $this->model::query();
+        $query->initializer();
+        $query->onlyTrashed();
+        $model = $query->findOrFail($id);
 
         try {
             DB::beginTransaction();
@@ -615,7 +623,32 @@ abstract class BaseController extends Controller
             throw new Exception("[{$modelClass}] must extend ".Model::class);
         }
 
-        return resolve($modelClass);
+        return new $modelClass;
+    }
+
+    /**
+     * Resolve a FormRequest and return only fillable data.
+     *
+     * @param  class-string<FormRequest>  $requestClass
+     * @return array<string, mixed>
+     */
+    private function resolveValidatedData(string $requestClass): array
+    {
+        $resolved = resolve($requestClass);
+        if (! $resolved instanceof FormRequest) {
+            return [];
+        }
+
+        $data = $resolved->safe()->only($this->model->getFillable());
+
+        $result = [];
+        foreach ($data as $key => $value) {
+            if (is_string($key)) {
+                $result[$key] = $value;
+            }
+        }
+
+        return $result;
     }
 
     /**

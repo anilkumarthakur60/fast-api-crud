@@ -41,6 +41,7 @@ final class BuilderMacros
          *   ->likeWhere(['user:name,email'], $search)
          */
         Builder::macro('likeWhere', function (array $attributes, ?string $searchTerm = null): Builder {
+            /** @var array<int, string> $attributes */
             /** @var Builder<Model> $this */
             if ($searchTerm === null || $searchTerm === '') {
                 return $this;
@@ -74,7 +75,8 @@ final class BuilderMacros
          * @param  array<string>|string  $columns
          * @return Paginator
          */
-        Builder::macro('paginates', function ($columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
+        Builder::macro('paginates', function (array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
+            /** @var array<int, string> $columns */
             /** @var Builder<Model> $this */
             $perPage = Pagination::resolvePerPage();
 
@@ -95,7 +97,8 @@ final class BuilderMacros
          * @param  array<string>|string  $columns
          * @return Paginator
          */
-        Builder::macro('simplePaginates', function ($columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
+        Builder::macro('simplePaginates', function (array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
+            /** @var array<int, string> $columns */
             /** @var Builder<Model> $this */
             $perPage = Pagination::resolvePerPage();
 
@@ -116,7 +119,8 @@ final class BuilderMacros
          * @param  array<string>|string  $columns
          * @return CursorPaginator
          */
-        Builder::macro('cursorPaginates', function ($columns = ['*'], ?string $cursorName = null, ?Cursor $cursor = null): CursorPaginator {
+        Builder::macro('cursorPaginates', function (array $columns = ['*'], ?string $cursorName = null, ?Cursor $cursor = null): CursorPaginator {
+            /** @var array<int, string> $columns */
             /** @var Builder<Model> $this */
             $requested = Pagination::requestedPerPage(Pagination::defaultPerPage());
             $perPage = $requested <= 0 ? Pagination::defaultPerPage() : min($requested, Pagination::maxPerPage());
@@ -200,11 +204,13 @@ final class BuilderMacros
 
             foreach ($aggregates as $relation => $value) {
                 if (is_array($value)) {
-                    $column = $value[0];
+                    $column = is_string($value[0]) ? $value[0] : '';
                     $function = isset($value[1]) && is_string($value[1]) ? $value[1] : null;
-                } else {
+                } elseif (is_string($value)) {
                     $column = $value;
                     $function = null;
+                } else {
+                    continue;
                 }
                 $this->withAggregate($relation, $column, $function);
             }

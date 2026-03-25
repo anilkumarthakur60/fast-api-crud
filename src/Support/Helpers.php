@@ -18,10 +18,14 @@ if (! function_exists('classShortName')) {
      */
     function classShortName(string $param): ?string
     {
-        if (! app($param)) {
+        $instance = app($param);
+        if (! $instance) {
             return null;
         }
-        $reflection = new ReflectionClass(app($param));
+        if (! is_object($instance)) {
+            return null;
+        }
+        $reflection = new ReflectionClass($instance);
 
         return $reflection->getShortName();
     }
@@ -208,7 +212,7 @@ if (! function_exists('flattenArray')) {
      * Flatten a nested array to a given depth.
      *
      * @param  array<string,mixed>  $data
-     * @return array<string,mixed>
+     * @return array<int|string, mixed>
      */
     function flattenArray(array $data, int $depth = 0): array
     {
@@ -293,13 +297,13 @@ if (! function_exists('tableColumns')) {
             $columns = Schema::getColumnListing($table->getTable());
         }
 
-        $columns = array_diff($columns, ['id']);
+        $stringColumns = array_filter($columns, 'is_string');
+        $stringColumns = array_diff($stringColumns, ['id']);
         $specialColumns = ['created_at', 'updated_at', 'deleted_at'];
-        $columns = array_diff($columns, $specialColumns);
-        sort($columns);
+        $stringColumns = array_diff($stringColumns, $specialColumns);
+        sort($stringColumns);
 
-        /** @var array<string> */
-        return array_merge(['id'], $columns, $specialColumns);
+        return array_merge(['id'], $stringColumns, $specialColumns);
     }
 }
 
