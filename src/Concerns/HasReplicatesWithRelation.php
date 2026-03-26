@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use SplObjectStorage;
@@ -36,7 +37,7 @@ trait HasReplicatesWithRelation
      * Replicate this model along with specified or loaded relations.
      *
      * @param  array<int, string>  $relations  Relations to replicate (dot notation for depth). Empty = use loaded relations.
-     * @param  array<int, string>  $except     Attributes to exclude from the replica.
+     * @param  array<int, string>  $except  Attributes to exclude from the replica.
      * @return static The newly saved replica.
      *
      * @throws Exception
@@ -216,7 +217,7 @@ trait HasReplicatesWithRelation
 
             $pivot = $relatedModel->getRelation('pivot');
 
-            if ($pivotColumns !== [] && $pivot instanceof \Illuminate\Database\Eloquent\Relations\Pivot) {
+            if ($pivotColumns !== [] && $pivot instanceof Pivot) {
                 $pivotData = [];
                 foreach ($pivotColumns as $column) {
                     if (is_string($column)) {
