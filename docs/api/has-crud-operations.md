@@ -1,6 +1,6 @@
-# CrudQueries Trait
+# HasCrudOperations Trait
 
-`Anil\FastApiCrud\Concerns\CrudQueries`
+`Anil\FastApiCrud\Concerns\HasCrudOperations`
 
 Shared CRUD query building, data operations, and lifecycle hooks. Used by both `BaseController` and `BaseWebController`.
 

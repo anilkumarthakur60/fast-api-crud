@@ -101,7 +101,7 @@ After:  email = "john@example.com_1705312800"
 
 This prevents unique constraint violations when creating a new record with the same email while the old one is soft-deleted.
 
-Requires the model to use the `HandlesDeleteEvents` trait. See [Model Traits](./model-traits#handlesdeleteevents).
+Requires the model to use the `AnonymizesOnDelete` trait. See [Model Traits](./model-traits#anonymizesondelete).
 
 ## Web Flash Keys
 

@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Schema;
  *
  * Configurable via fast-api.soft_delete.anonymize_unique_columns (default: true).
  */
-trait HandlesDeleteEvents
+trait AnonymizesOnDelete
 {
-    public static function bootHandlesDeleteEvents(): void
+    public static function bootAnonymizesOnDelete(): void
     {
         static::deleting(function (self $model): void {
             if (! config('fast-api.soft_delete.anonymize_unique_columns', true)) {

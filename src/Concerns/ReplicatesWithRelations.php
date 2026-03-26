@@ -30,7 +30,7 @@ use SplObjectStorage;
  *
  * @phpstan-require-extends Model
  */
-trait HasReplicatesWithRelation
+trait ReplicatesWithRelations
 {
     /**
      * Replicate this model along with specified or loaded relations.

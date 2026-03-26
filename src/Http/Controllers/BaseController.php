@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Anil\FastApiCrud\Http\Controllers;
 
-use Anil\FastApiCrud\Concerns\ApiResponder;
-use Anil\FastApiCrud\Concerns\CrudQueries;
+use Anil\FastApiCrud\Concerns\HasApiResponse;
+use Anil\FastApiCrud\Concerns\HasCrudOperations;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -27,9 +27,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 abstract class BaseController extends Controller
 {
-    use ApiResponder;
     use AuthorizesRequests;
-    use CrudQueries;
+    use HasApiResponse;
+    use HasCrudOperations;
 
     /** @var class-string<JsonResource> */
     protected readonly string $resource;

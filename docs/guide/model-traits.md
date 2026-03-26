@@ -72,22 +72,22 @@ GET /posts?filters={"lastWeek":1}
 GET /posts?filters={"date":"2025-01-01 to 2025-01-31"}
 ```
 
-## HasUuid
+## HasUuidPrimaryKey
 
 Automatically assigns UUID v4 as the primary key on model creation.
 
 ```php
-use Anil\FastApiCrud\Concerns\HasUuid;
+use Anil\FastApiCrud\Concerns\HasUuidPrimaryKey;
 
 class Post extends Model
 {
-    use HasUuid;
+    use HasUuidPrimaryKey;
 }
 ```
 
 ### What It Does
 
-- **`bootHasUuid()`** — On `creating` event, assigns `Str::uuid()` to the primary key if empty
+- **`bootHasUuidPrimaryKey()`** — On `creating` event, assigns `Str::uuid()` to the primary key if empty
 - **`getIncrementing()`** — Returns `false` (UUID is not auto-incrementing)
 - **`getKeyType()`** — Returns `'string'`
 
@@ -110,16 +110,16 @@ $post->id; // "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
 
 You can also set a UUID manually — the trait only assigns one if the key is empty.
 
-## HandlesDeleteEvents
+## AnonymizesOnDelete
 
 Anonymizes unique column values on soft delete to prevent constraint violations.
 
 ```php
-use Anil\FastApiCrud\Concerns\HandlesDeleteEvents;
+use Anil\FastApiCrud\Concerns\AnonymizesOnDelete;
 
 class User extends Model
 {
-    use SoftDeletes, HandlesDeleteEvents;
+    use SoftDeletes, AnonymizesOnDelete;
 }
 ```
 
@@ -141,16 +141,16 @@ This prevents unique constraint violations when creating a new record with the s
 - Only affects columns that are part of a unique index (not primary key)
 - Uses `saveQuietly()` to avoid triggering additional model events
 
-## HasReplicatesWithRelation
+## ReplicatesWithRelations
 
 Replicate a model along with all its loaded relations.
 
 ```php
-use Anil\FastApiCrud\Concerns\HasReplicatesWithRelation;
+use Anil\FastApiCrud\Concerns\ReplicatesWithRelations;
 
 class Post extends Model
 {
-    use HasReplicatesWithRelation;
+    use ReplicatesWithRelations;
 }
 ```
 
@@ -188,4 +188,4 @@ The trait automatically re-applies castable attributes (numeric, boolean, string
 
 ### Recursive Replication
 
-If a related model also uses `HasReplicatesWithRelation`, it will be replicated recursively with its own relations. Otherwise, a simple `replicate()` is used.
+If a related model also uses `ReplicatesWithRelations`, it will be replicated recursively with its own relations. Otherwise, a simple `replicate()` is used.

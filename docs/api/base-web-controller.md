@@ -2,7 +2,7 @@
 
 `Anil\FastApiCrud\Http\Controllers\BaseWebController`
 
-Abstract controller for Blade/web endpoints. Uses `AuthorizesRequests` and `CrudQueries` traits.
+Abstract controller for Blade/web endpoints. Uses `AuthorizesRequests` and `HasCrudOperations` traits.
 
 ## Constructor
 
@@ -21,7 +21,7 @@ public function __construct(
 
 ## Properties
 
-Inherits all properties from [`CrudQueries`](./crud-queries). Additionally:
+Inherits all properties from [`HasCrudOperations`](./has-crud-operations). Additionally:
 
 | Property | Type | Description |
 |----------|------|-------------|
