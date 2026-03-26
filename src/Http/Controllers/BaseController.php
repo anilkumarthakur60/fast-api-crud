@@ -7,7 +7,9 @@ namespace Anil\FastApiCrud\Http\Controllers;
 use Anil\FastApiCrud\Concerns\ApiResponder;
 use Anil\FastApiCrud\Concerns\CrudQueries;
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -33,9 +35,9 @@ abstract class BaseController extends Controller
     protected readonly string $resource;
 
     /**
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $model
-     * @param  class-string<\Illuminate\Foundation\Http\FormRequest>  $storeRequest
-     * @param  class-string<\Illuminate\Foundation\Http\FormRequest>  $updateRequest
+     * @param  class-string<Model>  $model
+     * @param  class-string<FormRequest>  $storeRequest
+     * @param  class-string<FormRequest>  $updateRequest
      * @param  class-string<JsonResource>  $resource
      *
      * @throws Exception

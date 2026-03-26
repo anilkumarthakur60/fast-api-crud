@@ -42,17 +42,17 @@ trait HasReplicatesWithRelation
         $newModel->save();
 
         foreach ($this->getRelations() as $relationName => $relationValue) {
-            if (!is_string($relationName) || !$relationValue) {
+            if (! is_string($relationName) || ! $relationValue) {
                 continue;
             }
 
-            if (!method_exists($this, $relationName)) {
+            if (! method_exists($this, $relationName)) {
                 continue;
             }
 
             $relationInstance = $this->{$relationName}();
 
-            if (!$relationInstance instanceof Relation) {
+            if (! $relationInstance instanceof Relation) {
                 continue;
             }
 
@@ -72,7 +72,7 @@ trait HasReplicatesWithRelation
                 $relationInstance instanceof HasOneThrough => throw new Exception("HasOneThrough relationship '{$relationName}' is not supported for replication."),
                 $relationInstance instanceof HasManyThrough => throw new Exception("HasManyThrough relationship '{$relationName}' is not supported for replication."),
 
-                default => throw new Exception("Relation '{$relationName}' of type '" . get_class($relationInstance) . "' is not supported for replication."),
+                default => throw new Exception("Relation '{$relationName}' of type '".get_class($relationInstance)."' is not supported for replication."),
             };
         }
 
@@ -90,7 +90,7 @@ trait HasReplicatesWithRelation
         $matched = [];
 
         foreach ($this->getCasts() as $attribute => $castType) {
-            if (!is_string($attribute) || !is_string($castType)) {
+            if (! is_string($attribute) || ! is_string($castType)) {
                 continue;
             }
 
@@ -159,7 +159,7 @@ trait HasReplicatesWithRelation
      */
     private function replicateBelongsTo(Model $newModel, string $relationName, mixed $relationValue): void
     {
-        if (!$relationValue instanceof Model) {
+        if (! $relationValue instanceof Model) {
             return;
         }
 
@@ -178,7 +178,7 @@ trait HasReplicatesWithRelation
      */
     private function replicateHasOne(Model $newModel, string $relationName, mixed $relationValue): void
     {
-        if (!$relationValue instanceof Model) {
+        if (! $relationValue instanceof Model) {
             return;
         }
 
@@ -195,7 +195,7 @@ trait HasReplicatesWithRelation
      */
     private function replicateHasMany(Model $newModel, string $relationName, mixed $relationValue): void
     {
-        if (!$relationValue instanceof Collection) {
+        if (! $relationValue instanceof Collection) {
             return;
         }
 
@@ -218,7 +218,7 @@ trait HasReplicatesWithRelation
      */
     private function replicateBelongsToMany(Model $newModel, string $relationName, mixed $relationValue, BelongsToMany|MorphToMany $relationInstance): void
     {
-        if (!$relationValue instanceof Collection) {
+        if (! $relationValue instanceof Collection) {
             return;
         }
 
