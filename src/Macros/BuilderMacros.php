@@ -161,11 +161,13 @@ final class BuilderMacros
                 if (! isset($value)) {
                     continue;
                 }
-                $studlyFilter = Str::studly((string) $filter);
-                if (method_exists($this->getModel(), 'scope'.$studlyFilter)) {
+
+                $model = $this->getModel();
+
+                if ($model->hasNamedScope($filter)) {
                     $this->{$filter}($value);
-                } elseif (method_exists($this->getModel(), $studlyFilter)) {
-                    $this->getModel()->{$studlyFilter}($value);
+                } elseif (method_exists($model, Str::studly((string) $filter))) {
+                    $model->{Str::studly((string) $filter)}($value);
                 }
             }
 

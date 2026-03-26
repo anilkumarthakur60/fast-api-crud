@@ -1,6 +1,7 @@
 <?php
 
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
+use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 
@@ -198,5 +199,54 @@ describe('ProviderMacrosFeatureTest', function () {
         expect($query->perPage())->toBe(15);
         $query = PostModel::query()->simplePaginates();
         expect($query->perPage())->toBe(15);
+    });
+
+    it('initializer macro applies traditional scopePrefix scopes', function () {
+        UserModel::factory()->create(['name' => 'Active User', 'active' => 1, 'status' => 1]);
+        UserModel::factory()->create(['name' => 'Inactive User', 'active' => 0, 'status' => 1]);
+
+        request()->merge([
+            'filters' => json_encode(['active' => 1]),
+        ]);
+
+        $query = UserModel::query()->initializer(orderBy: false);
+        $results = $query->get();
+
+        expect($results)->toHaveCount(1)
+            ->and($results->first()->name)->toBe('Active User');
+    });
+
+    it('initializer macro applies attribute-based #[Scope] scopes', function () {
+        UserModel::factory()->create(['name' => 'Verified User', 'active' => 1, 'status' => 1]);
+        UserModel::factory()->create(['name' => 'Unverified User', 'active' => 0, 'status' => 0]);
+        UserModel::factory()->create(['name' => 'Partial User', 'active' => 1, 'status' => 0]);
+
+        request()->merge([
+            'filters' => json_encode(['verified' => true]),
+        ]);
+
+        $query = UserModel::query()->initializer(orderBy: false);
+        $results = $query->get();
+
+        expect($results)->toHaveCount(1)
+            ->and($results->first()->name)->toBe('Verified User');
+    });
+
+    it('initializer macro applies both traditional and attribute-based scopes together', function () {
+        UserModel::factory()->create(['name' => 'Match User', 'active' => 1, 'status' => 1]);
+        UserModel::factory()->create(['name' => 'No Match', 'active' => 0, 'status' => 0]);
+
+        request()->merge([
+            'filters' => json_encode([
+                'active' => 1,
+                'verified' => true,
+            ]),
+        ]);
+
+        $query = UserModel::query()->initializer(orderBy: false);
+        $results = $query->get();
+
+        expect($results)->toHaveCount(1)
+            ->and($results->first()->name)->toBe('Match User');
     });
 });

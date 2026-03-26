@@ -3,6 +3,7 @@
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
 use Anil\FastApiCrud\Tests\TestSetup\Factories\UserModelFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -89,6 +90,17 @@ class UserModel extends Authenticatable
     public function scopeHasPosts(Builder $query): Builder
     {
         return $query->whereHas('posts');
+    }
+
+    /**
+     * Scope using the #[Scope] attribute (Laravel 11+ style).
+     *
+     * @param  Builder<UserModel>  $query
+     */
+    #[Scope]
+    protected function verified(Builder $query): void
+    {
+        $query->where('active', 1)->where('status', 1);
     }
 
     public function afterCreate(): static
