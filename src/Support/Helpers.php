@@ -474,7 +474,6 @@ if (! function_exists('relativePath')) {
     }
 }
 
-
 if (! function_exists('_dd')) {
     /**
      * Enhanced debug dump with CORS headers support for API contexts.
@@ -484,7 +483,6 @@ if (! function_exists('_dd')) {
      * Always returns HTTP 500.
      *
      * @param  mixed  ...$vars  Values to dump.
-     * @return never
      */
     function _dd(mixed ...$vars): never
     {
