@@ -18,28 +18,65 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
+use SplObjectStorage;
 
 /**
+ * Replicate a model along with its relations to any depth.
+ *
+ * Usage:
+ *   $clone = $post->replicateWithRelations();
+ *   $clone = $post->replicateWithRelations(['comments.replies', 'tags']);
+ *   $clone = $post->replicateWithRelations(except: ['slug', 'published_at']);
+ *
  * @phpstan-require-extends Model
  */
 trait HasReplicatesWithRelation
 {
     /**
-     * Replicate this model along with all of its loaded relations.
+     * Replicate this model along with specified or loaded relations.
      *
-     * @return static The newly replicated model instance.
+     * @param  array<int, string>  $relations  Relations to replicate (dot notation for depth). Empty = use loaded relations.
+     * @param  array<int, string>  $except     Attributes to exclude from the replica.
+     * @return static The newly saved replica.
      *
      * @throws Exception
      */
-    public function replicateWithRelations(): static
+    public function replicateWithRelations(array $relations = [], array $except = []): static
     {
-        $newModel = $this->replicate();
+        /** @var SplObjectStorage<Model, Model> $visited */
+        $visited = new SplObjectStorage;
 
-        foreach ($this->matchingCastableAttributes() as $attribute => $casts) {
-            $newModel->{$attribute} = $this->castAttribute($attribute, $this->{$attribute});
+        return $this->replicateWithRelationsUsing($relations, $except, $visited);
+    }
+
+    /**
+     * Internal replication with circular reference tracking.
+     *
+     * @param  array<int, string>  $relations
+     * @param  array<int, string>  $except
+     * @param  SplObjectStorage<Model, Model>  $visited  Tracks original→clone to prevent infinite loops.
+     *
+     * @throws Exception
+     */
+    private function replicateWithRelationsUsing(array $relations, array $except, SplObjectStorage $visited): static
+    {
+        // Circular reference guard — return existing clone if we've seen this model
+        if ($visited->contains($this)) {
+            /** @var static */
+            return $visited[$this];
         }
 
+        // Eager-load requested relations if not already loaded
+        if ($relations !== []) {
+            $this->loadMissing($relations);
+        }
+
+        $newModel = $this->replicate($except !== [] ? $except : null);
+        $this->reApplyCasts($newModel);
         $newModel->save();
+
+        // Register in visited map before processing relations (handles circular refs)
+        $visited[$this] = $newModel;
 
         foreach ($this->getRelations() as $relationName => $relationValue) {
             if (! is_string($relationName) || ! $relationValue) {
@@ -57,105 +94,34 @@ trait HasReplicatesWithRelation
             }
 
             match (true) {
-                $relationInstance instanceof MorphTo => $this->replicateBelongsTo($newModel, $relationName, $relationValue),
+                $relationInstance instanceof MorphTo,
                 $relationInstance instanceof BelongsTo => $this->replicateBelongsTo($newModel, $relationName, $relationValue),
 
-                $relationInstance instanceof MorphOne => $this->replicateHasOne($newModel, $relationName, $relationValue),
-                $relationInstance instanceof HasOne => $this->replicateHasOne($newModel, $relationName, $relationValue),
+                $relationInstance instanceof MorphOne,
+                $relationInstance instanceof HasOne => $this->replicateHasOne($newModel, $relationName, $relationValue, $visited),
 
-                $relationInstance instanceof MorphMany => $this->replicateHasMany($newModel, $relationName, $relationValue),
-                $relationInstance instanceof HasMany => $this->replicateHasMany($newModel, $relationName, $relationValue),
+                $relationInstance instanceof MorphMany,
+                $relationInstance instanceof HasMany => $this->replicateHasMany($newModel, $relationName, $relationValue, $visited),
 
-                $relationInstance instanceof MorphToMany => $this->replicateBelongsToMany($newModel, $relationName, $relationValue, $relationInstance),
+                $relationInstance instanceof MorphToMany,
                 $relationInstance instanceof BelongsToMany => $this->replicateBelongsToMany($newModel, $relationName, $relationValue, $relationInstance),
 
-                $relationInstance instanceof HasOneThrough => throw new Exception("HasOneThrough relationship '{$relationName}' is not supported for replication."),
-                $relationInstance instanceof HasManyThrough => throw new Exception("HasManyThrough relationship '{$relationName}' is not supported for replication."),
+                $relationInstance instanceof HasOneThrough,
+                $relationInstance instanceof HasManyThrough => null, // Skip — "through" relations are derived, not owned
 
-                default => throw new Exception("Relation '{$relationName}' of type '".get_class($relationInstance)."' is not supported for replication."),
+                default => null,
             };
         }
 
         return $newModel;
     }
 
-    /**
-     * Return castable attributes that need re-applying during replication.
-     *
-     * @return array<string, string>
-     */
-    public function matchingCastableAttributes(): array
-    {
-        /** @var array<string, string> $matched */
-        $matched = [];
-
-        foreach ($this->getCasts() as $attribute => $castType) {
-            if (! is_string($attribute) || ! is_string($castType)) {
-                continue;
-            }
-
-            $normalizedType = $this->normalizeCastType(strtolower(trim($castType)));
-
-            if (
-                isset($this->{$attribute})
-                && is_scalar($this->{$attribute})
-                && $this->isCastable($this->{$attribute}, $normalizedType)
-            ) {
-                $matched[$attribute] = $normalizedType;
-            }
-        }
-
-        return $matched;
-    }
+    // -------------------------------------------------------------------------
+    // Relation replicators
+    // -------------------------------------------------------------------------
 
     /**
-     * Normalize cast type to a category.
-     */
-    private function normalizeCastType(string $castType): string
-    {
-        if (in_array($castType, ['int', 'integer', 'real', 'float', 'double', 'decimal'], true)) {
-            return 'numeric';
-        }
-
-        if (in_array($castType, ['json', 'array', 'object', 'collection'], true)) {
-            return 'json';
-        }
-
-        return $castType;
-    }
-
-    /**
-     * Determine if a given value matches a particular cast type.
-     */
-    private function isCastable(mixed $value, string $type): bool
-    {
-        return match ($type) {
-            'numeric' => is_numeric($value),
-            'bool', 'boolean' => is_bool($value) || (is_string($value) && in_array(strtolower($value), ['1', 'true', 'yes'], true)),
-            'string' => is_string($value),
-            'json' => is_array($value) || (is_object($value) && method_exists($value, 'toArray')),
-            default => false,
-        };
-    }
-
-    /**
-     * Replicate a BelongsTo/MorphTo relationship.
-     */
-    private function replicateRelatedModel(Model $relatedModel): Model
-    {
-        if (method_exists($relatedModel, 'replicateWithRelations')) {
-            $result = $relatedModel->replicateWithRelations();
-
-            if ($result instanceof Model) {
-                return $result;
-            }
-        }
-
-        return $relatedModel->replicate();
-    }
-
-    /**
-     * Replicate a BelongsTo/MorphTo relationship.
+     * BelongsTo / MorphTo — associate with the SAME parent (don't duplicate it).
      */
     private function replicateBelongsTo(Model $newModel, string $relationName, mixed $relationValue): void
     {
@@ -163,56 +129,61 @@ trait HasReplicatesWithRelation
             return;
         }
 
-        $replicatedParent = $this->replicateRelatedModel($relationValue);
         $relation = $newModel->{$relationName}();
 
         if ($relation instanceof BelongsTo) {
-            $relation->associate($replicatedParent);
+            $relation->associate($relationValue);
+            $newModel->save();
         }
-
-        $newModel->save();
     }
 
     /**
-     * Replicate a HasOne/MorphOne relationship.
+     * HasOne / MorphOne — deep-replicate the child and attach to new parent.
+     *
+     * @param  SplObjectStorage<Model, Model>  $visited
      */
-    private function replicateHasOne(Model $newModel, string $relationName, mixed $relationValue): void
+    private function replicateHasOne(Model $newModel, string $relationName, mixed $relationValue, SplObjectStorage $visited): void
     {
         if (! $relationValue instanceof Model) {
             return;
         }
 
-        $newRelated = $this->replicateRelatedModel($relationValue);
+        $newChild = $this->deepReplicateChild($relationValue, $visited);
         $relation = $newModel->{$relationName}();
 
         if ($relation instanceof HasOne || $relation instanceof MorphOne) {
-            $relation->save($newRelated);
+            $relation->save($newChild);
         }
     }
 
     /**
-     * Replicate a HasMany/MorphMany relationship.
+     * HasMany / MorphMany — deep-replicate each child and attach to new parent.
+     *
+     * @param  SplObjectStorage<Model, Model>  $visited
      */
-    private function replicateHasMany(Model $newModel, string $relationName, mixed $relationValue): void
+    private function replicateHasMany(Model $newModel, string $relationName, mixed $relationValue, SplObjectStorage $visited): void
     {
         if (! $relationValue instanceof Collection) {
             return;
         }
 
+        $relation = $newModel->{$relationName}();
+
+        if (! ($relation instanceof HasMany || $relation instanceof MorphMany)) {
+            return;
+        }
+
         /** @var Collection<int, Model> $relatedCollection */
         $relatedCollection = $relationValue;
-        foreach ($relatedCollection as $childModel) {
-            $newChild = $this->replicateRelatedModel($childModel);
-            $relation = $newModel->{$relationName}();
 
-            if ($relation instanceof HasMany || $relation instanceof MorphMany) {
-                $relation->save($newChild);
-            }
+        foreach ($relatedCollection as $childModel) {
+            $newChild = $this->deepReplicateChild($childModel, $visited);
+            $relation->save($newChild);
         }
     }
 
     /**
-     * Replicate a BelongsToMany/MorphToMany relationship.
+     * BelongsToMany / MorphToMany — sync IDs with pivot data preserved.
      *
      * @param  BelongsToMany<Model, Model>|MorphToMany<Model, Model>  $relationInstance
      */
@@ -222,15 +193,92 @@ trait HasReplicatesWithRelation
             return;
         }
 
-        /** @var Collection<int, Model> $relatedCollection */
-        $relatedCollection = $relationValue;
-        $ids = $relatedCollection->pluck(
-            $relationInstance->getRelated()->getKeyName()
-        )->toArray();
         $relation = $newModel->{$relationName}();
 
-        if ($relation instanceof BelongsToMany) {
-            $relation->sync($ids);
+        if (! $relation instanceof BelongsToMany) {
+            return;
+        }
+
+        /** @var Collection<int, Model> $relatedCollection */
+        $relatedCollection = $relationValue;
+
+        // Build sync array with pivot data preserved
+        $pivotColumns = $relationInstance->getPivotColumns();
+        /** @var array<int|string, array<string, mixed>> $syncData */
+        $syncData = [];
+
+        foreach ($relatedCollection as $relatedModel) {
+            $key = $relatedModel->getKey();
+
+            if (! is_int($key) && ! is_string($key)) {
+                continue;
+            }
+
+            $pivot = $relatedModel->getRelation('pivot');
+
+            if ($pivotColumns !== [] && $pivot instanceof \Illuminate\Database\Eloquent\Relations\Pivot) {
+                $pivotData = [];
+                foreach ($pivotColumns as $column) {
+                    if (is_string($column)) {
+                        $pivotData[$column] = $pivot->getAttribute($column);
+                    }
+                }
+                $syncData[$key] = $pivotData;
+            } else {
+                $syncData[$key] = [];
+            }
+        }
+
+        $relation->sync($syncData);
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Deep-replicate a child model: if it uses this trait, replicate with its own relations;
+     * otherwise do a simple replicate.
+     *
+     * @param  SplObjectStorage<Model, Model>  $visited
+     */
+    private function deepReplicateChild(Model $child, SplObjectStorage $visited): Model
+    {
+        // Already cloned (circular reference) — return the existing clone
+        if ($visited->contains($child)) {
+            /** @var Model */
+            return $visited[$child];
+        }
+
+        if (method_exists($child, 'replicateWithRelationsUsing')) {
+            $result = $child->replicateWithRelationsUsing([], [], $visited);
+
+            if ($result instanceof Model) {
+                return $result;
+            }
+        }
+
+        // Simple replicate for models without the trait
+        $newChild = $child->replicate();
+        $newChild->save();
+        $visited[$child] = $newChild;
+
+        return $newChild;
+    }
+
+    /**
+     * Re-apply castable attributes to the replicated model.
+     */
+    private function reApplyCasts(Model $newModel): void
+    {
+        foreach ($this->getCasts() as $attribute => $castType) {
+            if (! is_string($attribute) || ! is_string($castType)) {
+                continue;
+            }
+
+            if (isset($this->{$attribute}) && is_scalar($this->{$attribute})) {
+                $newModel->{$attribute} = $this->castAttribute($attribute, $this->{$attribute});
+            }
         }
     }
 }
