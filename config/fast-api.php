@@ -60,4 +60,18 @@ return [
     'permissions' => [
         'enabled' => true,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Web (Blade) Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure the flash message session keys used by BaseWebController
+    | when redirecting after CRUD operations.
+    |
+    */
+    'web' => [
+        'flash_key_success' => 'success',
+        'flash_key_error' => 'error',
+    ],
 ];

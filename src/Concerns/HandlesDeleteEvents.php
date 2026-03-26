@@ -30,12 +30,24 @@ trait HandlesDeleteEvents
             $changed = false;
 
             foreach ($indexes as $index) {
-                if (! $index['unique'] || $index['primary']) {
+                if (! is_array($index)) {
                     continue;
                 }
 
-                foreach ($index['columns'] as $column) {
-                    if (isset($model->{$column})) {
+                $isUnique = isset($index['unique']) && $index['unique'] === true;
+                $isPrimary = isset($index['primary']) && $index['primary'] === true;
+
+                if (! $isUnique || $isPrimary) {
+                    continue;
+                }
+
+                $columns = is_array($index['columns'] ?? null) ? $index['columns'] : [];
+
+                foreach ($columns as $column) {
+                    if (! is_string($column)) {
+                        continue;
+                    }
+                    if (isset($model->{$column}) && is_string($model->{$column})) {
                         $model->{$column} = $model->{$column}.'_'.$timestamp;
                         $changed = true;
                     }
