@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Anil\FastApiCrud\Http\Controllers;
 
-use Anil\FastApiCrud\Concerns\CrudQueries;
+use Anil\FastApiCrud\Concerns\HasCrudOperations;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -25,7 +25,7 @@ use Illuminate\View\View;
 abstract class BaseWebController extends Controller
 {
     use AuthorizesRequests;
-    use CrudQueries;
+    use HasCrudOperations;
 
     /** @var class-string<JsonResource>|null */
     protected readonly ?string $resource;

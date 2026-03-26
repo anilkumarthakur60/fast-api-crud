@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\VarDumper\Caster\ScalarStub;
+use Symfony\Component\VarDumper\VarDumper;
 
 if (! function_exists('classShortName')) {
     /**
@@ -469,5 +471,45 @@ if (! function_exists('relativePath')) {
     function relativePath(string $path): string
     {
         return str_replace(base_path().DIRECTORY_SEPARATOR, '', $path);
+    }
+}
+
+if (! function_exists('_dd')) {
+    /**
+     * Enhanced debug dump with CORS headers support for API contexts.
+     *
+     * Outputs dumped values and halts execution. Includes CORS headers
+     * to prevent browser/API clients from swallowing the error response.
+     * Always returns HTTP 500.
+     *
+     * @param  mixed  ...$vars  Values to dump.
+     */
+    function _dd(mixed ...$vars): never
+    {
+        // CORS headers so API clients (Postman, axios, fetch) can read the error body
+        if (! headers_sent()) {
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: *');
+            header('Access-Control-Allow-Headers: *');
+            header('HTTP/1.1 500 Internal Server Error');
+            http_response_code(500);
+        }
+
+        // No args? Drop a bug marker so you know dd() was hit
+        if (! $vars) {
+            VarDumper::dump(new ScalarStub('🐛'));
+            exit(1);
+        }
+
+        if (array_key_exists(0, $vars) && count($vars) === 1) {
+            VarDumper::dump($vars[0]);
+        } else {
+            foreach ($vars as $k => $v) {
+                // @phpstan-ignore-next-line
+                VarDumper::dump($v, is_int($k) ? 1 + $k : $k);
+            }
+        }
+
+        exit(1);
     }
 }

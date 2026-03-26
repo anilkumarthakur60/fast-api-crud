@@ -38,7 +38,7 @@ return [
     | Response Configuration
     |--------------------------------------------------------------------------
     |
-    | Customize the JSON response envelope keys used by the ApiResponder trait.
+    | Customize the JSON response envelope keys used by the HasApiResponse trait.
     |
     */
     'response' => [

@@ -1,6 +1,6 @@
 <?php
 
-use Anil\FastApiCrud\Concerns\ApiResponder;
+use Anil\FastApiCrud\Concerns\HasApiResponse;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -8,7 +8,7 @@ describe('HasApiResponse Trait', function () {
     // Create an anonymous class to use the trait
     $trait = new class
     {
-        use ApiResponder;
+        use HasApiResponse;
     };
 
     describe('success responses', function () use ($trait) {

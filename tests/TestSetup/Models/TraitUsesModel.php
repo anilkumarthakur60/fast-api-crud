@@ -2,16 +2,16 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
-use Anil\FastApiCrud\Concerns\HandlesDeleteEvents;
+use Anil\FastApiCrud\Concerns\AnonymizesOnDelete;
 use Anil\FastApiCrud\Concerns\HasDateScopes;
-use Anil\FastApiCrud\Concerns\HasReplicatesWithRelation;
-use Anil\FastApiCrud\Concerns\HasUuid;
+use Anil\FastApiCrud\Concerns\HasUuidPrimaryKey;
+use Anil\FastApiCrud\Concerns\ReplicatesWithRelations;
 use Illuminate\Database\Eloquent\Model;
 
 class TraitUsesModel extends Model
 {
-    use HandlesDeleteEvents;
+    use AnonymizesOnDelete;
     use HasDateScopes;
-    use HasReplicatesWithRelation;
-    use HasUuid;
+    use HasUuidPrimaryKey;
+    use ReplicatesWithRelations;
 }

@@ -23,7 +23,7 @@ use Throwable;
  *
  * Used by both BaseController (API) and BaseWebController (Blade/web).
  */
-trait CrudQueries
+trait HasCrudOperations
 {
     /**
      * Pagination strategy for index results.

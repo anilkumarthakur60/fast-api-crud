@@ -2,7 +2,7 @@
 
 `Anil\FastApiCrud\Http\Controllers\BaseController`
 
-Abstract controller for JSON API endpoints. Uses `ApiResponder`, `AuthorizesRequests`, and `CrudQueries` traits.
+Abstract controller for JSON API endpoints. Uses `HasApiResponse`, `AuthorizesRequests`, and `HasCrudOperations` traits.
 
 ## Constructor
 
@@ -19,7 +19,7 @@ All parameters are validated. Throws `Exception` if any class doesn't extend the
 
 ## Properties
 
-Inherits all properties from [`CrudQueries`](./crud-queries). Additionally:
+Inherits all properties from [`HasCrudOperations`](./has-crud-operations). Additionally:
 
 | Property | Type | Description |
 |----------|------|-------------|

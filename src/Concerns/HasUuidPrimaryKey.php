@@ -12,9 +12,9 @@ use Illuminate\Support\Str;
  * Include this trait in any Eloquent model that should use UUID primary keys
  * instead of auto-incrementing integers.
  */
-trait HasUuid
+trait HasUuidPrimaryKey
 {
-    protected static function bootHasUuid(): void
+    protected static function bootHasUuidPrimaryKey(): void
     {
         static::creating(function (self $model): void {
             if (empty($model->{$model->getKeyName()})) {

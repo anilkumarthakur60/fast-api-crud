@@ -1,6 +1,6 @@
 # Controller Properties
 
-Both `BaseController` and `BaseWebController` share these properties via the `CrudQueries` trait.
+Both `BaseController` and `BaseWebController` share these properties via the `HasCrudOperations` trait.
 
 ## All Properties
 

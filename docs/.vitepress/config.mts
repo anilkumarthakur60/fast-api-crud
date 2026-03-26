@@ -77,8 +77,8 @@ export default defineConfig({
         {
           text: 'Traits',
           items: [
-            { text: 'CrudQueries', link: '/api/crud-queries' },
-            { text: 'ApiResponder', link: '/api/api-responder' },
+            { text: 'HasCrudOperations', link: '/api/has-crud-operations' },
+            { text: 'HasApiResponse', link: '/api/has-api-response' },
           ],
         },
         {

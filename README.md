@@ -786,16 +786,16 @@ Post::query()->today('published_at');
 Post::query()->lastMonth('updated_at');
 ```
 
-### HasUuid
+### HasUuidPrimaryKey
 
 Automatically assigns UUID v4 as primary key on model creation.
 
 ```php
-use Anil\FastApiCrud\Concerns\HasUuid;
+use Anil\FastApiCrud\Concerns\HasUuidPrimaryKey;
 
 class Post extends Model
 {
-    use HasUuid;
+    use HasUuidPrimaryKey;
 }
 ```
 
@@ -803,16 +803,16 @@ class Post extends Model
 - Sets `keyType` to `string`
 - Auto-generates UUID on creation if key is empty
 
-### HandlesDeleteEvents
+### AnonymizesOnDelete
 
 Anonymizes unique column values on soft delete to prevent constraint violations.
 
 ```php
-use Anil\FastApiCrud\Concerns\HandlesDeleteEvents;
+use Anil\FastApiCrud\Concerns\AnonymizesOnDelete;
 
 class User extends Model
 {
-    use SoftDeletes, HandlesDeleteEvents;
+    use SoftDeletes, AnonymizesOnDelete;
 }
 ```
 
@@ -824,16 +824,16 @@ email: john@example.com → john@example.com_1705312800
 
 This prevents conflicts when creating a new user with `john@example.com` while the old record is soft-deleted. Controlled by `fast-api.soft_delete.anonymize_unique_columns` config.
 
-### HasReplicatesWithRelation
+### ReplicatesWithRelations
 
 Replicate a model along with all its loaded relations.
 
 ```php
-use Anil\FastApiCrud\Concerns\HasReplicatesWithRelation;
+use Anil\FastApiCrud\Concerns\ReplicatesWithRelations;
 
 class Post extends Model
 {
-    use HasReplicatesWithRelation;
+    use ReplicatesWithRelations;
 }
 
 // Usage
@@ -998,14 +998,14 @@ $paginated = $items->paginate(perPage: 5, total: 100);
 
 ## API Responder
 
-The `ApiResponder` trait (used by `BaseController`) provides response helpers for every HTTP status code. You can also use it in any controller:
+The `HasApiResponse` trait (used by `BaseController`) provides response helpers for every HTTP status code. You can also use it in any controller:
 
 ```php
-use Anil\FastApiCrud\Concerns\ApiResponder;
+use Anil\FastApiCrud\Concerns\HasApiResponse;
 
 class MyController extends Controller
 {
-    use ApiResponder;
+    use HasApiResponse;
 }
 ```
 
@@ -1423,7 +1423,7 @@ CrudAction::Restore       // 'restore'
 namespace App\Models;
 
 use Anil\FastApiCrud\Concerns\HasDateScopes;
-use Anil\FastApiCrud\Concerns\HandlesDeleteEvents;
+use Anil\FastApiCrud\Concerns\AnonymizesOnDelete;
 use Anil\FastApiCrud\Contracts\HasPermissionSlug;
 use Anil\FastApiCrud\Contracts\Searchable;
 use Anil\FastApiCrud\Contracts\Sortable;
@@ -1432,7 +1432,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Post extends Model implements Searchable, Sortable, HasPermissionSlug
 {
-    use SoftDeletes, HasDateScopes, HandlesDeleteEvents;
+    use SoftDeletes, HasDateScopes, AnonymizesOnDelete;
 
     protected $fillable = ['name', 'desc', 'status', 'active', 'user_id'];
 
