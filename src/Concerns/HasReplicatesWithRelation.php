@@ -16,8 +16,12 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 
+/**
+ * @phpstan-require-extends Model
+ */
 trait HasReplicatesWithRelation
 {
     /**
@@ -27,9 +31,8 @@ trait HasReplicatesWithRelation
      *
      * @throws Exception
      */
-    public function replicateWithRelations(): self
+    public function replicateWithRelations(): static
     {
-        /** @var Model $this */
         $newModel = $this->replicate();
 
         foreach ($this->matchingCastableAttributes() as $attribute => $casts) {
@@ -39,24 +42,32 @@ trait HasReplicatesWithRelation
         $newModel->save();
 
         foreach ($this->getRelations() as $relationName => $relationValue) {
-            if (! $relationValue) {
+            if (! is_string($relationName) || ! $relationValue) {
+                continue;
+            }
+
+            if (! method_exists($this, $relationName)) {
                 continue;
             }
 
             $relationInstance = $this->{$relationName}();
 
+            if (! $relationInstance instanceof Relation) {
+                continue;
+            }
+
             match (true) {
-                $relationInstance instanceof BelongsTo,
                 $relationInstance instanceof MorphTo => $this->replicateBelongsTo($newModel, $relationName, $relationValue),
+                $relationInstance instanceof BelongsTo => $this->replicateBelongsTo($newModel, $relationName, $relationValue),
 
-                $relationInstance instanceof HasOne,
                 $relationInstance instanceof MorphOne => $this->replicateHasOne($newModel, $relationName, $relationValue),
+                $relationInstance instanceof HasOne => $this->replicateHasOne($newModel, $relationName, $relationValue),
 
-                $relationInstance instanceof HasMany,
                 $relationInstance instanceof MorphMany => $this->replicateHasMany($newModel, $relationName, $relationValue),
+                $relationInstance instanceof HasMany => $this->replicateHasMany($newModel, $relationName, $relationValue),
 
-                $relationInstance instanceof BelongsToMany,
                 $relationInstance instanceof MorphToMany => $this->replicateBelongsToMany($newModel, $relationName, $relationValue, $relationInstance),
+                $relationInstance instanceof BelongsToMany => $this->replicateBelongsToMany($newModel, $relationName, $relationValue, $relationInstance),
 
                 $relationInstance instanceof HasOneThrough => throw new Exception("HasOneThrough relationship '{$relationName}' is not supported for replication."),
                 $relationInstance instanceof HasManyThrough => throw new Exception("HasManyThrough relationship '{$relationName}' is not supported for replication."),
@@ -75,10 +86,15 @@ trait HasReplicatesWithRelation
      */
     public function matchingCastableAttributes(): array
     {
+        /** @var array<string, string> $matched */
         $matched = [];
 
         foreach ($this->getCasts() as $attribute => $castType) {
-            $normalizedType = $this->normalizeCastType(strtolower(trim((string) $castType)));
+            if (! is_string($attribute) || ! is_string($castType)) {
+                continue;
+            }
+
+            $normalizedType = $this->normalizeCastType(strtolower(trim($castType)));
 
             if (
                 isset($this->{$attribute})
@@ -115,7 +131,7 @@ trait HasReplicatesWithRelation
     {
         return match ($type) {
             'numeric' => is_numeric($value),
-            'bool', 'boolean' => is_bool($value) || in_array(strtolower((string) $value), ['1', 'true', 'yes'], true),
+            'bool', 'boolean' => is_bool($value) || (is_string($value) && in_array(strtolower($value), ['1', 'true', 'yes'], true)),
             'string' => is_string($value),
             'json' => is_array($value) || (is_object($value) && method_exists($value, 'toArray')),
             default => false,
@@ -125,12 +141,35 @@ trait HasReplicatesWithRelation
     /**
      * Replicate a BelongsTo/MorphTo relationship.
      */
+    private function replicateRelatedModel(Model $relatedModel): Model
+    {
+        if (method_exists($relatedModel, 'replicateWithRelations')) {
+            $result = $relatedModel->replicateWithRelations();
+
+            if ($result instanceof Model) {
+                return $result;
+            }
+        }
+
+        return $relatedModel->replicate();
+    }
+
+    /**
+     * Replicate a BelongsTo/MorphTo relationship.
+     */
     private function replicateBelongsTo(Model $newModel, string $relationName, mixed $relationValue): void
     {
-        /** @var Model $relatedModel */
-        $relatedModel = $relationValue;
-        $replicatedParent = $relatedModel->replicateWithRelations();
-        $newModel->{$relationName}()->associate($replicatedParent);
+        if (! $relationValue instanceof Model) {
+            return;
+        }
+
+        $replicatedParent = $this->replicateRelatedModel($relationValue);
+        $relation = $newModel->{$relationName}();
+
+        if ($relation instanceof BelongsTo) {
+            $relation->associate($replicatedParent);
+        }
+
         $newModel->save();
     }
 
@@ -139,10 +178,16 @@ trait HasReplicatesWithRelation
      */
     private function replicateHasOne(Model $newModel, string $relationName, mixed $relationValue): void
     {
-        /** @var Model $relatedModel */
-        $relatedModel = $relationValue;
-        $newRelated = $relatedModel->replicateWithRelations();
-        $newModel->{$relationName}()->save($newRelated);
+        if (! $relationValue instanceof Model) {
+            return;
+        }
+
+        $newRelated = $this->replicateRelatedModel($relationValue);
+        $relation = $newModel->{$relationName}();
+
+        if ($relation instanceof HasOne || $relation instanceof MorphOne) {
+            $relation->save($newRelated);
+        }
     }
 
     /**
@@ -150,24 +195,42 @@ trait HasReplicatesWithRelation
      */
     private function replicateHasMany(Model $newModel, string $relationName, mixed $relationValue): void
     {
+        if (! $relationValue instanceof Collection) {
+            return;
+        }
+
         /** @var Collection<int, Model> $relatedCollection */
         $relatedCollection = $relationValue;
         foreach ($relatedCollection as $childModel) {
-            $newChild = $childModel->replicateWithRelations();
-            $newModel->{$relationName}()->save($newChild);
+            $newChild = $this->replicateRelatedModel($childModel);
+            $relation = $newModel->{$relationName}();
+
+            if ($relation instanceof HasMany || $relation instanceof MorphMany) {
+                $relation->save($newChild);
+            }
         }
     }
 
     /**
      * Replicate a BelongsToMany/MorphToMany relationship.
+     *
+     * @param  BelongsToMany<Model, Model>|MorphToMany<Model, Model>  $relationInstance
      */
     private function replicateBelongsToMany(Model $newModel, string $relationName, mixed $relationValue, BelongsToMany|MorphToMany $relationInstance): void
     {
+        if (! $relationValue instanceof Collection) {
+            return;
+        }
+
         /** @var Collection<int, Model> $relatedCollection */
         $relatedCollection = $relationValue;
         $ids = $relatedCollection->pluck(
             $relationInstance->getRelated()->getKeyName()
         )->toArray();
-        $newModel->{$relationName}()->sync($ids);
+        $relation = $newModel->{$relationName}();
+
+        if ($relation instanceof BelongsToMany) {
+            $relation->sync($ids);
+        }
     }
 }

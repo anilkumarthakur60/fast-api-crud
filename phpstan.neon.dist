@@ -6,16 +6,9 @@ parameters:
     level: 10
     paths:
         - src/
+        - tests/TestSetup/Models/TraitUsesModel.php
+
+    bootstrapFiles:
+        - phpstan-bootstrap.php
 
     treatPhpDocTypesAsCertain: false
-
-    ignoreErrors:
-        - '#.*::initializer\(\)#'
-        - '#.*::paginates\(\)#'
-        - '#.*::simplePaginates\(\)#'
-        - '#.*::cursorPaginates\(\)#'
-        - '#.*::likeWhere\(\)#'
-        - '#.*::onlyTrashed\(\)#'
-        - '#.*::restore\(\)#'
-        -
-            identifier: trait.unused

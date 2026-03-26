@@ -1,5 +1,9 @@
 vendor
 .idea
+.DS_Store
 composer.lock
 .phpunit.cache
 readme/
+docs/node_modules
+docs/.vitepress/dist
+docs/.vitepress/cache
