@@ -2,6 +2,7 @@
 
 use Anil\FastApiCrud\Tests\TestSetup\Models\PostModel;
 use Anil\FastApiCrud\Tests\TestSetup\Models\UserModel;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 
@@ -217,6 +218,10 @@ describe('ProviderMacrosFeatureTest', function () {
     });
 
     it('initializer macro applies attribute-based #[Scope] scopes', function () {
+        if (! class_exists(Scope::class)) {
+            $this->markTestSkipped('#[Scope] attribute not available in this Laravel version.');
+        }
+
         UserModel::factory()->create(['name' => 'Verified User', 'active' => 1, 'status' => 1]);
         UserModel::factory()->create(['name' => 'Unverified User', 'active' => 0, 'status' => 0]);
         UserModel::factory()->create(['name' => 'Partial User', 'active' => 1, 'status' => 0]);
@@ -233,6 +238,10 @@ describe('ProviderMacrosFeatureTest', function () {
     });
 
     it('initializer macro applies both traditional and attribute-based scopes together', function () {
+        if (! class_exists(Scope::class)) {
+            $this->markTestSkipped('#[Scope] attribute not available in this Laravel version.');
+        }
+
         UserModel::factory()->create(['name' => 'Match User', 'active' => 1, 'status' => 1]);
         UserModel::factory()->create(['name' => 'No Match', 'active' => 0, 'status' => 0]);
 
