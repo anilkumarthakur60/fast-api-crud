@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\UuidInterface;
-use Symfony\Component\VarDumper\Caster\ScalarStub;
-use Symfony\Component\VarDumper\VarDumper;
 
 if (! function_exists('classShortName')) {
     /**
@@ -486,29 +484,13 @@ if (! function_exists('_dd')) {
      */
     function _dd(mixed ...$vars): never
     {
-        // CORS headers so API clients (Postman, axios, fetch) can read the error body
         if (! headers_sent()) {
             header('Access-Control-Allow-Origin: *');
             header('Access-Control-Allow-Methods: *');
             header('Access-Control-Allow-Headers: *');
             header('HTTP/1.1 500 Internal Server Error');
         }
-
-        // No args? Drop a bug marker so you know dd() was hit
-        if (! $vars) {
-            VarDumper::dump(new ScalarStub('🐛'));
-            exit(1);
-        }
-
-        if (array_key_exists(0, $vars) && count($vars) === 1) {
-            VarDumper::dump($vars[0]);
-        } else {
-            foreach ($vars as $k => $v) {
-                // @phpstan-ignore-next-line
-                VarDumper::dump($v, is_int($k) ? 1 + $k : $k);
-            }
-        }
-
-        exit(1);
+        dd($vars);
     }
+
 }
