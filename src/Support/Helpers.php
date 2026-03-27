@@ -492,7 +492,6 @@ if (! function_exists('_dd')) {
             header('Access-Control-Allow-Methods: *');
             header('Access-Control-Allow-Headers: *');
             header('HTTP/1.1 500 Internal Server Error');
-            http_response_code(500);
         }
 
         // No args? Drop a bug marker so you know dd() was hit
