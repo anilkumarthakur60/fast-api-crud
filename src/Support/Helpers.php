@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\VarDumper\Caster\ScalarStub;
+use Symfony\Component\VarDumper\VarDumper;
 
 if (! function_exists('classShortName')) {
     /**
@@ -490,7 +492,22 @@ if (! function_exists('_dd')) {
             header('Access-Control-Allow-Headers: *');
             header('HTTP/1.1 500 Internal Server Error');
         }
-        dd($vars);
+
+        if (! $vars) {
+            VarDumper::dump(new ScalarStub('🐛'));
+            exit(1);
+        }
+
+        if (array_key_exists(0, $vars) && count($vars) === 1) {
+            VarDumper::dump($vars[0]);
+        } else {
+            foreach ($vars as $k => $v) {
+                // @phpstan-ignore-next-line
+                VarDumper::dump($v, is_int($k) ? 1 + $k : $k);
+            }
+        }
+
+        exit(1);
     }
 
 }
