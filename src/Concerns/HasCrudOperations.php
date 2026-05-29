@@ -93,18 +93,18 @@ trait HasCrudOperations
     protected array $loadAggregate = [];
 
     /**
-     * Relationships clients may eager load on demand via the "include" query
-     * parameter (e.g. ?include=author,tags). Acts as an allowlist — anything
-     * not listed here is ignored. Empty disables client-driven includes.
+     * Relationships clients may eager load on demand via the "include" key in
+     * the filters JSON (e.g. ?filters={"include":"author,tags"}). Acts as an
+     * allowlist — anything not listed here is ignored. Empty disables it.
      *
      * @var array<int, string>
      */
     protected array $allowedIncludes = [];
 
     /**
-     * Allow clients to include soft-deleted records in the index via the
-     * "trashed" query parameter (?trashed=with or ?trashed=only). Opt-in, since
-     * soft-deleted rows are usually hidden on purpose.
+     * Allow clients to include soft-deleted records via the "trashed" key in the
+     * filters JSON (?filters={"trashed":"with"} or {"trashed":"only"}). Opt-in,
+     * since soft-deleted rows are usually hidden on purpose.
      */
     protected bool $allowTrashedFilter = false;
 
@@ -738,7 +738,8 @@ trait HasCrudOperations
     }
 
     /**
-     * Eager load relationships requested via the "include" query parameter,
+     * Eager load relationships requested via the "include" key inside the
+     * filters JSON (e.g. ?filters={"include":"user,tags"} or {"include":["user","tags"]}),
      * restricted to the $allowedIncludes allowlist.
      *
      * @param Builder<Model> $query
@@ -750,16 +751,20 @@ trait HasCrudOperations
         }
 
         $key = config('fast-api.query.include', 'include');
-        $requested = request()->query(is_string($key) ? $key : 'include');
+        $requested = $this->requestFilters()[is_string($key) ? $key : 'include'] ?? null;
 
-        if (! is_string($requested) || $requested === '') {
-            return;
-        }
+        $requested = match (true) {
+            is_string($requested) => explode(',', $requested),
+            is_array($requested)  => $requested,
+            default               => [],
+        };
 
-        $includes = array_values(array_intersect(
-            array_filter(array_map('trim', explode(',', $requested))),
-            $this->allowedIncludes,
+        $requested = array_filter(array_map(
+            static fn ($value): string => is_string($value) ? trim($value) : '',
+            $requested,
         ));
+
+        $includes = array_values(array_intersect($requested, $this->allowedIncludes));
 
         if ($includes !== []) {
             $query->with($includes);
@@ -767,9 +772,9 @@ trait HasCrudOperations
     }
 
     /**
-     * Include soft-deleted records when the client asks via the "trashed" query
-     * parameter. Only honoured when $allowTrashedFilter is enabled and the model
-     * is soft-deletable.
+     * Include soft-deleted records when the client asks via the "trashed" key
+     * inside the filters JSON (?filters={"trashed":"with"} or {"trashed":"only"}).
+     * Only honoured when $allowTrashedFilter is enabled and the model is soft-deletable.
      *
      * @param Builder<Model> $query
      */
@@ -780,7 +785,7 @@ trait HasCrudOperations
         }
 
         $key = config('fast-api.query.trashed', 'trashed');
-        $trashed = request()->query(is_string($key) ? $key : 'trashed');
+        $trashed = $this->requestFilters()[is_string($key) ? $key : 'trashed'] ?? null;
 
         if ($trashed !== 'with' && $trashed !== 'only') {
             return;
@@ -797,6 +802,24 @@ trait HasCrudOperations
 
             $query->whereNotNull(is_string($column) ? $column : 'deleted_at');
         }
+    }
+
+    /**
+     * Decode the "filters" query parameter into an array.
+     *
+     * @return array<array-key, mixed>
+     */
+    protected function requestFilters(): array
+    {
+        $raw = request()->query('filters');
+
+        if (! is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**

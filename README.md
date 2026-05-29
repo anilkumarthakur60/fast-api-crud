@@ -555,8 +555,11 @@ If the model implements the `Searchable` interface, performs a LIKE search acros
 
 ### Includes (client-driven eager loading)
 
+Passed as an `include` key **inside the filters JSON** (string or array form):
+
 ```
-GET /posts?include=user,tags
+GET /posts?filters={"include":"user,tags"}
+GET /posts?filters={"include":["user","tags"]}
 ```
 
 Eager loads relations on demand. Only relations listed in the controller's
@@ -565,9 +568,11 @@ Works on both index and show.
 
 ### Trashed (soft-deleted records)
 
+Passed as a `trashed` key inside the filters JSON:
+
 ```
-GET /posts?trashed=with    # include soft-deleted alongside active
-GET /posts?trashed=only    # only soft-deleted
+GET /posts?filters={"trashed":"with"}    # include soft-deleted alongside active
+GET /posts?filters={"trashed":"only"}    # only soft-deleted
 ```
 
 Opt-in: set `$allowTrashedFilter = true` on the controller. Ignored unless the
@@ -575,8 +580,10 @@ model uses `SoftDeletes`.
 
 ### Combined Example
 
+One `filters` param drives scopes, includes, and trashed together:
+
 ```
-GET /posts?filters={"active":1}&sortBy=name&descending=false&rowsPerPage=20&search=laravel&include=tags&trashed=with
+GET /posts?filters={"active":1,"queryFilter":"laravel","include":"user,tags","trashed":"with"}&sortBy=name&descending=false&rowsPerPage=20&search=eloquent
 ```
 
 ---
@@ -604,9 +611,9 @@ class PostController extends BaseController
     protected array $loadCount = ['comments'];               // Count in show
     protected array $loadAggregate = [];                     // Aggregates in show
 
-    // Client-driven query features
-    protected array $allowedIncludes = ['user', 'tags'];     // Relations clients may request via ?include=
-    protected bool $allowTrashedFilter = false;              // Allow ?trashed=with|only (soft-deletes)
+    // Client-driven query features (driven via the filters JSON)
+    protected array $allowedIncludes = ['user', 'tags'];     // filters={"include":"user,tags"}
+    protected bool $allowTrashedFilter = false;              // filters={"trashed":"with"|"only"}
 
     // Operation scopes
     protected array $deleteScopes = [];     // Scopes when finding record for delete

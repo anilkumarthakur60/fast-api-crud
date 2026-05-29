@@ -147,8 +147,15 @@ final class BuilderMacros
                 }
             }
 
+            // Keys reserved for the controller (client-driven include / soft-delete
+            // filtering) — never treated as model scopes.
+            $reserved = [
+                config('fast-api.query.include', 'include'),
+                config('fast-api.query.trashed', 'trashed'),
+            ];
+
             foreach ($filters as $filter => $value) {
-                if (! isset($value)) {
+                if (! isset($value) || in_array($filter, $reserved, true)) {
                     continue;
                 }
 

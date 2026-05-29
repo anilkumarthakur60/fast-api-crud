@@ -37,8 +37,9 @@ return [
     | Query Parameters
     |--------------------------------------------------------------------------
     |
-    | The request query-string keys the index/show endpoints read for
-    | client-driven eager loading and soft-delete filtering.
+    | The keys, read from inside the "filters" JSON object, that drive
+    | client-side eager loading and soft-delete filtering on index/show.
+    | e.g. ?filters={"include":"author,tags","trashed":"with"}
     |
     */
     'query' => [
