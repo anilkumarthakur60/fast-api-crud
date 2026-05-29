@@ -14,7 +14,7 @@ class FastApiCrudServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__ . '/../config/fast-api.php' => config_path('fast-api.php'),
+            __DIR__.'/../config/fast-api.php' => config_path('fast-api.php'),
         ], 'config');
 
         BuilderMacros::register();
@@ -29,6 +29,6 @@ class FastApiCrudServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/fast-api.php', 'fast-api');
+        $this->mergeConfigFrom(__DIR__.'/../config/fast-api.php', 'fast-api');
     }
 }

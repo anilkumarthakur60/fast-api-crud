@@ -156,10 +156,10 @@ class MakeAllCommand extends Command
         }
 
         $views = [
-            'index'  => $this->buildIndexViewStub($modelName, $collectionName, $slug),
+            'index' => $this->buildIndexViewStub($modelName, $collectionName, $slug),
             'create' => $this->buildCreateViewStub($modelName, $slug),
-            'edit'   => $this->buildEditViewStub($modelName, $resourceName, $slug),
-            'show'   => $this->buildShowViewStub($modelName, $resourceName, $slug),
+            'edit' => $this->buildEditViewStub($modelName, $resourceName, $slug),
+            'show' => $this->buildShowViewStub($modelName, $resourceName, $slug),
         ];
 
         foreach ($views as $name => $content) {

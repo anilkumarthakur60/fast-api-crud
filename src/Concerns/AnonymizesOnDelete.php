@@ -48,7 +48,7 @@ trait AnonymizesOnDelete
                         continue;
                     }
                     if (isset($model->{$column}) && is_string($model->{$column})) {
-                        $model->{$column} = $model->{$column} . '_' . $timestamp;
+                        $model->{$column} = $model->{$column}.'_'.$timestamp;
                         $changed = true;
                     }
                 }

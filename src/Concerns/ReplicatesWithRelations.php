@@ -36,12 +36,11 @@ trait ReplicatesWithRelations
     /**
      * Replicate this model along with specified or loaded relations.
      *
-     * @param array<int, string> $relations Relations to replicate (dot notation for depth). Empty = use loaded relations.
-     * @param array<int, string> $except Attributes to exclude from the replica.
+     * @param  array<int, string>  $relations  Relations to replicate (dot notation for depth). Empty = use loaded relations.
+     * @param  array<int, string>  $except  Attributes to exclude from the replica.
+     * @return static The newly saved replica.
      *
      * @throws Exception
-     *
-     * @return static The newly saved replica.
      */
     public function replicateWithRelations(array $relations = [], array $except = []): static
     {
@@ -54,9 +53,9 @@ trait ReplicatesWithRelations
     /**
      * Internal replication with circular reference tracking.
      *
-     * @param array<int, string> $relations
-     * @param array<int, string> $except
-     * @param SplObjectStorage<Model, Model> $visited Tracks original→clone to prevent infinite loops.
+     * @param  array<int, string>  $relations
+     * @param  array<int, string>  $except
+     * @param  SplObjectStorage<Model, Model>  $visited  Tracks original→clone to prevent infinite loops.
      *
      * @throws Exception
      */
@@ -142,7 +141,7 @@ trait ReplicatesWithRelations
     /**
      * HasOne / MorphOne — deep-replicate the child and attach to new parent.
      *
-     * @param SplObjectStorage<Model, Model> $visited
+     * @param  SplObjectStorage<Model, Model>  $visited
      */
     private function replicateHasOne(Model $newModel, string $relationName, mixed $relationValue, SplObjectStorage $visited): void
     {
@@ -161,7 +160,7 @@ trait ReplicatesWithRelations
     /**
      * HasMany / MorphMany — deep-replicate each child and attach to new parent.
      *
-     * @param SplObjectStorage<Model, Model> $visited
+     * @param  SplObjectStorage<Model, Model>  $visited
      */
     private function replicateHasMany(Model $newModel, string $relationName, mixed $relationValue, SplObjectStorage $visited): void
     {
@@ -187,7 +186,7 @@ trait ReplicatesWithRelations
     /**
      * BelongsToMany / MorphToMany — sync IDs with pivot data preserved.
      *
-     * @param BelongsToMany<Model, Model>|MorphToMany<Model, Model> $relationInstance
+     * @param  BelongsToMany<Model, Model>|MorphToMany<Model, Model>  $relationInstance
      */
     private function replicateBelongsToMany(Model $newModel, string $relationName, mixed $relationValue, BelongsToMany|MorphToMany $relationInstance): void
     {
@@ -242,7 +241,7 @@ trait ReplicatesWithRelations
      * Deep-replicate a child model: if it uses this trait, replicate with its own relations;
      * otherwise do a simple replicate.
      *
-     * @param SplObjectStorage<Model, Model> $visited
+     * @param  SplObjectStorage<Model, Model>  $visited
      */
     private function deepReplicateChild(Model $child, SplObjectStorage $visited): Model
     {
