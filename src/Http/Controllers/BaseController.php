@@ -35,10 +35,10 @@ abstract class BaseController extends Controller
     protected readonly string $resource;
 
     /**
-     * @param  class-string<Model>  $model
-     * @param  class-string<FormRequest>  $storeRequest
-     * @param  class-string<FormRequest>  $updateRequest
-     * @param  class-string<JsonResource>  $resource
+     * @param class-string<Model> $model
+     * @param class-string<FormRequest> $storeRequest
+     * @param class-string<FormRequest> $updateRequest
+     * @param class-string<JsonResource> $resource
      *
      * @throws Exception
      */
