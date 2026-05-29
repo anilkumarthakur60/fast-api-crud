@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Anil\FastApiCrud\Concerns;
 
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -214,7 +215,7 @@ trait HasDateScopes
         try {
             $carbonFrom = Carbon::parse($from)->startOfDay()->toDateString();
             $carbonTo = Carbon::parse($to)->endOfDay()->toDateString();
-        } catch (\Exception) {
+        } catch (Exception) {
             return $query;
         }
 

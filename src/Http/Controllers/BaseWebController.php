@@ -80,42 +80,6 @@ abstract class BaseWebController extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // View / route helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Resolve the full view name from a suffix (e.g., 'index' → 'admin.posts.index').
-     */
-    protected function viewName(string $suffix): string
-    {
-        return "{$this->viewPrefix}.{$suffix}";
-    }
-
-    /**
-     * Redirect to a named route with a success flash message.
-     *
-     * @param  array<string, mixed>  $parameters
-     */
-    protected function redirectWithSuccess(string $route, string $message, array $parameters = []): RedirectResponse
-    {
-        $key = config('fast-api.web.flash_key_success', 'success');
-        $flashKey = is_string($key) ? $key : 'success';
-
-        return redirect()->route($route, $parameters)->with($flashKey, $message);
-    }
-
-    /**
-     * Redirect back with an error flash message and old input.
-     */
-    protected function redirectBackWithError(string $message): RedirectResponse
-    {
-        $key = config('fast-api.web.flash_key_error', 'error');
-        $flashKey = is_string($key) ? $key : 'error';
-
-        return back()->withInput()->with($flashKey, $message);
-    }
-
-    // -------------------------------------------------------------------------
     // CRUD operations
     // -------------------------------------------------------------------------
 
@@ -158,7 +122,7 @@ abstract class BaseWebController extends Controller
 
         return $this->redirectWithSuccess(
             "{$this->routePrefix}.index",
-            $this->storeSuccessMessage()
+            $this->storeSuccessMessage(),
         );
     }
 
@@ -205,7 +169,7 @@ abstract class BaseWebController extends Controller
 
         return $this->redirectWithSuccess(
             "{$this->routePrefix}.index",
-            $this->updateSuccessMessage()
+            $this->updateSuccessMessage(),
         );
     }
 
@@ -222,7 +186,7 @@ abstract class BaseWebController extends Controller
 
         return $this->redirectWithSuccess(
             "{$this->routePrefix}.index",
-            $this->destroySuccessMessage()
+            $this->destroySuccessMessage(),
         );
     }
 
@@ -239,7 +203,7 @@ abstract class BaseWebController extends Controller
 
         return $this->redirectWithSuccess(
             "{$this->routePrefix}.index",
-            $this->bulkDeleteSuccessMessage()
+            $this->bulkDeleteSuccessMessage(),
         );
     }
 
@@ -260,7 +224,7 @@ abstract class BaseWebController extends Controller
 
         return $this->redirectWithSuccess(
             "{$this->routePrefix}.index",
-            $this->statusChangeSuccessMessage()
+            $this->statusChangeSuccessMessage(),
         );
     }
 
@@ -277,7 +241,7 @@ abstract class BaseWebController extends Controller
 
         return $this->redirectWithSuccess(
             "{$this->routePrefix}.index",
-            $this->columnUpdateSuccessMessage()
+            $this->columnUpdateSuccessMessage(),
         );
     }
 
@@ -294,7 +258,7 @@ abstract class BaseWebController extends Controller
 
         return $this->redirectWithSuccess(
             "{$this->routePrefix}.index",
-            $this->restoreSuccessMessage()
+            $this->restoreSuccessMessage(),
         );
     }
 
@@ -311,7 +275,7 @@ abstract class BaseWebController extends Controller
 
         return $this->redirectWithSuccess(
             "{$this->routePrefix}.index",
-            $this->restoreAllSuccessMessage()
+            $this->restoreAllSuccessMessage(),
         );
     }
 
@@ -328,8 +292,44 @@ abstract class BaseWebController extends Controller
 
         return $this->redirectWithSuccess(
             "{$this->routePrefix}.index",
-            $this->permanentDeleteSuccessMessage()
+            $this->permanentDeleteSuccessMessage(),
         );
+    }
+
+    // -------------------------------------------------------------------------
+    // View / route helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Resolve the full view name from a suffix (e.g., 'index' → 'admin.posts.index').
+     */
+    protected function viewName(string $suffix): string
+    {
+        return "{$this->viewPrefix}.{$suffix}";
+    }
+
+    /**
+     * Redirect to a named route with a success flash message.
+     *
+     * @param  array<string, mixed>  $parameters
+     */
+    protected function redirectWithSuccess(string $route, string $message, array $parameters = []): RedirectResponse
+    {
+        $key = config('fast-api.web.flash_key_success', 'success');
+        $flashKey = is_string($key) ? $key : 'success';
+
+        return redirect()->route($route, $parameters)->with($flashKey, $message);
+    }
+
+    /**
+     * Redirect back with an error flash message and old input.
+     */
+    protected function redirectBackWithError(string $message): RedirectResponse
+    {
+        $key = config('fast-api.web.flash_key_error', 'error');
+        $flashKey = is_string($key) ? $key : 'error';
+
+        return back()->withInput()->with($flashKey, $message);
     }
 
     // -------------------------------------------------------------------------

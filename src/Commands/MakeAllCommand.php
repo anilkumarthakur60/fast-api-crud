@@ -83,13 +83,13 @@ class MakeAllCommand extends Command
 
         declare(strict_types=1);
 
-        namespace App\Http\Controllers;
+        namespace App\\Http\\Controllers;
 
-        use Anil\FastApiCrud\Http\Controllers\BaseController;
-        use App\Http\Requests\\{$modelName}\Store{$modelName}Request;
-        use App\Http\Requests\\{$modelName}\Update{$modelName}Request;
-        use App\Http\Resources\\{$modelName}\\{$modelName}Resource;
-        use App\Models\\{$modelName};
+        use Anil\\FastApiCrud\\Http\\Controllers\\BaseController;
+        use App\\Http\\Requests\\{$modelName}\\Store{$modelName}Request;
+        use App\\Http\\Requests\\{$modelName}\\Update{$modelName}Request;
+        use App\\Http\\Resources\\{$modelName}\\{$modelName}Resource;
+        use App\\Models\\{$modelName};
 
         class {$modelName}Controller extends BaseController
         {
@@ -118,12 +118,12 @@ class MakeAllCommand extends Command
 
         declare(strict_types=1);
 
-        namespace App\Http\Controllers;
+        namespace App\\Http\\Controllers;
 
-        use Anil\FastApiCrud\Http\Controllers\BaseWebController;
-        use App\Http\Requests\\{$modelName}\Store{$modelName}Request;
-        use App\Http\Requests\\{$modelName}\Update{$modelName}Request;
-        use App\Models\\{$modelName};
+        use Anil\\FastApiCrud\\Http\\Controllers\\BaseWebController;
+        use App\\Http\\Requests\\{$modelName}\\Store{$modelName}Request;
+        use App\\Http\\Requests\\{$modelName}\\Update{$modelName}Request;
+        use App\\Models\\{$modelName};
 
         class {$modelName}Controller extends BaseWebController
         {

@@ -8,6 +8,7 @@ use Anil\FastApiCrud\Contracts\HasPermissionSlug;
 use Anil\FastApiCrud\Contracts\Searchable;
 use Anil\FastApiCrud\Enums\CrudAction;
 use Anil\FastApiCrud\Enums\PaginationType;
+use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -33,14 +34,14 @@ trait HasCrudOperations
     /**
      * Scopes applied to the index query.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|Closure>
      */
     protected array $scopes = [];
 
     /**
      * Scopes applied to the show (single resource) query.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|Closure>
      */
     protected array $loadScopes = [];
 
@@ -94,28 +95,28 @@ trait HasCrudOperations
     /**
      * Scopes applied when finding a record for deletion.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|Closure>
      */
     protected array $deleteScopes = [];
 
     /**
      * Scopes applied when finding a record for status change or column update.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|Closure>
      */
     protected array $columnScopes = [];
 
     /**
      * Scopes applied when finding a trashed record for restore.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|Closure>
      */
     protected array $restoreScopes = [];
 
     /**
      * Scopes applied when finding a record for update.
      *
-     * @var array<int, string>|array<string, scalar|array<scalar>|\Closure>
+     * @var array<int, string>|array<string, scalar|array<scalar>|Closure>
      */
     protected array $updateScopes = [];
 
@@ -654,7 +655,7 @@ trait HasCrudOperations
     }
 
     /**
-     * @param  array<int, string>|array<string, scalar|array<scalar>|\Closure>  $scopes
+     * @param  array<int, string>|array<string, scalar|array<scalar>|Closure>  $scopes
      */
     protected function findModel(int|string $id, array $scopes = []): Model
     {
@@ -669,7 +670,7 @@ trait HasCrudOperations
 
     /**
      * @param  Builder<Model>  $query
-     * @param  array<int, string>|array<string, scalar|array<scalar>|\Closure>  $scopes
+     * @param  array<int, string>|array<string, scalar|array<scalar>|Closure>  $scopes
      * @return Builder<Model>
      */
     protected function applyScopes(Builder $query, array $scopes): Builder
@@ -687,9 +688,7 @@ trait HasCrudOperations
                 continue;
             }
 
-            $scopeMethod = 'scope'.ucfirst($scope);
-
-            if (method_exists($query->getModel(), $scopeMethod) || method_exists($query->getModel(), $scope)) {
+            if ($query->getModel()->hasNamedScope($scope)) {
                 $query->{$scope}(...$args);
             }
         }

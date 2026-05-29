@@ -509,5 +509,4 @@ if (! function_exists('_dd')) {
 
         exit(1);
     }
-
 }

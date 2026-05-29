@@ -37,7 +37,7 @@ final class CollectionMacros
                 [
                     'path' => LengthAwarePaginator::resolveCurrentPath(),
                     'pageName' => $pageName,
-                ]
+                ],
             );
         });
     }

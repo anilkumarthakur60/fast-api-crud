@@ -60,7 +60,7 @@ final class BuilderMacros
                         },
                         function (Builder $query) use ($attribute, $searchTerm): void {
                             $query->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
-                        }
+                        },
                     );
                 }
             });
