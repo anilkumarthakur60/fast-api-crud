@@ -19,6 +19,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -516,6 +517,7 @@ trait HasCrudOperations
      *   }
      *
      * Returns an empty array when permissions are disabled via config.
+     * Throws a RuntimeException if spatie/laravel-permission is not installed.
      *
      * @return array<int, Middleware>
      */
@@ -523,6 +525,12 @@ trait HasCrudOperations
     {
         if (! config('fast-api.permissions.enabled', true)) {
             return [];
+        }
+
+        if (! class_exists(\Spatie\Permission\PermissionServiceProvider::class)) {
+            throw new RuntimeException(
+                'spatie/laravel-permission is required to use permissionMiddleware(). Install it with: composer require spatie/laravel-permission',
+            );
         }
 
         return [

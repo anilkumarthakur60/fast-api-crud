@@ -1,0 +1,168 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [3.0.0] — 2026-05-29
+
+### Breaking Changes
+- `BaseController` and `BaseWebController` no longer extend `Illuminate\Routing\Controller`. They now implement `HasMiddleware` directly. The old `$this->middleware()->only()` constructor registration is removed.
+- Automatic permission middleware registration (`registerPermissionMiddleware()`) is removed. Declare permissions explicitly by overriding the static `middleware()` method and calling `static::permissionMiddleware('slug')`.
+- `spatie/laravel-permission` is no longer a hard dependency. It has moved to `suggest`. Install it separately if you use permissions: `composer require spatie/laravel-permission`.
+- `paginateQuery()` return type narrowed from `mixed` to `Paginator<int, Model>|CursorPaginator<int, Model>|Collection<int, Model>`.
+- `uuid()` helper now returns `string` instead of `UuidInterface`.
+
+### Added
+- `Pagination::resolveEffectivePerPage(\Closure $countFn)` — COUNT query is deferred and only fires when "show all" is requested (`rowsPerPage=0`), avoiding an extra query on every normal paginated request.
+- Static schema index cache in `AnonymizesOnDelete` — `Schema::getIndexes()` is now called once per table per process instead of on every soft-delete.
+- `LICENSE` file (MIT).
+- `CHANGELOG.md`.
+
+### Changed
+- `applyScopes()` now uses `Model::hasNamedScope()` instead of manual `method_exists` double-check. This correctly supports scopes defined via the `#[LocalScope]` PHP attribute (Laravel 12+).
+- `permissionMiddleware()` now includes the `fast-api.permissions.enabled` config guard and a `class_exists` check for Spatie, making it safe to call unconditionally.
+- Lifecycle hook methods (`beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete`, `afterDelete`, `beforeStatusChange`, `afterStatusChange`, `beforeColumnUpdate`, `afterColumnUpdate`, `beforeRestore`, `afterRestore`, `beforeForceDelete`, `afterForceDelete`) consolidated — each is now a one-liner delegating to a private `fireModelHook()` dispatcher.
+- `performRestore`, `performRestoreAll`, and `performPermanentDelete` now chain `initializer()->onlyTrashed()` consistently with the rest of the codebase.
+- `BaseController` 204 responses now call `noContent()` directly instead of wrapping an empty array in `success()`.
+- `Str::studly()` in the `initializer` macro is now cached in a local variable instead of being evaluated twice per filter.
+- CI matrix: removed unreleased PHP 8.5.
+- `HasPermissionSlug` contract and `config/fast-api.php` comments updated to reflect the new explicit `middleware()` pattern.
+
+---
+
+## [2.0.4.12] — 2024-03-05
+
+### Changed
+- General stability updates and code style fixes.
+
+## [2.0.4.11] — 2024-02-19
+
+### Fixed
+- `withAggregates` macro on the controller was not being applied correctly.
+
+## [2.0.4.10] — 2024-02-19
+
+### Changed
+- General updates and code style fixes.
+
+## [2.0.4.9] — 2024-02-14
+
+### Added
+- `withCountWhereHas` and `orWithCountWhereHas` Builder macros — combine `withCount` + `whereHas`/`orWhereHas` in a single call.
+
+## [2.0.4.8] — 2024-02-14
+
+### Fixed
+- `equalWhere` macro edge cases.
+- `initializer` macro filter handling improvements.
+- Code style fixes.
+
+## [2.0.4.7] — 2024-02-06
+
+### Changed
+- General updates and code style fixes.
+
+## [2.0.4.6] — 2024-02-06
+
+### Changed
+- General updates.
+
+## [2.0.4.5] — 2024-02-06
+
+### Changed
+- General updates.
+
+## [2.0.4.4] — 2024-01-30
+
+### Changed
+- Code formatting and style cleanup.
+
+## [2.0.4.3] — 2023-12-19
+
+### Fixed
+- Namespace fix for the `AnonymizesOnDelete` (delete event) trait.
+
+## [2.0.4.2] — 2023-12-19
+
+### Changed
+- General updates.
+
+## [2.0.4.1] — 2023-08-21
+
+### Changed
+- `tableColumns()` helper now returns `id` first and timestamp columns (`created_at`, `updated_at`, `deleted_at`) last, with remaining columns sorted alphabetically in between.
+
+## [2.0.4] — 2023-08-21
+
+### Added
+- `tableColumns()` / `getColumns()` helper function to retrieve an ordered list of column names for a table or Eloquent model.
+
+## [2.0.3] — 2023-07-21
+
+### Fixed
+- `initializer` macro now falls back to `newQuery()` when the model does not define an `initializeModel` method, preventing a fatal error on plain models.
+
+## [2.0.2] — 2023-05-30
+
+### Changed
+- Config file updates.
+
+## [2.0.1] — 2023-05-10
+
+### Changed
+- Argument types relaxed from `string` to `mixed` in several places to improve compatibility.
+
+## [2.0.0] — 2023-05-06
+
+### Breaking Changes
+- Full package rewrite targeting Laravel 10+.
+- Introduced `BaseController` and `BaseWebController` as the primary extension points.
+- `initializer` Builder macro replaces the old `defaultOrder` and filter helpers.
+- `paginates`, `simplePaginates`, and `cursorPaginates` Builder macros added, powered by the `Pagination` support class.
+- Config file (`fast-api.php`) introduced with pagination, soft-delete, response, permission, and web sections.
+
+### Added
+- `HasCrudOperations` trait — shared CRUD query building, lifecycle hooks, and operation execution for both API and web controllers.
+- `HasApiResponse` trait — typed helper methods for every HTTP status code.
+- `HasDateScopes` model trait — `today`, `yesterday`, `thisWeek`, `lastWeek`, `monthToDate`, `thisMonth`, `lastMonth`, `quarterToDate`, `yearToDate`, `last7Days`, `last30Days`, `lastQuarter`, `lastYear`, `date` scopes.
+- `AnonymizesOnDelete` model trait — appends `_{timestamp}` to unique column values on soft delete to prevent constraint violations.
+- `HasUuidPrimaryKey` model trait — auto-assigns UUID v4 on creation.
+- `ReplicatesWithRelations` model trait — deep-replicates a model along with its loaded relations to any depth, with circular reference protection.
+- `Searchable`, `Sortable`, `HasPermissionSlug` contracts.
+- `CrudAction` and `PaginationType` enums.
+- `ApiException` — renders a structured JSON error response with optional debug detail.
+- `fast-api:make-all` Artisan command — scaffolds model, migration, factory, seeder, controller, resource, and requests in one step. Supports `--web` flag for Blade controller + view stubs.
+- `CollectionMacros::paginate` — paginate an in-memory Collection.
+- CI matrix covering PHP 8.2/8.3 × Laravel 10/11.
+- PHPStan at level 10 via Larastan.
+
+---
+
+## [1.0.3] — 2023-04-23
+
+### Fixed
+- Namespace fix for the `HasUuidPrimaryKey` (UUID) trait.
+
+## [1.0.2] — 2023-04-18
+
+### Added
+- `getSqlQuery()` and `toRawSql()` helper functions.
+- In-memory Collection `paginate()` macro.
+
+## [1.0.1] — 2023-04-18
+
+### Changed
+- Package auto-discovery configuration.
+- Config file auto-merging via `mergeConfigFrom`.
+
+## [1.0.0] — 2023-04-11
+
+### Added
+- Initial release.
+- Core helper functions (`parseTimeToSeconds`, `formatDuration`, `diffForHumans`, `ymdDate`, `filterValue`, `sortBy`, `scopeMethods`, `uuid`, and more).
+- Date scopes, UUID trait, delete event trait.
+- Basic controller scaffolding.
