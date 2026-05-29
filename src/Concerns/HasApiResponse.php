@@ -12,7 +12,7 @@ trait HasApiResponse
     /**
      * Return a success response with given data and HTTP status code.
      *
-     * @param  array<string, mixed>  $data
+     * @param array<string, mixed> $data
      */
     public function success(array $data = [], int $code = Response::HTTP_OK): JsonResponse
     {
@@ -25,7 +25,7 @@ trait HasApiResponse
     /**
      * Return an error response with a message, errors data, and HTTP status code.
      *
-     * @param  array<string, mixed>  $data
+     * @param array<string, mixed> $data
      */
     public function error(string $message = 'Something went wrong', array $data = [], int $status = Response::HTTP_BAD_REQUEST): JsonResponse
     {
