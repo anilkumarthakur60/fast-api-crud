@@ -739,7 +739,7 @@ trait HasCrudOperations
     /**
      * @param Builder<Model> $query
      *
-     * @return Paginator|CursorPaginator|Collection<int, Model>
+     * @return Paginator<int, Model>|CursorPaginator<int, Model>|Collection<int, Model>
      */
     protected function paginateQuery(Builder $query): Paginator|CursorPaginator|Collection
     {

@@ -311,7 +311,7 @@ abstract class BaseWebController extends Controller
     /**
      * Redirect to a named route with a success flash message.
      *
-     * @param array<string, mixed> $parameters
+     * @param array<string, string|int|float|bool|null> $parameters
      */
     protected function redirectWithSuccess(string $route, string $message, array $parameters = []): RedirectResponse
     {
