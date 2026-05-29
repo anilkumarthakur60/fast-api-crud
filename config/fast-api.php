@@ -15,8 +15,8 @@ return [
     */
     'pagination' => [
         'default_per_page' => 15,
-        'max_per_page' => 100,
-        'allow_all' => true,
+        'max_per_page'     => 100,
+        'allow_all'        => true,
     ],
 
     /*
@@ -43,7 +43,7 @@ return [
     */
     'response' => [
         'success_key' => 'data',
-        'error_key' => 'errors',
+        'error_key'   => 'errors',
         'message_key' => 'message',
     ],
 
@@ -72,6 +72,6 @@ return [
     */
     'web' => [
         'flash_key_success' => 'success',
-        'flash_key_error' => 'error',
+        'flash_key_error'   => 'error',
     ],
 ];

@@ -14,15 +14,6 @@ use Illuminate\Support\Str;
  */
 trait HasUuidPrimaryKey
 {
-    protected static function bootHasUuidPrimaryKey(): void
-    {
-        static::creating(function (self $model): void {
-            if (empty($model->{$model->getKeyName()})) {
-                $model->{$model->getKeyName()} = (string) Str::uuid();
-            }
-        });
-    }
-
     public function getIncrementing(): bool
     {
         return false;
@@ -31,5 +22,14 @@ trait HasUuidPrimaryKey
     public function getKeyType(): string
     {
         return 'string';
+    }
+
+    protected static function bootHasUuidPrimaryKey(): void
+    {
+        static::creating(function (self $model): void {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
     }
 }

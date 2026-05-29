@@ -35,9 +35,9 @@ final class CollectionMacros
                 $perPage,
                 $page,
                 [
-                    'path' => LengthAwarePaginator::resolveCurrentPath(),
+                    'path'     => LengthAwarePaginator::resolveCurrentPath(),
                     'pageName' => $pageName,
-                ]
+                ],
             );
         });
     }

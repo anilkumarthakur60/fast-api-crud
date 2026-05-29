@@ -99,12 +99,12 @@ if (! function_exists('formatDuration')) {
         $seconds = $total % $secPerMin;
 
         $units = [
-            '%y' => ['value' => $years, 'label' => 'yr'],
+            '%y'  => ['value' => $years, 'label' => 'yr'],
             '%mo' => ['value' => $months, 'label' => 'mo'],
-            '%d' => ['value' => $days, 'label' => 'd'],
-            '%h' => ['value' => $hours, 'label' => 'h'],
-            '%m' => ['value' => $minutes, 'label' => 'm'],
-            '%s' => ['value' => $seconds, 'label' => 's'],
+            '%d'  => ['value' => $days, 'label' => 'd'],
+            '%h'  => ['value' => $hours, 'label' => 'h'],
+            '%m'  => ['value' => $minutes, 'label' => 'm'],
+            '%s'  => ['value' => $seconds, 'label' => 's'],
         ];
 
         $parts = [];
@@ -113,7 +113,7 @@ if (! function_exists('formatDuration')) {
             foreach (preg_split('/\s+/', $format) ?: [] as $token) {
                 if (str_starts_with($token, '%')) {
                     if (isset($units[$token]) && $units[$token]['value'] > 0) {
-                        $parts[] = $units[$token]['value'].$units[$token]['label'];
+                        $parts[] = $units[$token]['value'] . $units[$token]['label'];
                     }
                 } else {
                     $parts[] = $token;
@@ -127,7 +127,7 @@ if (! function_exists('formatDuration')) {
 
         foreach ($units as $u) {
             if ($u['value'] > 0) {
-                $parts[] = $u['value'].$u['label'];
+                $parts[] = $u['value'] . $u['label'];
             }
         }
 
@@ -194,7 +194,8 @@ if (! function_exists('arrayFilters')) {
     /**
      * Convert a JSON string or array into a filtered associative array (removes falsy values).
      *
-     * @param  string|array<string,mixed>|null  $data
+     * @param string|array<string,mixed>|null $data
+     *
      * @return array<string,mixed>
      */
     function arrayFilters(array|string|null $data): array
@@ -213,7 +214,8 @@ if (! function_exists('flattenArray')) {
     /**
      * Flatten a nested array to a given depth.
      *
-     * @param  array<string,mixed>  $data
+     * @param array<string,mixed> $data
+     *
      * @return array<int|string, mixed>
      */
     function flattenArray(array $data, int $depth = 0): array
@@ -313,7 +315,8 @@ if (! function_exists('databaseClasses')) {
     /**
      * Recursively find all PHP classes inside the database directory.
      *
-     * @param  array<string>  $excluding
+     * @param array<string> $excluding
+     *
      * @return array<int,string>
      */
     function databaseClasses(?string $directory = null, array $excluding = []): array
@@ -336,7 +339,7 @@ if (! function_exists('databaseClasses')) {
                 $namespace = $namespaceMatch[1] ?? null;
                 $className = $classMatch[1] ?? null;
                 if ($namespace && $className) {
-                    $classes[] = $namespace.'\\'.$className;
+                    $classes[] = $namespace . '\\' . $className;
                 }
             }
         }
@@ -428,7 +431,8 @@ if (! function_exists('appClasses')) {
     /**
      * Get a list of fully qualified class names in a given app directory.
      *
-     * @param  array<string>  $excluding
+     * @param array<string> $excluding
+     *
      * @return array<int,string>
      */
     function appClasses(string $path = 'App', array $excluding = []): array
@@ -440,7 +444,7 @@ if (! function_exists('appClasses')) {
         foreach ($iterator as $file) {
             /** @var RecursiveDirectoryIterator $file */
             if ($file->isFile() && $file->getExtension() === 'php') {
-                $relativePath = str_replace(app_path().'/', '', $file->getPathname());
+                $relativePath = str_replace(app_path() . '/', '', $file->getPathname());
                 $className = str_replace(['/', '.php'], ['\\', ''], $relativePath);
                 $classes[] = "App\\{$className}";
             }
@@ -470,7 +474,7 @@ if (! function_exists('relativePath')) {
      */
     function relativePath(string $path): string
     {
-        return str_replace(base_path().DIRECTORY_SEPARATOR, '', $path);
+        return str_replace(base_path() . DIRECTORY_SEPARATOR, '', $path);
     }
 }
 
@@ -482,7 +486,7 @@ if (! function_exists('_dd')) {
      * to prevent browser/API clients from swallowing the error response.
      * Always returns HTTP 500.
      *
-     * @param  mixed  ...$vars  Values to dump.
+     * @param mixed ...$vars Values to dump.
      */
     function _dd(mixed ...$vars): never
     {
@@ -509,5 +513,4 @@ if (! function_exists('_dd')) {
 
         exit(1);
     }
-
 }
