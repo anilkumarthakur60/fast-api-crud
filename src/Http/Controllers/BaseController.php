@@ -148,7 +148,7 @@ abstract class BaseController implements HasMiddleware
             return $this->error($e->getMessage());
         }
 
-        return $this->success(code: Response::HTTP_NO_CONTENT);
+        return $this->noContent();
     }
 
     /**
@@ -166,7 +166,7 @@ abstract class BaseController implements HasMiddleware
             return $this->error($e->getMessage());
         }
 
-        return $this->success(code: Response::HTTP_NO_CONTENT);
+        return $this->noContent();
     }
 
     // -------------------------------------------------------------------------
@@ -242,7 +242,7 @@ abstract class BaseController implements HasMiddleware
             return $this->error($e->getMessage());
         }
 
-        return $this->success(code: Response::HTTP_NO_CONTENT);
+        return $this->noContent();
     }
 
     /**
@@ -260,6 +260,6 @@ abstract class BaseController implements HasMiddleware
             return $this->error($e->getMessage());
         }
 
-        return $this->success(code: Response::HTTP_NO_CONTENT);
+        return $this->noContent();
     }
 }

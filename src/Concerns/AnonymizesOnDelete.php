@@ -25,7 +25,10 @@ trait AnonymizesOnDelete
             }
 
             $table = $model->getTable();
-            $indexes = Schema::getIndexes($table);
+
+            /** @var array<string, array<int, array<string, mixed>>> $indexCache */
+            static $indexCache = [];
+            $indexes = $indexCache[$table] ??= Schema::getIndexes($table);
             $timestamp = time();
             $changed = false;
 

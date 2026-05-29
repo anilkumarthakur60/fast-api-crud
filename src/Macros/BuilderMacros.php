@@ -79,14 +79,7 @@ final class BuilderMacros
         Builder::macro('paginates', function (array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
             /** @var array<int, string> $columns */
             /** @var Builder<Model> $this */
-            $perPage = Pagination::resolvePerPage();
-
-            if ($perPage === 0) {
-                $count = $this->count();
-                $perPage = $count > 0 ? $count : Pagination::defaultPerPage();
-            }
-
-            return $this->paginate($perPage, $columns, $pageName, $page);
+            return $this->paginate(Pagination::resolveEffectivePerPage(fn () => $this->count()), $columns, $pageName, $page);
         });
     }
 
@@ -102,14 +95,7 @@ final class BuilderMacros
         Builder::macro('simplePaginates', function (array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
             /** @var array<int, string> $columns */
             /** @var Builder<Model> $this */
-            $perPage = Pagination::resolvePerPage();
-
-            if ($perPage === 0) {
-                $count = $this->count();
-                $perPage = $count > 0 ? $count : Pagination::defaultPerPage();
-            }
-
-            return $this->simplePaginate($perPage, $columns, $pageName, $page);
+            return $this->simplePaginate(Pagination::resolveEffectivePerPage(fn () => $this->count()), $columns, $pageName, $page);
         });
     }
 
@@ -169,8 +155,8 @@ final class BuilderMacros
 
                 if ($model->hasNamedScope($filter)) {
                     $this->{$filter}($value);
-                } elseif (method_exists($model, Str::studly((string) $filter))) {
-                    $model->{Str::studly((string) $filter)}($value);
+                } elseif (method_exists($model, $studly = Str::studly((string) $filter))) {
+                    $model->{$studly}($value);
                 }
             }
 

@@ -62,4 +62,25 @@ final class Pagination
     {
         return self::configInt('fast-api.pagination.max_per_page', 100);
     }
+
+    /**
+     * Resolve per-page for offset-based paginators (paginates / simplePaginates).
+     *
+     * The $countFn closure is only invoked when "show all" is requested (rowsPerPage=0
+     * and allow_all=true), avoiding an extra COUNT query on normal paginated requests.
+     *
+     * @param \Closure(): int $countFn
+     */
+    public static function resolveEffectivePerPage(\Closure $countFn): int
+    {
+        $perPage = self::resolvePerPage();
+
+        if ($perPage === 0) {
+            $count = $countFn();
+
+            return $count > 0 ? $count : self::defaultPerPage();
+        }
+
+        return $perPage;
+    }
 }

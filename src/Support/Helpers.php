@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\VarDumper\Caster\ScalarStub;
 use Symfony\Component\VarDumper\VarDumper;
 
@@ -184,7 +183,7 @@ if (! function_exists('filterValue')) {
             return null;
         }
 
-        $value = collect($jsonData)->get($key);
+        $value = $jsonData[$key] ?? null;
 
         return is_string($value) ? $value : null;
     }
@@ -285,7 +284,7 @@ if (! function_exists('tableColumns')) {
      *
      * Returns: ["id", ...other columns (sorted), "created_at", "updated_at", "deleted_at"].
      *
-     * @return array<string>
+     * @return list<string>
      */
     function tableColumns(string|Model $table = 'users'): array
     {
@@ -301,6 +300,7 @@ if (! function_exists('tableColumns')) {
             $columns = Schema::getColumnListing($table->getTable());
         }
 
+        /** @var array<string> $stringColumns */
         $stringColumns = array_filter($columns, 'is_string');
         $stringColumns = array_diff($stringColumns, ['id']);
         $specialColumns = ['created_at', 'updated_at', 'deleted_at'];
@@ -362,11 +362,11 @@ if (! function_exists('toFormattedDateString')) {
 
 if (! function_exists('uuid')) {
     /**
-     * Generate a UUID (version 4).
+     * Generate a UUID v4 string.
      */
-    function uuid(): UuidInterface
+    function uuid(): string
     {
-        return Str::uuid();
+        return (string) Str::uuid();
     }
 }
 

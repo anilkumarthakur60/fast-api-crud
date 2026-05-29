@@ -440,101 +440,38 @@ trait HasCrudOperations
     // Lifecycle hooks — override in child controller or define on the model
     // -------------------------------------------------------------------------
 
-    protected function beforeCreate(Model $model): void
-    {
-        if (method_exists($model, 'beforeCreate')) {
-            $model->beforeCreate();
-        }
-    }
+    protected function beforeCreate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function afterCreate(Model $model): void
-    {
-        if (method_exists($model, 'afterCreate')) {
-            $model->afterCreate();
-        }
-    }
+    protected function afterCreate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function beforeUpdate(Model $model): void
-    {
-        if (method_exists($model, 'beforeUpdate')) {
-            $model->beforeUpdate();
-        }
-    }
+    protected function beforeUpdate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function afterUpdate(Model $model): void
-    {
-        if (method_exists($model, 'afterUpdate')) {
-            $model->afterUpdate();
-        }
-    }
+    protected function afterUpdate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function beforeDelete(Model $model): void
-    {
-        if (method_exists($model, 'beforeDelete')) {
-            $model->beforeDelete();
-        }
-    }
+    protected function beforeDelete(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function afterDelete(Model $model): void
-    {
-        if (method_exists($model, 'afterDelete')) {
-            $model->afterDelete();
-        }
-    }
+    protected function afterDelete(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function beforeStatusChange(Model $model): void
-    {
-        if (method_exists($model, 'beforeStatusChange')) {
-            $model->beforeStatusChange();
-        }
-    }
+    protected function beforeStatusChange(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function afterStatusChange(Model $model): void
-    {
-        if (method_exists($model, 'afterStatusChange')) {
-            $model->afterStatusChange();
-        }
-    }
+    protected function afterStatusChange(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function beforeColumnUpdate(Model $model): void
-    {
-        if (method_exists($model, 'beforeColumnUpdate')) {
-            $model->beforeColumnUpdate();
-        }
-    }
+    protected function beforeColumnUpdate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function afterColumnUpdate(Model $model): void
-    {
-        if (method_exists($model, 'afterColumnUpdate')) {
-            $model->afterColumnUpdate();
-        }
-    }
+    protected function afterColumnUpdate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function beforeRestore(Model $model): void
-    {
-        if (method_exists($model, 'beforeRestore')) {
-            $model->beforeRestore();
-        }
-    }
+    protected function beforeRestore(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function afterRestore(Model $model): void
-    {
-        if (method_exists($model, 'afterRestore')) {
-            $model->afterRestore();
-        }
-    }
+    protected function afterRestore(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function beforeForceDelete(Model $model): void
-    {
-        if (method_exists($model, 'beforeForceDelete')) {
-            $model->beforeForceDelete();
-        }
-    }
+    protected function beforeForceDelete(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
 
-    protected function afterForceDelete(Model $model): void
+    protected function afterForceDelete(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
+
+    private function fireModelHook(Model $model, string $hook): void
     {
-        if (method_exists($model, 'afterForceDelete')) {
-            $model->afterForceDelete();
+        if (method_exists($model, $hook)) {
+            $model->{$hook}();
         }
     }
 
