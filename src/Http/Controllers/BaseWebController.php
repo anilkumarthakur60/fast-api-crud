@@ -51,10 +51,10 @@ abstract class BaseWebController extends Controller
     protected string $collectionName;
 
     /**
-     * @param class-string<Model> $model
-     * @param class-string<FormRequest> $storeRequest
-     * @param class-string<FormRequest> $updateRequest
-     * @param class-string<JsonResource>|null $resource
+     * @param  class-string<Model>  $model
+     * @param  class-string<FormRequest>  $storeRequest
+     * @param  class-string<FormRequest>  $updateRequest
+     * @param  class-string<JsonResource>|null  $resource
      *
      * @throws Exception
      */
@@ -311,7 +311,7 @@ abstract class BaseWebController extends Controller
     /**
      * Redirect to a named route with a success flash message.
      *
-     * @param array<string, mixed> $parameters
+     * @param  array<string, mixed>  $parameters
      */
     protected function redirectWithSuccess(string $route, string $message, array $parameters = []): RedirectResponse
     {

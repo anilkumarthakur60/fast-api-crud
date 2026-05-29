@@ -72,8 +72,7 @@ final class BuilderMacros
         /**
          * Paginate using the rowsPerPage request parameter.
          *
-         * @param array<string>|string $columns
-         *
+         * @param  array<string>|string  $columns
          * @return Paginator
          */
         Builder::macro('paginates', function (array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
@@ -95,8 +94,7 @@ final class BuilderMacros
         /**
          * Simple-paginate using the rowsPerPage request parameter.
          *
-         * @param array<string>|string $columns
-         *
+         * @param  array<string>|string  $columns
          * @return Paginator
          */
         Builder::macro('simplePaginates', function (array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
@@ -118,8 +116,7 @@ final class BuilderMacros
         /**
          * Cursor-paginate using the rowsPerPage request parameter.
          *
-         * @param array<string>|string $columns
-         *
+         * @param  array<string>|string  $columns
          * @return CursorPaginator
          */
         Builder::macro('cursorPaginates', function (array $columns = ['*'], ?string $cursorName = null, ?Cursor $cursor = null): CursorPaginator {
@@ -198,8 +195,7 @@ final class BuilderMacros
         /**
          * Apply multiple aggregate functions to the query.
          *
-         * @param array<string, array<string>|string> $aggregates
-         *
+         * @param  array<string, array<string>|string>  $aggregates
          * @return Builder<Model>
          */
         Builder::macro('withAggregates', function (array $aggregates): Builder {
