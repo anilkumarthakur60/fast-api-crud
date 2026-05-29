@@ -692,9 +692,7 @@ trait HasCrudOperations
                 continue;
             }
 
-            $scopeMethod = 'scope' . ucfirst($scope);
-
-            if (method_exists($query->getModel(), $scopeMethod) || method_exists($query->getModel(), $scope)) {
+            if ($query->getModel()->hasNamedScope($scope)) {
                 $query->{$scope}(...$args);
             }
         }
