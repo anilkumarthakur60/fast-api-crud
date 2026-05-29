@@ -27,6 +27,8 @@ class PostResource extends JsonResource
             'active' => $this['active'],
             'created_at' => $this['created_at'],
             'updated_at' => $this['updated_at'],
+            'tags' => TagResource::collection($this->whenLoaded('tags')),
+            'user' => new UserResource($this->whenLoaded('user')),
         ];
     }
 }

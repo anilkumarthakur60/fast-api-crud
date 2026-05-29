@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Static schema index cache in `AnonymizesOnDelete` — `Schema::getIndexes()` is now called once per table per process instead of on every soft-delete.
 - Support for models using `$guarded` (including `$guarded = []`). `resolveValidatedData()` now falls back to the actual table columns when `$fillable` is empty, instead of persisting nothing.
 - **`Route::fastApiResource('posts', PostController::class)` macro** — registers the full route set (index, store, show, update, destroy, bulk delete, restoreAll, changeStatus, updateColumn, restore, permanentDelete) in one line, with `only`/`except`/`parameter`/`names` options mirroring Laravel's `apiResource`.
+- **Client-driven eager loading** — set `$allowedIncludes` on a controller and clients can request relations per call via `?include=author,tags`. Restricted to the allowlist (anything else is ignored), applied on both index and show.
+- **Soft-delete filtering on index** — set `$allowTrashedFilter = true` and clients can pass `?trashed=with` or `?trashed=only`. Opt-in and gated on the model being soft-deletable.
+- **Bulk-delete cap** — `fast-api.bulk.max_rows` (default 1000) bounds how many IDs the bulk delete endpoint accepts; set to 0 to disable.
 - `LICENSE` file (MIT).
 - `CHANGELOG.md`.
 

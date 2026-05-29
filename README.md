@@ -553,10 +553,30 @@ GET /posts?search=laravel
 
 If the model implements the `Searchable` interface, performs a LIKE search across the columns returned by `searchableColumns()`.
 
+### Includes (client-driven eager loading)
+
+```
+GET /posts?include=user,tags
+```
+
+Eager loads relations on demand. Only relations listed in the controller's
+`$allowedIncludes` allowlist are honoured — anything else is silently ignored.
+Works on both index and show.
+
+### Trashed (soft-deleted records)
+
+```
+GET /posts?trashed=with    # include soft-deleted alongside active
+GET /posts?trashed=only    # only soft-deleted
+```
+
+Opt-in: set `$allowTrashedFilter = true` on the controller. Ignored unless the
+model uses `SoftDeletes`.
+
 ### Combined Example
 
 ```
-GET /posts?filters={"active":1}&sortBy=name&descending=false&rowsPerPage=20&search=laravel
+GET /posts?filters={"active":1}&sortBy=name&descending=false&rowsPerPage=20&search=laravel&include=tags&trashed=with
 ```
 
 ---
@@ -583,6 +603,10 @@ class PostController extends BaseController
     protected array $load = ['user', 'tags', 'comments'];   // Eager load in show
     protected array $loadCount = ['comments'];               // Count in show
     protected array $loadAggregate = [];                     // Aggregates in show
+
+    // Client-driven query features
+    protected array $allowedIncludes = ['user', 'tags'];     // Relations clients may request via ?include=
+    protected bool $allowTrashedFilter = false;              // Allow ?trashed=with|only (soft-deletes)
 
     // Operation scopes
     protected array $deleteScopes = [];     // Scopes when finding record for delete

@@ -14,6 +14,8 @@ use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Controllers\Middleware;
@@ -91,6 +93,22 @@ trait HasCrudOperations
     protected array $loadAggregate = [];
 
     /**
+     * Relationships clients may eager load on demand via the "include" query
+     * parameter (e.g. ?include=author,tags). Acts as an allowlist — anything
+     * not listed here is ignored. Empty disables client-driven includes.
+     *
+     * @var array<int, string>
+     */
+    protected array $allowedIncludes = [];
+
+    /**
+     * Allow clients to include soft-deleted records in the index via the
+     * "trashed" query parameter (?trashed=with or ?trashed=only). Opt-in, since
+     * soft-deleted rows are usually hidden on purpose.
+     */
+    protected bool $allowTrashedFilter = false;
+
+    /**
      * Force permanent deletion instead of soft delete.
      */
     protected bool $forceDelete = false;
@@ -161,6 +179,8 @@ trait HasCrudOperations
             $this->applyScopes($query, $this->scopes);
         }
 
+        $this->applyRequestedIncludes($query);
+        $this->applyTrashedFilter($query);
         $this->applySearch($query);
 
         return $query;
@@ -191,6 +211,8 @@ trait HasCrudOperations
         if ($this->loadScopes !== []) {
             $this->applyScopes($query, $this->loadScopes);
         }
+
+        $this->applyRequestedIncludes($query);
 
         return $query;
     }
@@ -282,8 +304,16 @@ trait HasCrudOperations
     {
         $keyName = $this->model->getKeyName();
 
+        $maxRows = config('fast-api.bulk.max_rows', 1000);
+        $maxRows = is_int($maxRows) ? $maxRows : 1000;
+
+        $rows = ['required', 'array'];
+        if ($maxRows > 0) {
+            $rows[] = "max:{$maxRows}";
+        }
+
         request()->validate([
-            'delete_rows'   => ['required', 'array'],
+            'delete_rows'   => $rows,
             'delete_rows.*' => ['required', "exists:{$this->model->getTable()},{$keyName}"],
         ]);
 
@@ -705,6 +735,76 @@ trait HasCrudOperations
         }
 
         $query->likeWhere($this->model->searchableColumns(), $searchTerm);
+    }
+
+    /**
+     * Eager load relationships requested via the "include" query parameter,
+     * restricted to the $allowedIncludes allowlist.
+     *
+     * @param Builder<Model> $query
+     */
+    protected function applyRequestedIncludes(Builder $query): void
+    {
+        if ($this->allowedIncludes === []) {
+            return;
+        }
+
+        $key = config('fast-api.query.include', 'include');
+        $requested = request()->query(is_string($key) ? $key : 'include');
+
+        if (! is_string($requested) || $requested === '') {
+            return;
+        }
+
+        $includes = array_values(array_intersect(
+            array_filter(array_map('trim', explode(',', $requested))),
+            $this->allowedIncludes,
+        ));
+
+        if ($includes !== []) {
+            $query->with($includes);
+        }
+    }
+
+    /**
+     * Include soft-deleted records when the client asks via the "trashed" query
+     * parameter. Only honoured when $allowTrashedFilter is enabled and the model
+     * is soft-deletable.
+     *
+     * @param Builder<Model> $query
+     */
+    protected function applyTrashedFilter(Builder $query): void
+    {
+        if (! $this->allowTrashedFilter || ! $this->modelUsesSoftDeletes()) {
+            return;
+        }
+
+        $key = config('fast-api.query.trashed', 'trashed');
+        $trashed = request()->query(is_string($key) ? $key : 'trashed');
+
+        if ($trashed !== 'with' && $trashed !== 'only') {
+            return;
+        }
+
+        // Drop the soft-delete global scope so trashed rows become visible
+        // (equivalent to withTrashed()), then narrow to only-trashed if asked.
+        $query->withoutGlobalScope(SoftDeletingScope::class);
+
+        if ($trashed === 'only') {
+            $column = method_exists($this->model, 'getDeletedAtColumn')
+                ? $this->model->getDeletedAtColumn()
+                : 'deleted_at';
+
+            $query->whereNotNull(is_string($column) ? $column : 'deleted_at');
+        }
+    }
+
+    /**
+     * Determine whether the model uses the SoftDeletes trait.
+     */
+    protected function modelUsesSoftDeletes(): bool
+    {
+        return in_array(SoftDeletes::class, class_uses_recursive($this->model), true);
     }
 
     /**

@@ -11,6 +11,11 @@ use Exception;
 
 class PostController extends BaseController
 {
+    /** @var array<int, string> */
+    protected array $allowedIncludes = ['user', 'tags'];
+
+    protected bool $allowTrashedFilter = true;
+
     /**
      * @throws Exception
      */

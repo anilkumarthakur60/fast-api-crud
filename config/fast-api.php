@@ -21,6 +21,33 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Bulk Operation Configuration
+    |--------------------------------------------------------------------------
+    |
+    | The maximum number of IDs accepted by the bulk delete endpoint in a
+    | single request. Set to 0 (or any value <= 0) to disable the limit.
+    |
+    */
+    'bulk' => [
+        'max_rows' => 1000,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Parameters
+    |--------------------------------------------------------------------------
+    |
+    | The request query-string keys the index/show endpoints read for
+    | client-driven eager loading and soft-delete filtering.
+    |
+    */
+    'query' => [
+        'include' => 'include',
+        'trashed' => 'trashed',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Soft Delete Configuration
     |--------------------------------------------------------------------------
     |
