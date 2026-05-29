@@ -81,11 +81,40 @@ class PostController extends BaseController
 
 ### 3. Register routes
 
+One line registers the entire CRUD route set via the `fastApiResource` macro:
+
 ```php
 // routes/api.php
 
 use App\Http\Controllers\PostController;
+use Illuminate\Support\Facades\Route;
 
+Route::fastApiResource('posts', PostController::class);
+
+// Partial registration, mirroring Laravel's apiResource:
+Route::fastApiResource('posts', PostController::class, ['only' => ['index', 'show']]);
+Route::fastApiResource('posts', PostController::class, ['except' => ['delete', 'restoreAll']]);
+```
+
+This registers:
+
+```
+GET     /posts                         index
+POST    /posts                         store
+DELETE  /posts                         delete           (bulk; delete_rows[])
+POST    /posts/restore                 restoreAll
+GET     /posts/{id}                    show
+PUT|PATCH /posts/{id}                  update
+DELETE  /posts/{id}                    destroy
+PATCH   /posts/{id}/status             changeStatus
+PATCH   /posts/{id}/status/{column}    updateColumn
+PATCH   /posts/{id}/restore            restore
+DELETE  /posts/{id}/force              permanentDelete
+```
+
+Prefer to wire routes by hand? That works too:
+
+```php
 Route::get('posts', [PostController::class, 'index']);
 Route::post('posts', [PostController::class, 'store']);
 Route::get('posts/{id}', [PostController::class, 'show']);
@@ -786,22 +815,24 @@ Post::query()->today('published_at');
 Post::query()->lastMonth('updated_at');
 ```
 
-### HasUuidPrimaryKey
+### UUID primary keys
 
-Automatically assigns UUID v4 as primary key on model creation.
+This package does not ship a UUID trait — use Laravel's first-party traits, which
+set `incrementing`/`keyType`, fill the key on creation, and add UUID-aware route
+model binding:
 
 ```php
-use Anil\FastApiCrud\Concerns\HasUuidPrimaryKey;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;          // UUID v7 (time-ordered, recommended)
+// use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids; // ordered UUID
 
 class Post extends Model
 {
-    use HasUuidPrimaryKey;
+    use HasUuids;
 }
 ```
 
-- Sets `incrementing` to `false`
-- Sets `keyType` to `string`
-- Auto-generates UUID on creation if key is empty
+Ordered UUIDs (v7) are recommended for primary keys because of their B-tree index
+locality. Reach for a pure-random v4 only if you must hide record creation order.
 
 ### AnonymizesOnDelete
 

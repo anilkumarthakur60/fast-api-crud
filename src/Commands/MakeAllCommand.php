@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Anil\FastApiCrud\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class MakeAllCommand extends Command
@@ -15,13 +16,13 @@ class MakeAllCommand extends Command
 
     protected $description = 'Generate model, migration, factory, seeder, controller (extending BaseController or BaseWebController), resource, and requests for one or more models';
 
-    public function handle(): void
+    public function handle(): int
     {
         $name = $this->argument('name');
-        if (empty($name) || ! is_string($name)) {
+        if (! is_string($name) || trim($name) === '') {
             $this->error('Please provide a valid model name.');
 
-            return;
+            return self::FAILURE;
         }
 
         $models = array_filter(array_map('trim', explode(',', $name)));
@@ -29,6 +30,8 @@ class MakeAllCommand extends Command
         foreach ($models as $modelName) {
             $this->generateScaffold($modelName);
         }
+
+        return self::SUCCESS;
     }
 
     private function generateScaffold(string $modelName): void
@@ -56,22 +59,19 @@ class MakeAllCommand extends Command
     {
         $controllerPath = app_path("Http/Controllers/{$modelName}Controller.php");
 
-        if (file_exists($controllerPath)) {
+        if (File::exists($controllerPath)) {
             $this->warn("Controller already exists: {$controllerPath}");
 
             return;
         }
 
-        $directory = dirname($controllerPath);
-        if (! is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
+        File::ensureDirectoryExists(dirname($controllerPath));
 
         $stub = $this->option('web')
             ? $this->buildWebControllerStub($modelName)
             : $this->buildControllerStub($modelName);
 
-        file_put_contents($controllerPath, $stub);
+        File::put($controllerPath, $stub);
 
         $this->info("Controller created: {$controllerPath}");
     }
@@ -151,9 +151,7 @@ class MakeAllCommand extends Command
         $collectionName = Str::camel(Str::pluralStudly(class_basename($modelName)));
         $viewDir = resource_path("views/{$slug}");
 
-        if (! is_dir($viewDir)) {
-            mkdir($viewDir, 0755, true);
-        }
+        File::ensureDirectoryExists($viewDir);
 
         $views = [
             'index'  => $this->buildIndexViewStub($modelName, $collectionName, $slug),
@@ -165,13 +163,13 @@ class MakeAllCommand extends Command
         foreach ($views as $name => $content) {
             $viewPath = "{$viewDir}/{$name}.blade.php";
 
-            if (file_exists($viewPath)) {
+            if (File::exists($viewPath)) {
                 $this->warn("View already exists: {$viewPath}");
 
                 continue;
             }
 
-            file_put_contents($viewPath, $content);
+            File::put($viewPath, $content);
             $this->info("View created: {$viewPath}");
         }
     }

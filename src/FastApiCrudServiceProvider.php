@@ -7,6 +7,7 @@ namespace Anil\FastApiCrud;
 use Anil\FastApiCrud\Commands\MakeAllCommand;
 use Anil\FastApiCrud\Macros\BuilderMacros;
 use Anil\FastApiCrud\Macros\CollectionMacros;
+use Anil\FastApiCrud\Macros\RouteMacros;
 use Illuminate\Support\ServiceProvider;
 
 class FastApiCrudServiceProvider extends ServiceProvider
@@ -19,6 +20,7 @@ class FastApiCrudServiceProvider extends ServiceProvider
 
         BuilderMacros::register();
         CollectionMacros::register();
+        RouteMacros::register();
 
         if ($this->app->runningInConsole()) {
             $this->commands([

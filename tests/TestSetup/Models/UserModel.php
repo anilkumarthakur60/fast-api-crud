@@ -2,6 +2,7 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
+use Anil\FastApiCrud\Concerns\ReplicatesWithRelations;
 use Anil\FastApiCrud\Tests\TestSetup\Factories\UserModelFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +18,7 @@ class UserModel extends Authenticatable
     /** @use HasFactory<UserModelFactory> */
     use HasFactory;
 
+    use ReplicatesWithRelations;
     use SoftDeletes;
 
     protected $table = 'users';

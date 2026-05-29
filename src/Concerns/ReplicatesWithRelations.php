@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Anil\FastApiCrud\Concerns;
 
+use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -29,12 +29,17 @@ use SplObjectStorage;
  *   $clone = $post->replicateWithRelations(['comments.replies', 'tags']);
  *   $clone = $post->replicateWithRelations(except: ['slug', 'published_at']);
  *
+ * Child records (HasOne/HasMany/MorphOne/MorphMany) are persisted *through* the
+ * parent relation, so their foreign key is set before the row is inserted —
+ * this works even when the foreign key column is NOT NULL. Only relations that
+ * are actually loaded on the source model are replicated.
+ *
  * @phpstan-require-extends Model
  */
 trait ReplicatesWithRelations
 {
     /**
-     * Replicate this model along with specified or loaded relations.
+     * Replicate this model along with its loaded (or given) relations.
      *
      * @param array<int, string> $relations Relations to replicate (dot notation for depth). Empty = use loaded relations.
      * @param array<int, string> $except Attributes to exclude from the replica.
@@ -52,40 +57,50 @@ trait ReplicatesWithRelations
     }
 
     /**
-     * Internal replication with circular reference tracking.
+     * Replication with circular-reference tracking.
+     *
+     * Must be public so a parent model can drive replication of child models of
+     * a different class during recursion. Treat as internal — use
+     * {@see replicateWithRelations()} as the entry point.
+     *
+     * @internal
      *
      * @param array<int, string> $relations
      * @param array<int, string> $except
      * @param SplObjectStorage<Model, Model> $visited Tracks original→clone to prevent infinite loops.
+     * @param (Closure(Model): void)|null $persist How to persist the replica. Null = standalone save;
+     *                                             otherwise the parent relation saves it (setting the FK).
      *
      * @throws Exception
      */
-    private function replicateWithRelationsUsing(array $relations, array $except, SplObjectStorage $visited): static
+    public function replicateWithRelationsUsing(array $relations, array $except, SplObjectStorage $visited, ?Closure $persist = null): static
     {
-        // Circular reference guard — return existing clone if we've seen this model
+        // Circular reference guard — return the existing clone if we've seen this model.
         if ($visited->contains($this)) {
             /** @var static */
             return $visited[$this];
         }
 
-        // Eager-load requested relations if not already loaded
         if ($relations !== []) {
             $this->loadMissing($relations);
         }
 
-        $newModel = $this->replicate($except !== [] ? $except : null);
-        $this->reApplyCasts($newModel);
-        $newModel->save();
+        $replica = $this->replicate($except !== [] ? $except : null);
+        $this->reApplyCasts($replica);
 
-        // Register in visited map before processing relations (handles circular refs)
-        $visited[$this] = $newModel;
+        // Persist the replica — through the parent relation (FK set before insert)
+        // when given a persist callback, otherwise as a standalone root record.
+        if ($persist !== null) {
+            $persist($replica);
+        } else {
+            $replica->save();
+        }
+
+        // Register in the visited map before recursing (handles circular refs).
+        $visited[$this] = $replica;
 
         foreach ($this->getRelations() as $relationName => $relationValue) {
-            if (! is_string($relationName) || ! $relationValue) {
-                continue;
-            }
-
-            if (! method_exists($this, $relationName)) {
+            if (! is_string($relationName) || ! $relationValue || ! method_exists($this, $relationName)) {
                 continue;
             }
 
@@ -96,26 +111,24 @@ trait ReplicatesWithRelations
             }
 
             match (true) {
-                $relationInstance instanceof MorphTo,
-                $relationInstance instanceof BelongsTo => $this->replicateBelongsTo($newModel, $relationName, $relationValue),
+                // BelongsTo / MorphTo (MorphTo extends BelongsTo): point at the same parent.
+                $relationInstance instanceof BelongsTo => $this->replicateBelongsTo($replica, $relationName, $relationValue),
 
+                // Owned children: deep-replicate and attach to the new parent.
+                $relationInstance instanceof HasOne,
                 $relationInstance instanceof MorphOne,
-                $relationInstance instanceof HasOne => $this->replicateHasOne($newModel, $relationName, $relationValue, $visited),
+                $relationInstance instanceof HasMany,
+                $relationInstance instanceof MorphMany => $this->replicateChildren($replica, $relationName, $relationValue, $visited),
 
-                $relationInstance instanceof MorphMany,
-                $relationInstance instanceof HasMany => $this->replicateHasMany($newModel, $relationName, $relationValue, $visited),
+                // Many-to-many: sync the same related records, preserving pivot data.
+                $relationInstance instanceof BelongsToMany => $this->replicateBelongsToMany($replica, $relationName, $relationValue, $relationInstance),
 
-                $relationInstance instanceof MorphToMany,
-                $relationInstance instanceof BelongsToMany => $this->replicateBelongsToMany($newModel, $relationName, $relationValue, $relationInstance),
-
-                $relationInstance instanceof HasOneThrough,
-                $relationInstance instanceof HasManyThrough => null, // Skip — "through" relations are derived, not owned
-
+                // "Through" relations are derived, not owned — nothing to replicate.
                 default => null,
             };
         }
 
-        return $newModel;
+        return $replica;
     }
 
     // -------------------------------------------------------------------------
@@ -140,52 +153,64 @@ trait ReplicatesWithRelations
     }
 
     /**
-     * HasOne / MorphOne — deep-replicate the child and attach to new parent.
+     * HasOne / HasMany / MorphOne / MorphMany — deep-replicate each child and
+     * persist it through the new parent's relation so the foreign key is set
+     * before the row is inserted.
      *
      * @param SplObjectStorage<Model, Model> $visited
+     *
+     * @throws Exception
      */
-    private function replicateHasOne(Model $newModel, string $relationName, mixed $relationValue, SplObjectStorage $visited): void
+    private function replicateChildren(Model $newParent, string $relationName, mixed $relationValue, SplObjectStorage $visited): void
     {
-        if (! $relationValue instanceof Model) {
-            return;
-        }
+        $children = $relationValue instanceof Collection ? $relationValue->all() : [$relationValue];
 
-        $newChild = $this->deepReplicateChild($relationValue, $visited);
-        $relation = $newModel->{$relationName}();
+        foreach ($children as $child) {
+            if (! $child instanceof Model) {
+                continue;
+            }
 
-        if ($relation instanceof HasOne || $relation instanceof MorphOne) {
-            $relation->save($newChild);
+            $persist = function (Model $childReplica) use ($newParent, $relationName): void {
+                $relation = $newParent->{$relationName}();
+
+                if ($relation instanceof HasOneOrMany) {
+                    $relation->save($childReplica);
+                }
+            };
+
+            if (method_exists($child, 'replicateWithRelationsUsing')) {
+                // Child uses this trait: recurse so its own loaded relations are replicated too.
+                $child->replicateWithRelationsUsing([], [], $visited, $persist);
+
+                continue;
+            }
+
+            // Child does not use the trait: replicate the row only.
+            $this->replicateSimpleChild($child, $visited, $persist);
         }
     }
 
     /**
-     * HasMany / MorphMany — deep-replicate each child and attach to new parent.
+     * Replicate a single child that does not use this trait, persisting it
+     * through the parent relation supplied by the caller.
      *
      * @param SplObjectStorage<Model, Model> $visited
+     * @param Closure(Model): void $persist
      */
-    private function replicateHasMany(Model $newModel, string $relationName, mixed $relationValue, SplObjectStorage $visited): void
+    private function replicateSimpleChild(Model $child, SplObjectStorage $visited, Closure $persist): void
     {
-        if (! $relationValue instanceof Collection) {
+        if ($visited->contains($child)) {
             return;
         }
 
-        $relation = $newModel->{$relationName}();
+        $replica = $child->replicate();
+        $persist($replica);
 
-        if (! ($relation instanceof HasMany || $relation instanceof MorphMany)) {
-            return;
-        }
-
-        /** @var Collection<int, Model> $relatedCollection */
-        $relatedCollection = $relationValue;
-
-        foreach ($relatedCollection as $childModel) {
-            $newChild = $this->deepReplicateChild($childModel, $visited);
-            $relation->save($newChild);
-        }
+        $visited[$child] = $replica;
     }
 
     /**
-     * BelongsToMany / MorphToMany — sync IDs with pivot data preserved.
+     * BelongsToMany / MorphToMany — sync the same related records with pivot data preserved.
      *
      * @param BelongsToMany<Model, Model>|MorphToMany<Model, Model> $relationInstance
      */
@@ -201,15 +226,15 @@ trait ReplicatesWithRelations
             return;
         }
 
-        /** @var Collection<int, Model> $relatedCollection */
-        $relatedCollection = $relationValue;
-
-        // Build sync array with pivot data preserved
         $pivotColumns = $relationInstance->getPivotColumns();
         /** @var array<int|string, array<string, mixed>> $syncData */
         $syncData = [];
 
-        foreach ($relatedCollection as $relatedModel) {
+        foreach ($relationValue as $relatedModel) {
+            if (! $relatedModel instanceof Model) {
+                continue;
+            }
+
             $key = $relatedModel->getKey();
 
             if (! is_int($key) && ! is_string($key)) {
@@ -239,42 +264,22 @@ trait ReplicatesWithRelations
     // -------------------------------------------------------------------------
 
     /**
-     * Deep-replicate a child model: if it uses this trait, replicate with its own relations;
-     * otherwise do a simple replicate.
-     *
-     * @param SplObjectStorage<Model, Model> $visited
-     */
-    private function deepReplicateChild(Model $child, SplObjectStorage $visited): Model
-    {
-        // Already cloned (circular reference) — return the existing clone
-        if ($visited->contains($child)) {
-            /** @var Model */
-            return $visited[$child];
-        }
-
-        if (method_exists($child, 'replicateWithRelationsUsing')) {
-            $result = $child->replicateWithRelationsUsing([], [], $visited);
-
-            if ($result instanceof Model) {
-                return $result;
-            }
-        }
-
-        // Simple replicate for models without the trait
-        $newChild = $child->replicate();
-        $newChild->save();
-        $visited[$child] = $newChild;
-
-        return $newChild;
-    }
-
-    /**
      * Re-apply castable attributes to the replicated model.
+     *
+     * Only attributes that survived replicate() are touched — this avoids
+     * re-introducing the primary key, timestamps, and other unique-id columns,
+     * which getCasts() reports (e.g. "id" => "int") but replicate() excludes.
      */
     private function reApplyCasts(Model $newModel): void
     {
+        $replicaAttributes = $newModel->getAttributes();
+
         foreach ($this->getCasts() as $attribute => $castType) {
             if (! is_string($attribute) || ! is_string($castType)) {
+                continue;
+            }
+
+            if (! array_key_exists($attribute, $replicaAttributes)) {
                 continue;
             }
 

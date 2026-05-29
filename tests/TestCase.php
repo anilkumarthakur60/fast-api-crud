@@ -217,6 +217,11 @@ abstract class TestCase extends OrchestraTestCase
         $this->postRoutes($router);
         $this->tagRoutes($router);
         $this->userRoutes($router);
+
+        // Routes registered via the fastApiResource macro (for macro coverage).
+        $router->fastApiResource('widgets', PostController::class);
+        $router->fastApiResource('gadgets', PostController::class, ['only' => ['index', 'show']]);
+        $router->fastApiResource('gizmos', PostController::class, ['except' => ['delete', 'restoreAll']]);
     }
 
     private function postRoutes(Router $router): void

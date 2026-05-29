@@ -39,6 +39,7 @@ final class BuilderMacros
          * Usage:
          *   ->likeWhere(['name', 'email'], $search)
          *   ->likeWhere(['user:name,email'], $search)
+         *   ->likeWhere(['name', 'user:name,email'], $search)
          */
         Builder::macro('likeWhere', function (array $attributes, ?string $searchTerm = null): Builder {
             /** @var array<int, string> $attributes */

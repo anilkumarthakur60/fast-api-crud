@@ -72,24 +72,24 @@ GET /posts?filters={"lastWeek":1}
 GET /posts?filters={"date":"2025-01-01 to 2025-01-31"}
 ```
 
-## HasUuidPrimaryKey
+## UUID primary keys
 
-Automatically assigns UUID v4 as the primary key on model creation.
+This package does not ship a UUID trait. Use Laravel's first-party traits — they
+set `incrementing`/`keyType`, fill the key on `creating`, and add UUID-aware route
+model binding:
 
 ```php
-use Anil\FastApiCrud\Concerns\HasUuidPrimaryKey;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;          // UUID v7 (time-ordered, recommended)
+// use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids; // ordered UUID
 
 class Post extends Model
 {
-    use HasUuidPrimaryKey;
+    use HasUuids;
 }
 ```
 
-### What It Does
-
-- **`bootHasUuidPrimaryKey()`** — On `creating` event, assigns `Str::uuid()` to the primary key if empty
-- **`getIncrementing()`** — Returns `false` (UUID is not auto-incrementing)
-- **`getKeyType()`** — Returns `'string'`
+Ordered UUIDs (v7) are recommended for primary keys because of their B-tree index
+locality. Use a pure-random v4 only when you must hide record creation order.
 
 ### Migration
 
@@ -107,8 +107,6 @@ Schema::create('posts', function (Blueprint $table) {
 $post = Post::create(['name' => 'Test']);
 $post->id; // "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
 ```
-
-You can also set a UUID manually — the trait only assigns one if the key is empty.
 
 ## AnonymizesOnDelete
 

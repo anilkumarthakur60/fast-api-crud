@@ -2,6 +2,7 @@
 
 namespace Anil\FastApiCrud\Tests\TestSetup\Models;
 
+use Anil\FastApiCrud\Concerns\ReplicatesWithRelations;
 use Anil\FastApiCrud\Database\Factories\PostModelFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,7 @@ class PostModel extends Model
     /** @use HasFactory<PostModelFactory> */
     use HasFactory;
 
+    use ReplicatesWithRelations;
     use SoftDeletes;
 
     protected $table = 'posts';
