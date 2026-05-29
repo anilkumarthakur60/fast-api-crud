@@ -27,7 +27,7 @@ final class Pagination
 
     public static function requestedPerPage(int $default): int
     {
-        $raw = request()->query('rowsPerPage', $default);
+        $raw = request()->query(QueryParams::perPage(), $default);
 
         return is_numeric($raw) ? (int) $raw : $default;
     }

@@ -147,6 +147,32 @@ return [
         'allow_all'        => true,  // Allow rowsPerPage=0 to fetch all
     ],
 
+    // Bulk delete
+    'bulk' => [
+        'max_rows' => 1000,          // Max IDs per bulk delete (0 = unlimited)
+        'field'    => 'delete_rows', // Request key holding the array of IDs
+    ],
+
+    // Query parameter keys — rename any of these to match your API conventions.
+    // Defaults reproduce: ?filters={...}&sortBy=...&descending=...&rowsPerPage=...&page=...&search=...
+    'query' => [
+        'filters'    => 'filters',
+        'search'     => 'search',
+        'sort_by'    => 'sortBy',
+        'descending' => 'descending',
+        'per_page'   => 'rowsPerPage',
+        'page'       => 'page',
+        'cursor'     => 'cursor',
+        'include'    => 'include',   // key read from inside the filters JSON
+        'trashed'    => 'trashed',   // key read from inside the filters JSON
+    ],
+
+    // Default sort when the request has no sort key (and the model isn't Sortable)
+    'sorting' => [
+        'default_column'     => 'id',
+        'default_descending' => true,
+    ],
+
     // Soft Delete
     'soft_delete' => [
         'anonymize_unique_columns' => true,  // Append _{timestamp} to unique columns on delete
@@ -170,6 +196,23 @@ return [
         'flash_key_error'   => 'error',
     ],
 ];
+```
+
+### Rename query parameters
+
+Every request key the index reads is configurable, so you can shape the public API your way. For example, to use `?limit=`, `?sort=`, `?dir=`, `?q=`:
+
+```php
+'query' => [
+    'per_page'   => 'limit',
+    'sort_by'    => 'sort',
+    'descending' => 'dir',
+    'search'     => 'q',
+],
+```
+
+```
+GET /posts?q=laravel&sort=created_at&dir=true&limit=25
 ```
 
 ---

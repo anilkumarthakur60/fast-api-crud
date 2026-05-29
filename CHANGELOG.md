@@ -24,7 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`Route::fastApiResource('posts', PostController::class)` macro** — registers the full route set (index, store, show, update, destroy, bulk delete, restoreAll, changeStatus, updateColumn, restore, permanentDelete) in one line, with `only`/`except`/`parameter`/`names` options mirroring Laravel's `apiResource`.
 - **Client-driven eager loading** — set `$allowedIncludes` on a controller and clients request relations per call via an `include` key inside the filters JSON: `?filters={"include":"author,tags"}` (string or array form). Restricted to the allowlist (anything else is ignored), applied on both index and show.
 - **Soft-delete filtering on index** — set `$allowTrashedFilter = true` and clients pass a `trashed` key inside the filters JSON: `?filters={"trashed":"with"}` or `{"trashed":"only"}`. Opt-in and gated on the model being soft-deletable.
-- **Bulk-delete cap** — `fast-api.bulk.max_rows` (default 1000) bounds how many IDs the bulk delete endpoint accepts; set to 0 to disable.
+- **Bulk-delete cap** — `fast-api.bulk.max_rows` (default 1000) bounds how many IDs the bulk delete endpoint accepts; set to 0 to disable. The request field name is configurable via `fast-api.bulk.field` (default `delete_rows`).
+- **Fully configurable query-parameter keys** — `fast-api.query.*` lets you rename every key the index/show reads (`filters`, `search`, `sortBy`, `descending`, `rowsPerPage`, `page`, `cursor`, and the in-filters `include`/`trashed`). Defaults are unchanged. Centralised in a new `Anil\FastApiCrud\Support\QueryParams` resolver used by the macros, pagination helper, and controllers.
+- **Configurable default sort** — `fast-api.sorting.default_column` (default `id`) and `fast-api.sorting.default_descending` (default `true`) control ordering when the request has no sort key and the model isn't `Sortable`.
 - `LICENSE` file (MIT).
 - `CHANGELOG.md`.
 

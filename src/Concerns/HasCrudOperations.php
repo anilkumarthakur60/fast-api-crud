@@ -7,6 +7,7 @@ namespace Anil\FastApiCrud\Concerns;
 use Anil\FastApiCrud\Contracts\Searchable;
 use Anil\FastApiCrud\Enums\CrudAction;
 use Anil\FastApiCrud\Enums\PaginationType;
+use Anil\FastApiCrud\Support\QueryParams;
 use Closure;
 use Exception;
 use Illuminate\Contracts\Pagination\CursorPaginator;
@@ -304,6 +305,9 @@ trait HasCrudOperations
     {
         $keyName = $this->model->getKeyName();
 
+        $field = config('fast-api.bulk.field', 'delete_rows');
+        $field = is_string($field) && $field !== '' ? $field : 'delete_rows';
+
         $maxRows = config('fast-api.bulk.max_rows', 1000);
         $maxRows = is_int($maxRows) ? $maxRows : 1000;
 
@@ -313,13 +317,13 @@ trait HasCrudOperations
         }
 
         request()->validate([
-            'delete_rows'   => $rows,
-            'delete_rows.*' => ['required', "exists:{$this->model->getTable()},{$keyName}"],
+            $field       => $rows,
+            "{$field}.*" => ['required', "exists:{$this->model->getTable()},{$keyName}"],
         ]);
 
         try {
             DB::beginTransaction();
-            foreach ((array) request()->input('delete_rows') as $rawId) {
+            foreach ((array) request()->input($field) as $rawId) {
                 if (! is_int($rawId) && ! is_string($rawId)) {
                     continue;
                 }
@@ -728,7 +732,7 @@ trait HasCrudOperations
             return;
         }
 
-        $searchTerm = request()->query('search');
+        $searchTerm = request()->query(QueryParams::search());
 
         if (! is_string($searchTerm) || $searchTerm === '') {
             return;
@@ -750,8 +754,7 @@ trait HasCrudOperations
             return;
         }
 
-        $key = config('fast-api.query.include', 'include');
-        $requested = $this->requestFilters()[is_string($key) ? $key : 'include'] ?? null;
+        $requested = $this->requestFilters()[QueryParams::includes()] ?? null;
 
         $requested = match (true) {
             is_string($requested) => explode(',', $requested),
@@ -784,8 +787,7 @@ trait HasCrudOperations
             return;
         }
 
-        $key = config('fast-api.query.trashed', 'trashed');
-        $trashed = $this->requestFilters()[is_string($key) ? $key : 'trashed'] ?? null;
+        $trashed = $this->requestFilters()[QueryParams::trashed()] ?? null;
 
         if ($trashed !== 'with' && $trashed !== 'only') {
             return;
@@ -811,7 +813,7 @@ trait HasCrudOperations
      */
     protected function requestFilters(): array
     {
-        $raw = request()->query('filters');
+        $raw = request()->query(QueryParams::filters());
 
         if (! is_string($raw) || $raw === '') {
             return [];

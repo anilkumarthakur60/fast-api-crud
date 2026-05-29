@@ -6,6 +6,7 @@ namespace Anil\FastApiCrud\Macros;
 
 use Anil\FastApiCrud\Contracts\Sortable;
 use Anil\FastApiCrud\Support\Pagination;
+use Anil\FastApiCrud\Support\QueryParams;
 use Closure;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Contracts\Pagination\Paginator;
@@ -77,10 +78,10 @@ final class BuilderMacros
          *
          * @return Paginator
          */
-        Builder::macro('paginates', function (array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
+        Builder::macro('paginates', function (array $columns = ['*'], ?string $pageName = null, ?int $page = null): Paginator {
             /** @var array<int, string> $columns */
             /** @var Builder<Model> $this */
-            return $this->paginate(Pagination::resolveEffectivePerPage(fn () => $this->count()), $columns, $pageName, $page);
+            return $this->paginate(Pagination::resolveEffectivePerPage(fn () => $this->count()), $columns, $pageName ?? QueryParams::page(), $page);
         });
     }
 
@@ -93,10 +94,10 @@ final class BuilderMacros
          *
          * @return Paginator
          */
-        Builder::macro('simplePaginates', function (array $columns = ['*'], string $pageName = 'page', ?int $page = null): Paginator {
+        Builder::macro('simplePaginates', function (array $columns = ['*'], ?string $pageName = null, ?int $page = null): Paginator {
             /** @var array<int, string> $columns */
             /** @var Builder<Model> $this */
-            return $this->simplePaginate(Pagination::resolveEffectivePerPage(fn () => $this->count()), $columns, $pageName, $page);
+            return $this->simplePaginate(Pagination::resolveEffectivePerPage(fn () => $this->count()), $columns, $pageName ?? QueryParams::page(), $page);
         });
     }
 
@@ -115,7 +116,7 @@ final class BuilderMacros
             $requested = Pagination::requestedPerPage(Pagination::defaultPerPage());
             $perPage = $requested <= 0 ? Pagination::defaultPerPage() : min($requested, Pagination::maxPerPage());
 
-            return $this->cursorPaginate($perPage, $columns, $cursorName ?? 'cursor', $cursor);
+            return $this->cursorPaginate($perPage, $columns, $cursorName ?? QueryParams::cursor(), $cursor);
         });
     }
 
@@ -133,10 +134,11 @@ final class BuilderMacros
         Builder::macro('initializer', function (bool $orderBy = true): Builder {
             /** @var Builder<Model> $this */
             $request = request();
+            $filtersKey = QueryParams::filters();
             $filters = [];
 
-            if ($request->filled('filters')) {
-                $filtersInput = $request->query('filters', '{}');
+            if ($request->filled($filtersKey)) {
+                $filtersInput = $request->query($filtersKey, '{}');
 
                 if (is_string($filtersInput)) {
                     $decodedFilters = json_decode($filtersInput, true);
@@ -149,10 +151,7 @@ final class BuilderMacros
 
             // Keys reserved for the controller (client-driven include / soft-delete
             // filtering) — never treated as model scopes.
-            $reserved = [
-                config('fast-api.query.include', 'include'),
-                config('fast-api.query.trashed', 'trashed'),
-            ];
+            $reserved = [QueryParams::includes(), QueryParams::trashed()];
 
             foreach ($filters as $filter => $value) {
                 if (! isset($value) || in_array($filter, $reserved, true)) {
@@ -169,8 +168,11 @@ final class BuilderMacros
             }
 
             if ($orderBy) {
-                $sortBy = $request->query('sortBy');
-                $desc = $request->boolean('descending', true);
+                $defaultColumn = config('fast-api.sorting.default_column', 'id');
+                $defaultColumn = is_string($defaultColumn) && $defaultColumn !== '' ? $defaultColumn : 'id';
+
+                $sortBy = $request->query(QueryParams::sortBy());
+                $desc = $request->boolean(QueryParams::descending(), (bool) config('fast-api.sorting.default_descending', true));
 
                 if ($sortBy === null && $this->getModel() instanceof Sortable) {
                     $defaults = $this->getModel()->sortByDefaults();
@@ -178,7 +180,7 @@ final class BuilderMacros
                     $desc = $defaults['sortByDesc'];
                 }
 
-                $sortBy = is_string($sortBy) && $sortBy !== '' ? $sortBy : 'id';
+                $sortBy = is_string($sortBy) && $sortBy !== '' ? $sortBy : $defaultColumn;
 
                 $desc ? $this->latest($sortBy) : $this->oldest($sortBy);
             }

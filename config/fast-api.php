@@ -24,27 +24,57 @@ return [
     | Bulk Operation Configuration
     |--------------------------------------------------------------------------
     |
-    | The maximum number of IDs accepted by the bulk delete endpoint in a
-    | single request. Set to 0 (or any value <= 0) to disable the limit.
+    | "max_rows" caps how many IDs the bulk delete endpoint accepts in one
+    | request (set to 0 to disable). "field" is the request key holding the
+    | array of IDs to delete.
     |
     */
     'bulk' => [
         'max_rows' => 1000,
+        'field'    => 'delete_rows',
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Query Parameters
+    | Query Parameter Keys
     |--------------------------------------------------------------------------
     |
-    | The keys, read from inside the "filters" JSON object, that drive
-    | client-side eager loading and soft-delete filtering on index/show.
-    | e.g. ?filters={"include":"author,tags","trashed":"with"}
+    | Rename any request key the index/show endpoints read, so the public API
+    | matches your conventions. Defaults reproduce the pattern:
+    |
+    |   ?filters={"active":1,"include":"author,tags","trashed":"with"}
+    |    &sortBy=created_at&descending=true&rowsPerPage=25&page=2&search=foo
+    |
+    | The first group are top-level query-string keys. "include" and "trashed"
+    | are keys read from inside the filters JSON object.
     |
     */
     'query' => [
+        'filters'    => 'filters',
+        'search'     => 'search',
+        'sort_by'    => 'sortBy',
+        'descending' => 'descending',
+        'per_page'   => 'rowsPerPage',
+        'page'       => 'page',
+        'cursor'     => 'cursor',
+
+        // Read from inside the filters JSON object.
         'include' => 'include',
         'trashed' => 'trashed',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Sorting
+    |--------------------------------------------------------------------------
+    |
+    | Applied by the index query when the request has no sort key and the model
+    | does not implement the Sortable contract.
+    |
+    */
+    'sorting' => [
+        'default_column'     => 'id',
+        'default_descending' => true,
     ],
 
     /*
