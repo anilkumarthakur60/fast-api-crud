@@ -280,7 +280,7 @@ trait HasCrudOperations
         $keyName = $this->model->getKeyName();
 
         request()->validate([
-            'delete_rows' => ['required', 'array'],
+            'delete_rows'   => ['required', 'array'],
             'delete_rows.*' => ['required', "exists:{$this->model->getTable()},{$keyName}"],
         ]);
 
@@ -548,12 +548,12 @@ trait HasCrudOperations
     protected static function permissionMiddleware(string $permissionSlug): array
     {
         return [
-            new Middleware('permission:'.CrudAction::View->value."-{$permissionSlug}", only: ['index', 'show']),
-            new Middleware('permission:'.CrudAction::Store->value."-{$permissionSlug}", only: ['store']),
-            new Middleware('permission:'.CrudAction::Update->value."-{$permissionSlug}", only: ['update', 'updateColumn']),
-            new Middleware('permission:'.CrudAction::Delete->value."-{$permissionSlug}", only: ['destroy', 'delete', 'permanentDelete']),
-            new Middleware('permission:'.CrudAction::ChangeStatus->value."-{$permissionSlug}", only: ['changeStatus']),
-            new Middleware('permission:'.CrudAction::Restore->value."-{$permissionSlug}", only: ['restore', 'restoreAll']),
+            new Middleware('permission:' . CrudAction::View->value . "-{$permissionSlug}", only: ['index', 'show']),
+            new Middleware('permission:' . CrudAction::Store->value . "-{$permissionSlug}", only: ['store']),
+            new Middleware('permission:' . CrudAction::Update->value . "-{$permissionSlug}", only: ['update', 'updateColumn']),
+            new Middleware('permission:' . CrudAction::Delete->value . "-{$permissionSlug}", only: ['destroy', 'delete', 'permanentDelete']),
+            new Middleware('permission:' . CrudAction::ChangeStatus->value . "-{$permissionSlug}", only: ['changeStatus']),
+            new Middleware('permission:' . CrudAction::Restore->value . "-{$permissionSlug}", only: ['restore', 'restoreAll']),
         ];
     }
 
@@ -562,14 +562,14 @@ trait HasCrudOperations
     // -------------------------------------------------------------------------
 
     /**
-     * @param  class-string<Model>  $modelClass
+     * @param class-string<Model> $modelClass
      *
      * @throws Exception
      */
     protected function resolveModel(string $modelClass): Model
     {
         if (! is_subclass_of($modelClass, Model::class)) {
-            throw new Exception("[{$modelClass}] must extend ".Model::class);
+            throw new Exception("[{$modelClass}] must extend " . Model::class);
         }
 
         return new $modelClass;
@@ -578,7 +578,8 @@ trait HasCrudOperations
     /**
      * Resolve a FormRequest and return only fillable data.
      *
-     * @param  class-string<FormRequest>  $requestClass
+     * @param class-string<FormRequest> $requestClass
+     *
      * @return array<string, mixed>
      */
     protected function resolveValidatedData(string $requestClass): array
@@ -601,30 +602,32 @@ trait HasCrudOperations
     }
 
     /**
-     * @param  class-string<FormRequest>  $requestClass
-     * @return class-string<FormRequest>
+     * @param class-string<FormRequest> $requestClass
      *
      * @throws Exception
+     *
+     * @return class-string<FormRequest>
      */
     protected function resolveFormRequest(string $requestClass, string $paramName): string
     {
         if (! is_subclass_of($requestClass, FormRequest::class)) {
-            throw new Exception("[{$requestClass}] ({$paramName}) must extend ".FormRequest::class);
+            throw new Exception("[{$requestClass}] ({$paramName}) must extend " . FormRequest::class);
         }
 
         return $requestClass;
     }
 
     /**
-     * @param  class-string<JsonResource>  $resourceClass
-     * @return class-string<JsonResource>
+     * @param class-string<JsonResource> $resourceClass
      *
      * @throws Exception
+     *
+     * @return class-string<JsonResource>
      */
     protected function resolveResource(string $resourceClass): string
     {
         if (! is_subclass_of($resourceClass, JsonResource::class)) {
-            throw new Exception("[{$resourceClass}] must extend ".JsonResource::class);
+            throw new Exception("[{$resourceClass}] must extend " . JsonResource::class);
         }
 
         return $resourceClass;
@@ -646,16 +649,16 @@ trait HasCrudOperations
             return;
         }
 
-        $this->middleware('permission:'.CrudAction::View->value."-{$slug}")->only(['index', 'show']);
-        $this->middleware('permission:'.CrudAction::Store->value."-{$slug}")->only(['store']);
-        $this->middleware('permission:'.CrudAction::Update->value."-{$slug}")->only(['update', 'updateColumn']);
-        $this->middleware('permission:'.CrudAction::Delete->value."-{$slug}")->only(['destroy', 'delete', 'permanentDelete']);
-        $this->middleware('permission:'.CrudAction::ChangeStatus->value."-{$slug}")->only(['changeStatus']);
-        $this->middleware('permission:'.CrudAction::Restore->value."-{$slug}")->only(['restore', 'restoreAll']);
+        $this->middleware('permission:' . CrudAction::View->value . "-{$slug}")->only(['index', 'show']);
+        $this->middleware('permission:' . CrudAction::Store->value . "-{$slug}")->only(['store']);
+        $this->middleware('permission:' . CrudAction::Update->value . "-{$slug}")->only(['update', 'updateColumn']);
+        $this->middleware('permission:' . CrudAction::Delete->value . "-{$slug}")->only(['destroy', 'delete', 'permanentDelete']);
+        $this->middleware('permission:' . CrudAction::ChangeStatus->value . "-{$slug}")->only(['changeStatus']);
+        $this->middleware('permission:' . CrudAction::Restore->value . "-{$slug}")->only(['restore', 'restoreAll']);
     }
 
     /**
-     * @param  array<int, string>|array<string, scalar|array<scalar>|Closure>  $scopes
+     * @param array<int, string>|array<string, scalar|array<scalar>|Closure> $scopes
      */
     protected function findModel(int|string $id, array $scopes = []): Model
     {
@@ -669,8 +672,9 @@ trait HasCrudOperations
     }
 
     /**
-     * @param  Builder<Model>  $query
-     * @param  array<int, string>|array<string, scalar|array<scalar>|Closure>  $scopes
+     * @param Builder<Model> $query
+     * @param array<int, string>|array<string, scalar|array<scalar>|Closure> $scopes
+     *
      * @return Builder<Model>
      */
     protected function applyScopes(Builder $query, array $scopes): Builder
@@ -697,8 +701,9 @@ trait HasCrudOperations
     }
 
     /**
-     * @param  Builder<Model>  $query
-     * @param  array<string, string>  $aggregates
+     * @param Builder<Model> $query
+     * @param array<string, string> $aggregates
+     *
      * @return Builder<Model>
      */
     protected function applyAggregates(Builder $query, array $aggregates): Builder
@@ -711,7 +716,7 @@ trait HasCrudOperations
     }
 
     /**
-     * @param  Builder<Model>  $query
+     * @param Builder<Model> $query
      */
     protected function applySearch(Builder $query): void
     {
@@ -729,15 +734,15 @@ trait HasCrudOperations
     }
 
     /**
-     * @param  Builder<Model>  $query
+     * @param Builder<Model> $query
      */
     protected function paginateQuery(Builder $query): mixed
     {
         return match ($this->paginationType) {
             PaginationType::LengthAware => $query->paginates(),
-            PaginationType::Simple => $query->simplePaginates(),
-            PaginationType::Cursor => $query->cursorPaginates(),
-            PaginationType::None => $query->get(),
+            PaginationType::Simple      => $query->simplePaginates(),
+            PaginationType::Cursor      => $query->cursorPaginates(),
+            PaginationType::None        => $query->get(),
         };
     }
 
@@ -751,7 +756,7 @@ trait HasCrudOperations
         }
 
         if (! in_array($column, $model->getFillable(), true)) {
-            throw new Exception("Column [{$column}] is not fillable on model [".get_class($model).'].');
+            throw new Exception("Column [{$column}] is not fillable on model [" . get_class($model) . '].');
         }
     }
 }
