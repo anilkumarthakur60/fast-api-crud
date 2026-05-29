@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Routing\Controller;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\View\View;
 
 /**
@@ -22,7 +22,7 @@ use Illuminate\View\View;
  *
  * Each operation supports lifecycle hooks (override in child controller or define on model).
  */
-abstract class BaseWebController extends Controller
+abstract class BaseWebController implements HasMiddleware
 {
     use AuthorizesRequests;
     use HasCrudOperations;
@@ -76,7 +76,23 @@ abstract class BaseWebController extends Controller
         $this->resourceName = $resourceName;
         $this->collectionName = $collectionName;
         $this->resource = $resource !== null ? $this->resolveResource($resource) : null;
-        $this->registerPermissionMiddleware();
+    }
+
+    /**
+     * Get the middleware that should be assigned to the controller.
+     *
+     * Override in child controllers to add permission middleware:
+     *
+     *   public static function middleware(): array
+     *   {
+     *       return static::permissionMiddleware('posts');
+     *   }
+     *
+     * @return array<int, \Illuminate\Routing\Controllers\Middleware|string>
+     */
+    public static function middleware(): array
+    {
+        return [];
     }
 
     // -------------------------------------------------------------------------

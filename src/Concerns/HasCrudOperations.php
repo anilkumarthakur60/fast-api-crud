@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Anil\FastApiCrud\Concerns;
 
-use Anil\FastApiCrud\Contracts\HasPermissionSlug;
 use Anil\FastApiCrud\Contracts\Searchable;
 use Anil\FastApiCrud\Enums\CrudAction;
 use Anil\FastApiCrud\Enums\PaginationType;
@@ -546,10 +545,22 @@ trait HasCrudOperations
     /**
      * Generate Spatie permission middleware definitions for a given slug.
      *
+     * Call this from a controller's static middleware() method:
+     *   public static function middleware(): array
+     *   {
+     *       return static::permissionMiddleware('posts');
+     *   }
+     *
+     * Returns an empty array when permissions are disabled via config.
+     *
      * @return array<int, Middleware>
      */
     protected static function permissionMiddleware(string $permissionSlug): array
     {
+        if (! config('fast-api.permissions.enabled', true)) {
+            return [];
+        }
+
         return [
             new Middleware('permission:' . CrudAction::View->value . "-{$permissionSlug}", only: ['index', 'show']),
             new Middleware('permission:' . CrudAction::Store->value . "-{$permissionSlug}", only: ['store']),
@@ -634,30 +645,6 @@ trait HasCrudOperations
         }
 
         return $resourceClass;
-    }
-
-    protected function registerPermissionMiddleware(): void
-    {
-        if (! config('fast-api.permissions.enabled', true)) {
-            return;
-        }
-
-        if (! $this->model instanceof HasPermissionSlug) {
-            return;
-        }
-
-        $slug = $this->model->getPermissionSlug();
-
-        if ($slug === '') {
-            return;
-        }
-
-        $this->middleware('permission:' . CrudAction::View->value . "-{$slug}")->only(['index', 'show']);
-        $this->middleware('permission:' . CrudAction::Store->value . "-{$slug}")->only(['store']);
-        $this->middleware('permission:' . CrudAction::Update->value . "-{$slug}")->only(['update', 'updateColumn']);
-        $this->middleware('permission:' . CrudAction::Delete->value . "-{$slug}")->only(['destroy', 'delete', 'permanentDelete']);
-        $this->middleware('permission:' . CrudAction::ChangeStatus->value . "-{$slug}")->only(['changeStatus']);
-        $this->middleware('permission:' . CrudAction::Restore->value . "-{$slug}")->only(['restore', 'restoreAll']);
     }
 
     /**

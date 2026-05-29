@@ -13,7 +13,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Routing\Controller;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Each operation supports lifecycle hooks (override in child controller or define on model).
  */
-abstract class BaseController extends Controller
+abstract class BaseController implements HasMiddleware
 {
     use AuthorizesRequests;
     use HasApiResponse;
@@ -52,7 +52,23 @@ abstract class BaseController extends Controller
         $this->storeRequest = $this->resolveFormRequest($storeRequest, 'storeRequest');
         $this->updateRequest = $this->resolveFormRequest($updateRequest, 'updateRequest');
         $this->resource = $this->resolveResource($resource);
-        $this->registerPermissionMiddleware();
+    }
+
+    /**
+     * Get the middleware that should be assigned to the controller.
+     *
+     * Override in child controllers to add permission middleware:
+     *
+     *   public static function middleware(): array
+     *   {
+     *       return static::permissionMiddleware('posts');
+     *   }
+     *
+     * @return array<int, \Illuminate\Routing\Controllers\Middleware|string>
+     */
+    public static function middleware(): array
+    {
+        return [];
     }
 
     // -------------------------------------------------------------------------
