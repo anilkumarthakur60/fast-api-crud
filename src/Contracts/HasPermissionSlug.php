@@ -5,9 +5,16 @@ declare(strict_types=1);
 namespace Anil\FastApiCrud\Contracts;
 
 /**
- * Implement this interface on Eloquent models to enable
- * automatic Spatie permission middleware registration
- * on BaseController CRUD actions.
+ * Implement this interface on Eloquent models to provide a permission slug.
+ *
+ * The slug is used by the static permissionMiddleware() helper in BaseController
+ * and BaseWebController to generate Spatie permission middleware definitions.
+ *
+ * Usage in a controller:
+ *   public static function middleware(): array
+ *   {
+ *       return static::permissionMiddleware((new Post)->getPermissionSlug());
+ *   }
  */
 interface HasPermissionSlug
 {

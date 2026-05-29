@@ -52,8 +52,8 @@ return [
     | Permissions Configuration
     |--------------------------------------------------------------------------
     |
-    | When enabled, BaseController automatically registers Spatie permission
-    | middleware for models that implement the HasPermissionSlug contract.
+    | When enabled, permissionMiddleware() returns middleware definitions for
+    | controllers that call it from their static middleware() method.
     | Requires spatie/laravel-permission to be installed.
     |
     */

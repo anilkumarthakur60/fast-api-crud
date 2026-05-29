@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Anil\FastApiCrud\Support;
 
+use Closure;
+
 /**
  * Static helpers for resolving pagination configuration from config and request.
  */
@@ -69,9 +71,9 @@ final class Pagination
      * The $countFn closure is only invoked when "show all" is requested (rowsPerPage=0
      * and allow_all=true), avoiding an extra COUNT query on normal paginated requests.
      *
-     * @param \Closure(): int $countFn
+     * @param Closure(): int $countFn
      */
-    public static function resolveEffectivePerPage(\Closure $countFn): int
+    public static function resolveEffectivePerPage(Closure $countFn): int
     {
         $perPage = self::resolvePerPage();
 

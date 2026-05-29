@@ -363,9 +363,7 @@ trait HasCrudOperations
      */
     protected function performRestore(int|string $id): Model
     {
-        $query = $this->model::query();
-        $query->initializer();
-        $query->onlyTrashed();
+        $query = $this->model::query()->initializer()->onlyTrashed();
 
         if ($this->restoreScopes !== []) {
             $this->applyScopes($query, $this->restoreScopes);
@@ -399,10 +397,7 @@ trait HasCrudOperations
     {
         try {
             DB::beginTransaction();
-            $query = $this->model::query();
-            $query->initializer();
-            $query->onlyTrashed();
-            $query->restore();
+            $this->model::query()->initializer()->onlyTrashed()->restore();
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -418,10 +413,7 @@ trait HasCrudOperations
      */
     protected function performPermanentDelete(int|string $id): void
     {
-        $query = $this->model::query();
-        $query->initializer();
-        $query->onlyTrashed();
-        $model = $query->findOrFail($id);
+        $model = $this->model::query()->initializer()->onlyTrashed()->findOrFail($id);
 
         try {
             DB::beginTransaction();
@@ -440,39 +432,74 @@ trait HasCrudOperations
     // Lifecycle hooks — override in child controller or define on the model
     // -------------------------------------------------------------------------
 
-    protected function beforeCreate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function afterCreate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function beforeUpdate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function afterUpdate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function beforeDelete(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function afterDelete(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function beforeStatusChange(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function afterStatusChange(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function beforeColumnUpdate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function afterColumnUpdate(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function beforeRestore(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function afterRestore(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function beforeForceDelete(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    protected function afterForceDelete(Model $model): void { $this->fireModelHook($model, __FUNCTION__); }
-
-    private function fireModelHook(Model $model, string $hook): void
+    protected function beforeCreate(Model $model): void
     {
-        if (method_exists($model, $hook)) {
-            $model->{$hook}();
-        }
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function afterCreate(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function beforeUpdate(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function afterUpdate(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function beforeDelete(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function afterDelete(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function beforeStatusChange(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function afterStatusChange(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function beforeColumnUpdate(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function afterColumnUpdate(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function beforeRestore(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function afterRestore(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function beforeForceDelete(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
+    }
+
+    protected function afterForceDelete(Model $model): void
+    {
+        $this->fireModelHook($model, __FUNCTION__);
     }
 
     // -------------------------------------------------------------------------
@@ -686,6 +713,13 @@ trait HasCrudOperations
 
         if (! in_array($column, $model->getFillable(), true)) {
             throw new Exception("Column [{$column}] is not fillable on model [" . get_class($model) . '].');
+        }
+    }
+
+    private function fireModelHook(Model $model, string $hook): void
+    {
+        if (method_exists($model, $hook)) {
+            $model->{$hook}();
         }
     }
 }

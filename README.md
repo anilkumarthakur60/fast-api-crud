@@ -721,7 +721,7 @@ class Post extends Model implements Sortable
 
 ### HasPermissionSlug
 
-Enables automatic Spatie permission middleware registration.
+Provides a permission slug for use with `permissionMiddleware()` in controllers.
 
 ```php
 use Anil\FastApiCrud\Contracts\HasPermissionSlug;
@@ -735,7 +735,7 @@ class Post extends Model implements HasPermissionSlug
 }
 ```
 
-This automatically registers middleware:
+Use the slug in your controller's `middleware()` method (see [Permissions](#permissions)):
 
 | Action | Permission | Routes |
 |--------|-----------|--------|
@@ -1290,22 +1290,14 @@ throw new ApiException('Resource not found', 404);
 
 ## Permissions
 
-### Automatic Registration
-
-If your model implements `HasPermissionSlug` and `fast-api.permissions.enabled` is `true`, permission middleware is registered automatically in the constructor.
-
-### Static Middleware (Laravel 11+ style)
-
-For the modern `HasMiddleware` interface:
+Both `BaseController` and `BaseWebController` implement Laravel's `HasMiddleware` interface. Override the static `middleware()` method in your controller and call `permissionMiddleware()` with the slug to register Spatie permission middleware:
 
 ```php
-use Illuminate\Routing\Controllers\HasMiddleware;
-
-class PostController extends BaseController implements HasMiddleware
+class PostController extends BaseController
 {
     public static function middleware(): array
     {
-        return self::permissionMiddleware('posts');
+        return static::permissionMiddleware('posts');
     }
 
     public function __construct()
@@ -1319,6 +1311,8 @@ class PostController extends BaseController implements HasMiddleware
     }
 }
 ```
+
+`permissionMiddleware()` returns an empty array when `fast-api.permissions.enabled` is `false`, so toggling permissions off in config is safe without changing controller code.
 
 ---
 

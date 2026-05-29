@@ -72,7 +72,7 @@ final class BuilderMacros
         /**
          * Paginate using the rowsPerPage request parameter.
          *
-         * @param array<string>|string $columns
+         * @param array<int, string> $columns
          *
          * @return Paginator
          */
@@ -88,7 +88,7 @@ final class BuilderMacros
         /**
          * Simple-paginate using the rowsPerPage request parameter.
          *
-         * @param array<string>|string $columns
+         * @param array<int, string> $columns
          *
          * @return Paginator
          */
