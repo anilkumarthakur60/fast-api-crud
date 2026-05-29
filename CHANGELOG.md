@@ -19,10 +19,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `Pagination::resolveEffectivePerPage(\Closure $countFn)` — COUNT query is deferred and only fires when "show all" is requested (`rowsPerPage=0`), avoiding an extra query on every normal paginated request.
 - Static schema index cache in `AnonymizesOnDelete` — `Schema::getIndexes()` is now called once per table per process instead of on every soft-delete.
+- Support for models using `$guarded` (including `$guarded = []`). `resolveValidatedData()` now falls back to the actual table columns when `$fillable` is empty, instead of persisting nothing.
 - `LICENSE` file (MIT).
 - `CHANGELOG.md`.
 
+### Fixed
+- **`store`/`update`/`destroy`/etc. on a missing record now return 404, not 400.** The API controller no longer wraps `ModelNotFoundException` (and every other exception) into a generic 400 with a leaked message. Validation, authorization, not-found, and unexpected errors now propagate to the framework's exception handler and render with correct, debug-aware status codes (422/403/404/500).
+- `changeStatus` now toggles correctly for boolean and string (`"0"`/`"1"`) casts, not just integer `1`/`0`.
+- `BaseWebController` no longer flattens `ValidationException` into a flash message — validation errors and old input are preserved on redirect-back, and missing records render a 404.
+- Transaction rollback in the `perform*` methods now triggers on any `Throwable` (including `Error`/`TypeError`), not only `Exception`.
+
 ### Changed
+- API controller actions now have narrowed return types (`JsonResource` instead of `JsonResource|JsonResponse`) since the error-wrapping branch was removed.
+- `BaseWebController` write actions share a single `perform()` helper, removing nine duplicated try/catch blocks.
 - `applyScopes()` now uses `Model::hasNamedScope()` instead of manual `method_exists` double-check. This correctly supports scopes defined via the `#[LocalScope]` PHP attribute (Laravel 12+).
 - `permissionMiddleware()` now includes the `fast-api.permissions.enabled` config guard and a `class_exists` check for Spatie, making it safe to call unconditionally.
 - Lifecycle hook methods (`beforeCreate`, `afterCreate`, `beforeUpdate`, `afterUpdate`, `beforeDelete`, `afterDelete`, `beforeStatusChange`, `afterStatusChange`, `beforeColumnUpdate`, `afterColumnUpdate`, `beforeRestore`, `afterRestore`, `beforeForceDelete`, `afterForceDelete`) consolidated — each is now a one-liner delegating to a private `fireModelHook()` dispatcher.

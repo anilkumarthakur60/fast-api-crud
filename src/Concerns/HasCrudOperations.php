@@ -217,7 +217,7 @@ trait HasCrudOperations
             $model->save();
             $this->afterCreate($model);
             DB::commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
 
             throw $e;
@@ -242,7 +242,7 @@ trait HasCrudOperations
             $model->update($data);
             $this->afterUpdate($model);
             DB::commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
 
             throw $e;
@@ -266,7 +266,7 @@ trait HasCrudOperations
             $this->forceDelete ? $model->forceDelete() : $model->delete();
             $this->afterDelete($model);
             DB::commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
 
             throw $e;
@@ -299,7 +299,7 @@ trait HasCrudOperations
                 $this->afterDelete($model);
             }
             DB::commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
 
             throw $e;
@@ -319,11 +319,12 @@ trait HasCrudOperations
         try {
             DB::beginTransaction();
             $this->beforeStatusChange($model);
-            $currentValue = $model->getAttribute($column);
-            $model->update([$column => $currentValue === 1 ? 0 : 1]);
+            // Toggle truthy → 0, falsy → 1. Works for int, bool, and "1"/"0"
+            // string casts alike without casting a mixed value.
+            $model->update([$column => $model->getAttribute($column) ? 0 : 1]);
             $this->afterStatusChange($model);
             DB::commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
 
             throw $e;
@@ -348,7 +349,7 @@ trait HasCrudOperations
             $model->update([$column => request()->input($column)]);
             $this->afterColumnUpdate($model);
             DB::commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
 
             throw $e;
@@ -380,7 +381,7 @@ trait HasCrudOperations
             }
             $this->afterRestore($model);
             DB::commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
 
             throw $e;
@@ -400,7 +401,7 @@ trait HasCrudOperations
             DB::beginTransaction();
             $this->model::query()->initializer()->onlyTrashed()->restore();
             DB::commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
 
             throw $e;
@@ -422,7 +423,7 @@ trait HasCrudOperations
             $model->forceDelete();
             $this->afterForceDelete($model);
             DB::commit();
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
 
             throw $e;
@@ -562,7 +563,13 @@ trait HasCrudOperations
     }
 
     /**
-     * Resolve a FormRequest and return only fillable data.
+     * Resolve a FormRequest and return the validated data the model may persist.
+     *
+     * Models declaring $fillable are restricted to that list. Models using
+     * $guarded (including the common `$guarded = []`) are restricted to the
+     * actual table columns, so request-only keys — nested payloads, *_ids used
+     * by lifecycle hooks, etc. — are never passed to the insert/update while
+     * Eloquent's own mass-assignment guard still applies on save.
      *
      * @param class-string<FormRequest> $requestClass
      *
@@ -575,16 +582,21 @@ trait HasCrudOperations
             return [];
         }
 
-        $data = $resolved->safe()->only($this->model->getFillable());
+        $validated = $resolved->validated();
 
-        $result = [];
-        foreach ($data as $key => $value) {
-            if (is_string($key)) {
-                $result[$key] = $value;
+        $fillable = $this->model->getFillable();
+        $allowed = $fillable !== []
+            ? $fillable
+            : Schema::getColumnListing($this->model->getTable());
+
+        $data = [];
+        foreach ($allowed as $column) {
+            if (is_string($column) && array_key_exists($column, $validated)) {
+                $data[$column] = $validated[$column];
             }
         }
 
-        return $result;
+        return $data;
     }
 
     /**

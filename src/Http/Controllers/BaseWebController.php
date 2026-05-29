@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Anil\FastApiCrud\Http\Controllers;
 
 use Anil\FastApiCrud\Concerns\HasCrudOperations;
+use Closure;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 /**
  * Abstract base controller providing standard CRUD operations with Blade view responses.
@@ -130,16 +134,7 @@ abstract class BaseWebController implements HasMiddleware
      */
     public function store(): RedirectResponse
     {
-        try {
-            $this->performStore();
-        } catch (Exception $e) {
-            return $this->redirectBackWithError($e->getMessage());
-        }
-
-        return $this->redirectWithSuccess(
-            "{$this->routePrefix}.index",
-            $this->storeSuccessMessage(),
-        );
+        return $this->perform(fn () => $this->performStore(), $this->storeSuccessMessage());
     }
 
     /**
@@ -177,16 +172,7 @@ abstract class BaseWebController implements HasMiddleware
      */
     public function update(int|string $id): RedirectResponse
     {
-        try {
-            $this->performUpdate($id);
-        } catch (Exception $e) {
-            return $this->redirectBackWithError($e->getMessage());
-        }
-
-        return $this->redirectWithSuccess(
-            "{$this->routePrefix}.index",
-            $this->updateSuccessMessage(),
-        );
+        return $this->perform(fn () => $this->performUpdate($id), $this->updateSuccessMessage());
     }
 
     /**
@@ -194,16 +180,7 @@ abstract class BaseWebController implements HasMiddleware
      */
     public function destroy(int|string $id): RedirectResponse
     {
-        try {
-            $this->performDestroy($id);
-        } catch (Exception $e) {
-            return $this->redirectBackWithError($e->getMessage());
-        }
-
-        return $this->redirectWithSuccess(
-            "{$this->routePrefix}.index",
-            $this->destroySuccessMessage(),
-        );
+        return $this->perform(fn () => $this->performDestroy($id), $this->destroySuccessMessage());
     }
 
     /**
@@ -211,16 +188,7 @@ abstract class BaseWebController implements HasMiddleware
      */
     public function delete(): RedirectResponse
     {
-        try {
-            $this->performBulkDelete();
-        } catch (Exception $e) {
-            return $this->redirectBackWithError($e->getMessage());
-        }
-
-        return $this->redirectWithSuccess(
-            "{$this->routePrefix}.index",
-            $this->bulkDeleteSuccessMessage(),
-        );
+        return $this->perform(fn () => $this->performBulkDelete(), $this->bulkDeleteSuccessMessage());
     }
 
     // -------------------------------------------------------------------------
@@ -232,16 +200,7 @@ abstract class BaseWebController implements HasMiddleware
      */
     public function changeStatus(int|string $id, string $column = 'status'): RedirectResponse
     {
-        try {
-            $this->performChangeStatus($id, $column);
-        } catch (Exception $e) {
-            return $this->redirectBackWithError($e->getMessage());
-        }
-
-        return $this->redirectWithSuccess(
-            "{$this->routePrefix}.index",
-            $this->statusChangeSuccessMessage(),
-        );
+        return $this->perform(fn () => $this->performChangeStatus($id, $column), $this->statusChangeSuccessMessage());
     }
 
     /**
@@ -249,16 +208,7 @@ abstract class BaseWebController implements HasMiddleware
      */
     public function updateColumn(int|string $id, string $column = 'status'): RedirectResponse
     {
-        try {
-            $this->performUpdateColumn($id, $column);
-        } catch (Exception $e) {
-            return $this->redirectBackWithError($e->getMessage());
-        }
-
-        return $this->redirectWithSuccess(
-            "{$this->routePrefix}.index",
-            $this->columnUpdateSuccessMessage(),
-        );
+        return $this->perform(fn () => $this->performUpdateColumn($id, $column), $this->columnUpdateSuccessMessage());
     }
 
     /**
@@ -266,16 +216,7 @@ abstract class BaseWebController implements HasMiddleware
      */
     public function restore(int|string $id): RedirectResponse
     {
-        try {
-            $this->performRestore($id);
-        } catch (Exception $e) {
-            return $this->redirectBackWithError($e->getMessage());
-        }
-
-        return $this->redirectWithSuccess(
-            "{$this->routePrefix}.index",
-            $this->restoreSuccessMessage(),
-        );
+        return $this->perform(fn () => $this->performRestore($id), $this->restoreSuccessMessage());
     }
 
     /**
@@ -283,16 +224,7 @@ abstract class BaseWebController implements HasMiddleware
      */
     public function restoreAll(): RedirectResponse
     {
-        try {
-            $this->performRestoreAll();
-        } catch (Exception $e) {
-            return $this->redirectBackWithError($e->getMessage());
-        }
-
-        return $this->redirectWithSuccess(
-            "{$this->routePrefix}.index",
-            $this->restoreAllSuccessMessage(),
-        );
+        return $this->perform(fn () => $this->performRestoreAll(), $this->restoreAllSuccessMessage());
     }
 
     /**
@@ -300,21 +232,37 @@ abstract class BaseWebController implements HasMiddleware
      */
     public function permanentDelete(int|string $id): RedirectResponse
     {
-        try {
-            $this->performPermanentDelete($id);
-        } catch (Exception $e) {
-            return $this->redirectBackWithError($e->getMessage());
-        }
-
-        return $this->redirectWithSuccess(
-            "{$this->routePrefix}.index",
-            $this->permanentDeleteSuccessMessage(),
-        );
+        return $this->perform(fn () => $this->performPermanentDelete($id), $this->permanentDeleteSuccessMessage());
     }
 
     // -------------------------------------------------------------------------
     // View / route helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * Run a write operation, redirecting to the index route with a success
+     * message on completion, or back with the error message on failure.
+     *
+     * ValidationException and ModelNotFoundException are re-thrown so the
+     * framework can render them correctly (redirect-back with field errors and
+     * old input, or a 404 response) instead of being flattened into a flash.
+     *
+     * @param Closure(): mixed $operation
+     *
+     * @throws Throwable
+     */
+    protected function perform(Closure $operation, string $successMessage): RedirectResponse
+    {
+        try {
+            $operation();
+        } catch (ValidationException|ModelNotFoundException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            return $this->redirectBackWithError($e->getMessage());
+        }
+
+        return $this->redirectWithSuccess("{$this->routePrefix}.index", $successMessage);
+    }
 
     /**
      * Resolve the full view name from a suffix (e.g., 'index' → 'admin.posts.index').

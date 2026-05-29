@@ -14,8 +14,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 /**
  * Abstract base controller providing standard CRUD operations for Eloquent models.
@@ -98,17 +98,15 @@ abstract class BaseController implements HasMiddleware
     /**
      * Store a newly created resource. Returns 201 Created on success.
      *
-     * @throws ValidationException
+     * Validation, authorization, and database errors propagate to the framework's
+     * exception handler so they render with correct status codes (422/403/500)
+     * and debug-aware messages rather than being flattened into a generic 400.
+     *
+     * @throws Throwable
      */
     public function store(): JsonResponse
     {
-        try {
-            $model = $this->performStore();
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
+        $model = $this->performStore();
 
         return (new $this->resource($model))
             ->toResponse(request())
@@ -118,35 +116,21 @@ abstract class BaseController implements HasMiddleware
     /**
      * Update the specified resource.
      *
-     * @throws ValidationException
+     * @throws Throwable
      */
-    public function update(int|string $id): JsonResource|JsonResponse
+    public function update(int|string $id): JsonResource
     {
-        try {
-            $model = $this->performUpdate($id);
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
-
-        return new $this->resource($model);
+        return new $this->resource($this->performUpdate($id));
     }
 
     /**
      * Remove the specified resource (soft delete or force delete).
      *
-     * @throws ValidationException
+     * @throws Throwable
      */
     public function destroy(int|string $id): JsonResponse
     {
-        try {
-            $this->performDestroy($id);
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
+        $this->performDestroy($id);
 
         return $this->noContent();
     }
@@ -154,17 +138,11 @@ abstract class BaseController implements HasMiddleware
     /**
      * Bulk delete records by passing an array of IDs in 'delete_rows'.
      *
-     * @throws ValidationException
+     * @throws Throwable
      */
     public function delete(): JsonResponse
     {
-        try {
-            $this->performBulkDelete();
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
+        $this->performBulkDelete();
 
         return $this->noContent();
     }
@@ -176,71 +154,41 @@ abstract class BaseController implements HasMiddleware
     /**
      * Toggle a boolean status column between 0 and 1.
      *
-     * @throws ValidationException
+     * @throws Throwable
      */
-    public function changeStatus(int|string $id, string $column = 'status'): JsonResource|JsonResponse
+    public function changeStatus(int|string $id, string $column = 'status'): JsonResource
     {
-        try {
-            $model = $this->performChangeStatus($id, $column);
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
-
-        return new $this->resource($model);
+        return new $this->resource($this->performChangeStatus($id, $column));
     }
 
     /**
      * Update a specific fillable column with the request value.
      *
-     * @throws ValidationException
+     * @throws Throwable
      */
-    public function updateColumn(int|string $id, string $column = 'status'): JsonResource|JsonResponse
+    public function updateColumn(int|string $id, string $column = 'status'): JsonResource
     {
-        try {
-            $model = $this->performUpdateColumn($id, $column);
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
-
-        return new $this->resource($model);
+        return new $this->resource($this->performUpdateColumn($id, $column));
     }
 
     /**
      * Restore a single soft-deleted resource.
      *
-     * @throws ValidationException
+     * @throws Throwable
      */
-    public function restore(int|string $id): JsonResource|JsonResponse
+    public function restore(int|string $id): JsonResource
     {
-        try {
-            $model = $this->performRestore($id);
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
-
-        return new $this->resource($model);
+        return new $this->resource($this->performRestore($id));
     }
 
     /**
      * Restore all soft-deleted records.
      *
-     * @throws ValidationException
+     * @throws Throwable
      */
     public function restoreAll(): JsonResponse
     {
-        try {
-            $this->performRestoreAll();
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
+        $this->performRestoreAll();
 
         return $this->noContent();
     }
@@ -248,17 +196,11 @@ abstract class BaseController implements HasMiddleware
     /**
      * Permanently delete a soft-deleted resource.
      *
-     * @throws ValidationException
+     * @throws Throwable
      */
     public function permanentDelete(int|string $id): JsonResponse
     {
-        try {
-            $this->performPermanentDelete($id);
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
+        $this->performPermanentDelete($id);
 
         return $this->noContent();
     }
