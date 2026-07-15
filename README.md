@@ -4,7 +4,7 @@ A powerful Laravel package that provides full-featured CRUD operations with mini
 
 Supports pagination (length-aware, simple, cursor), filtering, sorting, search, soft deletes, Spatie permissions, lifecycle hooks, and much more.
 
-**Supports:** Laravel 11, 12, 13 | PHP 8.2+
+**Supports:** Laravel 12, 13 | PHP 8.2+
 
 **Requires:** [spatie/laravel-permission](https://github.com/spatie/laravel-permission) ^6.0 or ^7.0
 
@@ -514,10 +514,10 @@ use App\Http\Controllers\PostController;
 Route::resource('admin/posts', PostController::class);
 
 // Additional routes for extended operations
-Route::put('admin/posts/{id}/status-change', [PostController::class, 'changeStatus']);
-Route::put('admin/posts/{id}/restore', [PostController::class, 'restore']);
-Route::post('admin/posts/restore-all', [PostController::class, 'restoreAll']);
-Route::post('admin/posts/{id}/permanent-delete', [PostController::class, 'permanentDelete']);
+Route::patch('admin/posts/{id}/status', [PostController::class, 'changeStatus']);
+Route::patch('admin/posts/{id}/restore', [PostController::class, 'restore']);
+Route::post('admin/posts/restore', [PostController::class, 'restoreAll']);
+Route::delete('admin/posts/{id}/force', [PostController::class, 'permanentDelete']);
 ```
 
 ---
@@ -1423,45 +1423,59 @@ class PostController extends BaseController
 
 ## Routes
 
-### Full API Route Setup
+### `Route::fastApiResource` (recommended)
+
+Register the full CRUD route set in one line:
 
 ```php
 use App\Http\Controllers\PostController;
 
-// Standard CRUD
+Route::fastApiResource('posts', PostController::class);
+
+// Restrict actions, or customise the {id} parameter / route-name prefix:
+Route::fastApiResource('posts', PostController::class, ['only' => ['index', 'show']]);
+Route::fastApiResource('posts', PostController::class, ['except' => ['delete', 'restoreAll']]);
+```
+
+This registers, in this order (collection routes before `{id}` routes):
+
+| Method | URI | Action |
+|--------|-----|--------|
+| GET | `/posts` | `index` |
+| POST | `/posts` | `store` |
+| DELETE | `/posts` | `delete` (bulk) |
+| POST | `/posts/restore` | `restoreAll` |
+| PATCH | `/posts/{id}/status/{column}` | `updateColumn` |
+| PATCH | `/posts/{id}/status` | `changeStatus` |
+| PATCH | `/posts/{id}/restore` | `restore` |
+| DELETE | `/posts/{id}/force` | `permanentDelete` |
+| GET | `/posts/{id}` | `show` |
+| PUT / PATCH | `/posts/{id}` | `update` |
+| DELETE | `/posts/{id}` | `destroy` |
+
+### Registering routes manually
+
+To wire them by hand, mirror the macro's verbs/URIs so `permissionMiddleware()` and your
+clients line up (keep collection routes above the `{id}` routes):
+
+```php
+use App\Http\Controllers\PostController;
+
 Route::get('posts', [PostController::class, 'index'])->name('posts.index');
 Route::post('posts', [PostController::class, 'store'])->name('posts.store');
+Route::delete('posts', [PostController::class, 'delete'])->name('posts.delete');
+Route::post('posts/restore', [PostController::class, 'restoreAll'])->name('posts.restoreAll');
+Route::patch('posts/{id}/status/{column}', [PostController::class, 'updateColumn'])->name('posts.updateColumn');
+Route::patch('posts/{id}/status', [PostController::class, 'changeStatus'])->name('posts.changeStatus');
+Route::patch('posts/{id}/restore', [PostController::class, 'restore'])->name('posts.restore');
+Route::delete('posts/{id}/force', [PostController::class, 'permanentDelete'])->name('posts.permanentDelete');
 Route::get('posts/{id}', [PostController::class, 'show'])->name('posts.show');
-Route::put('posts/{id}', [PostController::class, 'update'])->name('posts.update');
+Route::match(['put', 'patch'], 'posts/{id}', [PostController::class, 'update'])->name('posts.update');
 Route::delete('posts/{id}', [PostController::class, 'destroy'])->name('posts.destroy');
-
-// Bulk delete
-Route::post('posts/delete', [PostController::class, 'delete'])->name('posts.delete');
-
-// Status & column
-Route::put('posts/{id}/status-change', [PostController::class, 'changeStatus'])->name('posts.changeStatus');
-Route::put('posts/{id}/status-change/{column}', [PostController::class, 'updateColumn'])->name('posts.updateColumn');
-
-// Soft delete operations
-Route::put('posts/{id}/restore', [PostController::class, 'restore'])->name('posts.restore');
-Route::post('posts/restore-all', [PostController::class, 'restoreAll'])->name('posts.restoreAll');
-Route::post('posts/{id}/force-delete', [PostController::class, 'permanentDelete'])->name('posts.permanentDelete');
 ```
 
-### Full Web Route Setup
-
-```php
-use App\Http\Controllers\PostController;
-
-// Standard resource routes (index, create, store, show, edit, update, destroy)
-Route::resource('posts', PostController::class);
-
-// Extended operations
-Route::put('posts/{id}/status-change', [PostController::class, 'changeStatus'])->name('posts.changeStatus');
-Route::put('posts/{id}/restore', [PostController::class, 'restore'])->name('posts.restore');
-Route::post('posts/restore-all', [PostController::class, 'restoreAll'])->name('posts.restoreAll');
-Route::post('posts/{id}/force-delete', [PostController::class, 'permanentDelete'])->name('posts.permanentDelete');
-```
+For web controllers, `create` and `edit` form routes aren't registered by `fastApiResource` —
+add them separately (or use `Route::resource` for the standard verbs).
 
 ---
 

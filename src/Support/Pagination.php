@@ -41,7 +41,7 @@ final class Pagination
     {
         $defaultPerPage = self::configInt('fast-api.pagination.default_per_page', 15);
         $maxPerPage = self::configInt('fast-api.pagination.max_per_page', 100);
-        $allowAll = self::configBool('fast-api.pagination.allow_all', true);
+        $allowAll = self::configBool('fast-api.pagination.allow_all', false);
         $requested = self::requestedPerPage($defaultPerPage);
 
         if ($allowAll && $requested === 0) {
@@ -70,6 +70,8 @@ final class Pagination
      *
      * The $countFn closure is only invoked when "show all" is requested (rowsPerPage=0
      * and allow_all=true), avoiding an extra COUNT query on normal paginated requests.
+     * The result is bounded by pagination.max_all (0 = unbounded) so an enabled
+     * "show all" can never return an unlimited number of rows.
      *
      * @param Closure(): int $countFn
      */
@@ -79,8 +81,11 @@ final class Pagination
 
         if ($perPage === 0) {
             $count = $countFn();
+            $effective = $count > 0 ? $count : self::defaultPerPage();
 
-            return $count > 0 ? $count : self::defaultPerPage();
+            $maxAll = self::configInt('fast-api.pagination.max_all', 1000);
+
+            return $maxAll > 0 ? min($effective, $maxAll) : $effective;
         }
 
         return $perPage;

@@ -38,31 +38,24 @@ if (! function_exists('parseTimeToSeconds')) {
      *
      * Supports "H:i:s", "i:s", or plain integer seconds.
      */
-    function parseTimeToSeconds(string $timeString): int|float
+    function parseTimeToSeconds(string $timeString): int
     {
-        $parts = explode(':', $timeString);
-        $seconds = 0;
+        // Compute arithmetically rather than via Carbon::diffInSeconds — the latter
+        // is signed and directional in Carbon 3 and returned a NEGATIVE value here,
+        // contradicting the "total seconds" contract.
+        $parts = explode(':', trim($timeString));
+        $count = count($parts);
 
-        if (count($parts) >= 3) {
-            $carbon = Carbon::createFromFormat('H:i:s', $timeString);
-            $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
-
-            if ($carbon && $reference) {
-                $seconds = $carbon->diffInSeconds($reference);
-            }
-        } elseif (count($parts) === 2) {
-            $minSec = "00:{$timeString}";
-            $carbon = Carbon::createFromFormat('H:i:s', $minSec);
-            $reference = Carbon::createFromFormat('H:i:s', '00:00:00');
-
-            if ($carbon && $reference) {
-                $seconds = $carbon->diffInSeconds($reference);
-            }
-        } else {
-            $seconds = (int) $timeString;
+        if ($count >= 3) {
+            return (int) $parts[0] * 3600 + (int) $parts[1] * 60 + (int) $parts[2];
         }
 
-        return $seconds;
+        if ($count === 2) {
+            // "MM:SS"
+            return (int) $parts[0] * 60 + (int) $parts[1];
+        }
+
+        return (int) $timeString;
     }
 }
 

@@ -258,7 +258,15 @@ abstract class BaseWebController implements HasMiddleware
         } catch (ValidationException|ModelNotFoundException $e) {
             throw $e;
         } catch (Throwable $e) {
-            return $this->redirectBackWithError($e->getMessage());
+            report($e);
+
+            // Never surface raw exception text (SQL fragments, table/column names,
+            // paths) to end users. Log it, and only echo the message when debugging.
+            $message = (bool) config('app.debug', false)
+                ? $e->getMessage()
+                : $this->genericErrorMessage();
+
+            return $this->redirectBackWithError($message);
         }
 
         return $this->redirectWithSuccess("{$this->routePrefix}.index", $successMessage);
@@ -299,6 +307,15 @@ abstract class BaseWebController implements HasMiddleware
     // -------------------------------------------------------------------------
     // Overridable flash messages — override for localization or customization
     // -------------------------------------------------------------------------
+
+    /**
+     * Generic error flashed to end users when a write fails and APP_DEBUG is off.
+     * Kept intentionally vague so internal details never leak; override to localize.
+     */
+    protected function genericErrorMessage(): string
+    {
+        return 'Something went wrong. Please try again.';
+    }
 
     protected function storeSuccessMessage(): string
     {

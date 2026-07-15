@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.0.0] — 2026-05-29
+## [3.0.0] — 2026-07-15
+
+### Security & Hardening
+_Pre-release hardening pass from a full package audit — all covered by new tests._
+- **`initializer()` no longer dispatches arbitrary model methods from client filter keys.** Filter keys are matched only against declared query scopes (`hasNamedScope`). The previous `method_exists()` fallback could invoke any public model method whose studly-cased name matched a filter key — e.g. `?filters={"save":{}}` reached `Model::save()` and attempted a write on every index request. Non-scope keys are now silently ignored.
+- **`updateColumn` is restricted to an allowlist.** The client-controlled `{column}` route segment previously accepted any *fillable* column (e.g. `is_admin`, `role_id`, `email_verified_at`), bypassing the update FormRequest entirely. A new `protected array $updatableColumns = ['status']` gates the endpoint and returns 403 otherwise. **Breaking:** to update columns other than `status`, add them to `$updatableColumns` on the controller.
+- **`rowsPerPage=0` no longer returns the whole table by default.** `pagination.allow_all` now defaults to `false`, so `?rowsPerPage=0` falls back to `default_per_page` instead of returning an unbounded, unauthenticated result set (a DoS vector). When `allow_all` is enabled, the new `pagination.max_all` (default `1000`; `0` = unbounded) caps the "show all" path. **Breaking:** if you relied on `rowsPerPage=0` returning all rows, set `pagination.allow_all` to `true`.
+- **`BaseWebController` no longer leaks raw exception messages.** Unexpected write failures are logged via `report()` and shown as a generic, overridable message (`genericErrorMessage()`) unless `APP_DEBUG` is on — preventing SQL/schema disclosure via flash messages.
+- `parseTimeToSeconds()` computed a negative value under Carbon 3 (signed `diffInSeconds`); it now computes arithmetically and always returns a non-negative `int` (return type narrowed from `int|float` to `int`).
+- Performance: `resolveValidatedData()` memoises the table column listing (no schema metadata query per write for `$guarded` models), and `modelUsesSoftDeletes()` is memoised per model class.
 
 ### Breaking Changes
+- **Dropped support for Laravel 11.** The minimum supported framework is now Laravel 12 (`illuminate/* ^12.0||^13.0`, `orchestra/testbench ^10.0||^11.0`). PHP 8.2+ is still supported. Run Laravel 12 or 13.
 - `BaseController` and `BaseWebController` no longer extend `Illuminate\Routing\Controller`. They now implement `HasMiddleware` directly. The old `$this->middleware()->only()` constructor registration is removed.
 - Automatic permission middleware registration (`registerPermissionMiddleware()`) is removed. Declare permissions explicitly by overriding the static `middleware()` method and calling `static::permissionMiddleware('slug')`.
 - `spatie/laravel-permission` is no longer a hard dependency. It has moved to `suggest`. Install it separately if you use permissions: `composer require spatie/laravel-permission`.
@@ -47,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `performRestore`, `performRestoreAll`, and `performPermanentDelete` now chain `initializer()->onlyTrashed()` consistently with the rest of the codebase.
 - `BaseController` 204 responses now call `noContent()` directly instead of wrapping an empty array in `success()`.
 - `Str::studly()` in the `initializer` macro is now cached in a local variable instead of being evaluated twice per filter.
-- CI matrix: removed unreleased PHP 8.5.
+- CI matrix tests PHP 8.2–8.5 × Laravel 12–13 (both `prefer-stable` and `prefer-lowest`).
 - `HasPermissionSlug` contract and `config/fast-api.php` comments updated to reflect the new explicit `middleware()` pattern.
 
 ---
