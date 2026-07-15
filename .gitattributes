@@ -1,0 +1,13 @@
+# Keep the Composer dist archive lean — exclude dev, CI, and docs tooling from
+# `composer require` installs. Consumers get src/, config/, README, LICENSE,
+# CHANGELOG, and composer.json; nothing else.
+/.github               export-ignore
+/docs                  export-ignore
+/tests                 export-ignore
+/.gitattributes        export-ignore
+/.gitignore            export-ignore
+/.DS_Store             export-ignore
+/phpstan.neon.dist     export-ignore
+/phpstan-bootstrap.php export-ignore
+/phpunit.xml           export-ignore
+/pint.json             export-ignore

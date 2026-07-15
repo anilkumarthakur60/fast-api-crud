@@ -19,8 +19,6 @@ _Pre-release hardening pass from a full package audit — all covered by new tes
 - Performance: `resolveValidatedData()` memoises the table column listing (no schema metadata query per write for `$guarded` models), and `modelUsesSoftDeletes()` is memoised per model class.
 
 ### Breaking Changes
-
-### Breaking Changes
 - **Dropped support for Laravel 11.** The minimum supported framework is now Laravel 12 (`illuminate/* ^12.0||^13.0`, `orchestra/testbench ^10.0||^11.0`). PHP 8.2+ is still supported. Run Laravel 12 or 13.
 - `BaseController` and `BaseWebController` no longer extend `Illuminate\Routing\Controller`. They now implement `HasMiddleware` directly. The old `$this->middleware()->only()` constructor registration is removed.
 - Automatic permission middleware registration (`registerPermissionMiddleware()`) is removed. Declare permissions explicitly by overriding the static `middleware()` method and calling `static::permissionMiddleware('slug')`.
