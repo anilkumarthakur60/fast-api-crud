@@ -60,6 +60,12 @@ jobs:
 
       - name: Install Laravel + Testbench
         run: |
+          # The Laravel 11.x line is currently flagged by security advisories, which
+          # Composer blocks by default — this prevents the supported-version matrix
+          # from installing/testing L11 at all. CI is ephemeral and only exercises
+          # the package against each framework's API, so disable advisory blocking
+          # here (this does NOT affect what consumers install).
+          composer config policy.advisories.block false
           composer require "laravel/framework:${{ matrix.laravel }}" --no-update --no-interaction
           composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction
 
