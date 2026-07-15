@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Security
+- **`initializer()` no longer dispatches arbitrary model methods from client filter keys.** Filter keys are now matched only against declared query scopes (`hasNamedScope`). The previous `method_exists()` fallback could invoke any public model method whose studly-cased name matched a filter key — e.g. `?filters={"save":{}}` reached `Model::save()` and attempted a write on every index request. Non-scope keys are silently ignored.
+- **`updateColumn` is now restricted to an allowlist.** The `{column}` route segment is client-controlled; previously any *fillable* column (e.g. `is_admin`, `role_id`, `email_verified_at`) could be set to any value, bypassing the update FormRequest. A new `protected array $updatableColumns = ['status']` gates the endpoint and returns 403 for anything else. **Breaking:** if you used `updateColumn` for columns other than `status`, add them to `$updatableColumns` on the controller.
+- **`BaseWebController` no longer leaks raw exception messages.** Unexpected write failures are logged via `report()` and shown to end users as a generic, overridable message (`genericErrorMessage()`) unless `APP_DEBUG` is on — preventing SQL/schema disclosure via flash messages.
+
+### Fixed
+- `parseTimeToSeconds()` returned a negative value under Carbon 3 (Laravel 11+) because `diffInSeconds` is signed/directional. It now computes seconds arithmetically and always returns a non-negative `int` (return type narrowed from `int|float` to `int`).
+
+### Performance
+- `resolveValidatedData()` no longer issues a `Schema::getColumnListing()` query on every write for `$guarded` models — the column list is memoised per table.
+- `modelUsesSoftDeletes()` is memoised per model class instead of walking the trait tree on every index request.
+
+---
+
 ## [3.0.0] — 2026-05-29
 
 ### Breaking Changes

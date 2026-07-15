@@ -10,6 +10,7 @@ use Anil\FastApiCrud\Enums\PaginationType;
 use Anil\FastApiCrud\Support\QueryParams;
 use Closure;
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -127,6 +128,19 @@ trait HasCrudOperations
      * @var array<int, string>|array<string, scalar|array<scalar>|Closure>
      */
     protected array $columnScopes = [];
+
+    /**
+     * Columns the updateColumn endpoint is permitted to write.
+     *
+     * The {column} segment of the updateColumn route is client-controlled, so it
+     * is checked against this allowlist before any write. This is deliberately NOT
+     * "any fillable column" — expose each column on purpose. Defaults to ['status']
+     * to match the endpoint's advertised purpose (status/flag updates); add more
+     * to opt in, or empty the list to disable the endpoint entirely.
+     *
+     * @var array<int, string>
+     */
+    protected array $updatableColumns = ['status'];
 
     /**
      * Scopes applied when finding a trashed record for restore.
@@ -375,6 +389,7 @@ trait HasCrudOperations
     protected function performUpdateColumn(int|string $id, string $column = 'status'): Model
     {
         $model = $this->findModel($id, $this->columnScopes);
+        $this->assertColumnUpdatable($column);
         $this->assertFillableColumn($model, $column);
 
         try {
@@ -621,7 +636,7 @@ trait HasCrudOperations
         $fillable = $this->model->getFillable();
         $allowed = $fillable !== []
             ? $fillable
-            : Schema::getColumnListing($this->model->getTable());
+            : $this->tableColumnListing();
 
         $data = [];
         foreach ($allowed as $column) {
@@ -826,10 +841,44 @@ trait HasCrudOperations
 
     /**
      * Determine whether the model uses the SoftDeletes trait.
+     *
+     * Memoised per model class — soft-delete usage is fixed at compile time, so
+     * there is no need to walk the trait tree on every index request.
      */
     protected function modelUsesSoftDeletes(): bool
     {
-        return in_array(SoftDeletes::class, class_uses_recursive($this->model), true);
+        /** @var array<class-string, bool> $cache */
+        static $cache = [];
+
+        return $cache[$this->model::class] ??= in_array(
+            SoftDeletes::class,
+            class_uses_recursive($this->model),
+            true,
+        );
+    }
+
+    /**
+     * Column names for the model's table, memoised per table for the process.
+     *
+     * Guarded ($guarded = []) models fall back to this to derive the writable
+     * column set; caching avoids a schema-metadata query on every write.
+     *
+     * @return array<int, string>
+     */
+    protected function tableColumnListing(): array
+    {
+        /** @var array<string, array<int, string>> $cache */
+        static $cache = [];
+
+        $table = $this->model->getTable();
+
+        if (! isset($cache[$table])) {
+            /** @var array<int, string> $columns */
+            $columns = Schema::getColumnListing($table);
+            $cache[$table] = $columns;
+        }
+
+        return $cache[$table];
     }
 
     /**
@@ -845,6 +894,24 @@ trait HasCrudOperations
             PaginationType::Cursor      => $query->cursorPaginates(),
             PaginationType::None        => $query->get(),
         };
+    }
+
+    /**
+     * Guard the client-controlled updateColumn target against the allowlist.
+     *
+     * The {column} route segment is attacker-controlled; without this a caller
+     * could set ANY fillable column (e.g. is_admin, role_id) to any value,
+     * bypassing the update FormRequest entirely.
+     *
+     * @throws AuthorizationException
+     */
+    protected function assertColumnUpdatable(string $column): void
+    {
+        if (! in_array($column, $this->updatableColumns, true)) {
+            throw new AuthorizationException(
+                "Column [{$column}] may not be updated via updateColumn. Add it to \$updatableColumns to expose it.",
+            );
+        }
     }
 
     /**

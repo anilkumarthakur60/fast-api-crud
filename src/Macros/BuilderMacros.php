@@ -158,12 +158,13 @@ final class BuilderMacros
                     continue;
                 }
 
-                $model = $this->getModel();
-
-                if ($model->hasNamedScope($filter)) {
+                // Only named query scopes are honoured. Filter keys come straight
+                // from the client, so anything that is not a declared scope is
+                // ignored — we must never dispatch arbitrary model methods from
+                // request input (a key like "save" would otherwise reach the
+                // model and trigger a write).
+                if ($this->getModel()->hasNamedScope($filter)) {
                     $this->{$filter}($value);
-                } elseif (method_exists($model, $studly = Str::studly((string) $filter))) {
-                    $model->{$studly}($value);
                 }
             }
 
