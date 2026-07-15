@@ -21,6 +21,8 @@ describe('ProviderMacrosFeatureTest', function () {
     });
 
     it('adds the paginates macro to Builder', function () {
+        // rowsPerPage=0 => "show all" is opt-in; enable it for this assertion.
+        config(['fast-api.pagination.allow_all' => true]);
         PostModel::factory(5)->create();
 
         $query = PostModel::query()->paginates();
@@ -37,6 +39,8 @@ describe('ProviderMacrosFeatureTest', function () {
     });
 
     it('adds the simplePaginates macro to Builder', function () {
+        // rowsPerPage=0 => "show all" is opt-in; enable it for this assertion.
+        config(['fast-api.pagination.allow_all' => true]);
         PostModel::factory(5)->create();
 
         $query = PostModel::query()->simplePaginates();
@@ -52,6 +56,27 @@ describe('ProviderMacrosFeatureTest', function () {
         request()->merge(['rowsPerPage' => 0]);
         $query = PostModel::query()->simplePaginates();
         expect($query->perPage())->toBe(PostModel::query()->count());
+    });
+
+    it('does not "show all" by default — rowsPerPage=0 falls back to default_per_page', function () {
+        // allow_all defaults to false, so 0 must NOT return every row (DoS guard).
+        PostModel::factory(5)->create();
+        request()->merge(['rowsPerPage' => 0]);
+
+        $query = PostModel::query()->paginates();
+        expect($query->perPage())->toBe(15);
+    });
+
+    it('caps the show-all path at pagination.max_all when allow_all is enabled', function () {
+        config([
+            'fast-api.pagination.allow_all' => true,
+            'fast-api.pagination.max_all'   => 3,
+        ]);
+        PostModel::factory(5)->create();
+        request()->merge(['rowsPerPage' => 0]);
+
+        $query = PostModel::query()->paginates();
+        expect($query->perPage())->toBe(3); // capped, not the full count of 5
     });
 
     it('adds the initializer macro to Builder with filters and sorting', function () {

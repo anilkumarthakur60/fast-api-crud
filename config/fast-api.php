@@ -16,7 +16,16 @@ return [
     'pagination' => [
         'default_per_page' => 15,
         'max_per_page'     => 100,
-        'allow_all'        => true,
+
+        // When false (default), rowsPerPage=0 is treated as "use default_per_page"
+        // instead of "return every row". This prevents an unbounded, unauthenticated
+        // result set (a DoS vector). Enable it only for trusted/internal endpoints.
+        'allow_all' => false,
+
+        // Upper bound on the "return all" path when allow_all is enabled.
+        // 0 = no cap (truly all rows); any positive value caps how many rows
+        // rowsPerPage=0 may return.
+        'max_all' => 1000,
     ],
 
     /*
