@@ -188,12 +188,12 @@ use App\Http\Controllers\PostController;
 Route::resource('admin/posts', PostController::class);
 
 // Extended operations
-Route::put('admin/posts/{id}/status-change', [PostController::class, 'changeStatus'])
+Route::patch('admin/posts/{id}/status', [PostController::class, 'changeStatus'])
     ->name('admin.posts.changeStatus');
-Route::put('admin/posts/{id}/restore', [PostController::class, 'restore'])
+Route::patch('admin/posts/{id}/restore', [PostController::class, 'restore'])
     ->name('admin.posts.restore');
-Route::post('admin/posts/restore-all', [PostController::class, 'restoreAll'])
+Route::post('admin/posts/restore', [PostController::class, 'restoreAll'])
     ->name('admin.posts.restoreAll');
-Route::post('admin/posts/{id}/permanent-delete', [PostController::class, 'permanentDelete'])
+Route::delete('admin/posts/{id}/force', [PostController::class, 'permanentDelete'])
     ->name('admin.posts.permanentDelete');
 ```

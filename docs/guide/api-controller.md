@@ -151,14 +151,19 @@ The `delete_rows` array is validated: each ID must exist in the model's table.
 ### changeStatus — Toggle Boolean
 
 ```http
-PUT /posts/1/status-change
+PATCH /posts/1/status
 ```
 
-Toggles the `status` column between `0` and `1`. Pass a different column via the route:
+Toggles the `status` column between `0` and `1`.
+
+### updateColumn — Set an Allowlisted Column
 
 ```http
-PUT /posts/1/status-change/active
+PATCH /posts/1/status/active
 ```
+
+Sets the `{column}` (here `active`) to the request-body value. The column must be listed in
+the controller's `$updatableColumns` allowlist (default `['status']`) or the request returns `403`.
 
 ### Validation Error (422)
 
