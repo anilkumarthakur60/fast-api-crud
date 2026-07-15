@@ -4,7 +4,7 @@ A powerful Laravel package that provides full-featured CRUD operations with mini
 
 Supports pagination (length-aware, simple, cursor), filtering, sorting, search, soft deletes, Spatie permissions, lifecycle hooks, and much more.
 
-**Supports:** Laravel 11, 12, 13 | PHP 8.2+
+**Supports:** Laravel 12, 13 | PHP 8.2+
 
 **Requires:** [spatie/laravel-permission](https://github.com/spatie/laravel-permission) ^6.0 or ^7.0
 
