@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- **AI assistant integration** — `php artisan fast-api:install-ai` installs a `fast-api-crud` skill, a Claude Code subagent, a managed instructions block (`CLAUDE.md` / `AGENTS.md` / `.cursor/rules` / `.github/copilot-instructions.md`) and MCP server registration (`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`). Targets: `claude`, `agents` (default both), `cursor`, `copilot`, `all`. Idempotent: marker blocks are replaced in place and JSON configs are merged.
+- **MCP server** — `php artisan fast-api:mcp` serves a dependency-free Model Context Protocol server over stdio with tools `list_controllers`, `describe_controller`, `list_routes`, `model_info`, `get_config`, `query_reference`, `read_reference`, `search_reference`, `scaffold`; resources `fast-api://skill` + one per reference topic, `fast-api://agents`, `fast-api://config`; prompts `build-resource`, `debug-endpoint`.
+- **Complete AI reference set** (`resources/ai/skills/fast-api-crud/references/*.md`) derived from the source: controllers, routes, scaffolding, query params & responses, hooks/contracts/traits, `HasApiResponse`, macros, helpers, config/enums, spatie/laravel-permission integration (alias registration, guards, seeding, caching, teams), testing. Covered by a test that asserts every public helper, responder, date scope, Builder macro, config key and controller property is documented.
+- `vendor:publish --tag=ai` publishes the skill and agent into `.claude/`.
+- `Anil\FastApiCrud\Mcp\Inspector` — reusable read-only introspection of controllers, routes and models.
+
+---
+
 ## [3.0.0] — 2026-07-15
 
 ### Security & Hardening
