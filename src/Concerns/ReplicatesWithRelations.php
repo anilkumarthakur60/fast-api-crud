@@ -30,7 +30,7 @@ use SplObjectStorage;
  *   $clone = $post->replicateWithRelations(except: ['slug', 'published_at']);
  *
  * Child records (HasOne/HasMany/MorphOne/MorphMany) are persisted *through* the
- * parent relation, so their foreign key is set before the row is inserted 
+ * parent relation, so their foreign key is set before the row is inserted
  * this works even when the foreign key column is NOT NULL. Only relations that
  * are actually loaded on the source model are replicated.
  *
