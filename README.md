@@ -60,7 +60,7 @@ php artisan fast-api:make-all Post
 
 This creates: Model, Migration, Factory, Seeder, Controller, Resource, Store/Update Requests.
 
-### 2. The generated controller — zero boilerplate
+### 2. The generated controller  zero boilerplate
 
 ```php
 // app/Http/Controllers/PostController.php
@@ -153,7 +153,7 @@ return [
         'field'    => 'delete_rows', // Request key holding the array of IDs
     ],
 
-    // Query parameter keys — rename any of these to match your API conventions.
+    // Query parameter keys  rename any of these to match your API conventions.
     // Defaults reproduce: ?filters={...}&sortBy=...&descending=...&rowsPerPage=...&page=...&search=...
     'query' => [
         'filters'    => 'filters',
@@ -311,7 +311,7 @@ Methods returning `JsonResource|JsonResponse` return `JsonResponse` when an exce
 }
 ```
 
-**POST /posts** (store — 201 Created):
+**POST /posts** (store  201 Created):
 
 ```json
 {
@@ -327,7 +327,7 @@ Methods returning `JsonResource|JsonResponse` return `JsonResponse` when an exce
 }
 ```
 
-**DELETE /posts/1** (destroy — 204):
+**DELETE /posts/1** (destroy  204):
 
 ```json
 {
@@ -344,7 +344,7 @@ Methods returning `JsonResource|JsonResponse` return `JsonResponse` when an exce
 }
 ```
 
-**Validation error** (422 — handled by Laravel):
+**Validation error** (422  handled by Laravel):
 
 ```json
 {
@@ -378,7 +378,7 @@ class PostController extends BaseWebController
             routePrefix: 'admin.posts',    // redirects: route('admin.posts.index')
             resourceName: 'post',          // $post variable in views
             collectionName: 'posts',       // $posts variable in index view
-            resource: PostResource::class, // Optional — for data transformation before views
+            resource: PostResource::class, // Optional  for data transformation before views
         );
     }
 }
@@ -403,8 +403,8 @@ class PostController extends BaseWebController
 
 ### View Variables
 
-- **index**: `$posts` (or your `$collectionName`) — paginated collection
-- **show/edit**: `$post` (or your `$resourceName`) — single model instance
+- **index**: `$posts` (or your `$collectionName`)  paginated collection
+- **show/edit**: `$post` (or your `$resourceName`)  single model instance
 
 ### Customizing Flash Messages
 
@@ -574,8 +574,8 @@ The `filters` parameter accepts a JSON object. Each key is matched against the m
 GET /posts?sortBy=created_at&descending=true
 ```
 
-- `sortBy` — column name to sort by (default: `id`)
-- `descending` — `true` for DESC, `false` for ASC (default: `true`)
+- `sortBy`  column name to sort by (default: `id`)
+- `descending`  `true` for DESC, `false` for ASC (default: `true`)
 
 If the model implements `Sortable`, its defaults are used when no sort params are provided.
 
@@ -586,7 +586,7 @@ GET /posts?rowsPerPage=25
 GET /posts?rowsPerPage=0     # Returns all records (if allow_all is true)
 ```
 
-- `rowsPerPage` — records per page (default: 15, max: 100)
+- `rowsPerPage`  records per page (default: 15, max: 100)
 
 ### Search
 
@@ -606,7 +606,7 @@ GET /posts?filters={"include":["user","tags"]}
 ```
 
 Eager loads relations on demand. Only relations listed in the controller's
-`$allowedIncludes` allowlist are honoured — anything else is silently ignored.
+`$allowedIncludes` allowlist are honoured  anything else is silently ignored.
 Works on both index and show.
 
 ### Trashed (soft-deleted records)
@@ -891,7 +891,7 @@ Post::query()->lastMonth('updated_at');
 
 ### UUID primary keys
 
-This package does not ship a UUID trait — use Laravel's first-party traits, which
+This package does not ship a UUID trait  use Laravel's first-party traits, which
 set `incrementing`/`keyType`, fill the key on creation, and add UUID-aware route
 model binding:
 
@@ -975,8 +975,8 @@ $query = Post::query()->initializer(orderBy: false);
 ```
 
 **How it works:**
-1. Reads `?filters={"scope":"value"}` — decodes JSON, calls matching model scopes (uses `Str::studly` to find `scope{Name}` methods)
-2. Reads `?sortBy=column&descending=true` — applies ordering
+1. Reads `?filters={"scope":"value"}`  decodes JSON, calls matching model scopes (uses `Str::studly` to find `scope{Name}` methods)
+2. Reads `?sortBy=column&descending=true`  applies ordering
 3. If model implements `Sortable` and no sort params given, uses `sortByDefaults()`
 4. Default sort: `id` descending
 
@@ -1057,18 +1057,18 @@ Post::query()->withAggregates([
 Adds a conditional `withCount` that also filters results using `whereHas` (or `orWhereHas`).
 
 ```php
-// Basic — posts that have at least 1 comment, with comment count
+// Basic  posts that have at least 1 comment, with comment count
 Post::query()->withCountWhereHas('comments');
 
-// With callback — posts with approved comments
+// With callback  posts with approved comments
 Post::query()->withCountWhereHas('comments', function ($q) {
     $q->where('approved', true);
 });
 
-// With operator/count — posts with 5+ comments
+// With operator/count  posts with 5+ comments
 Post::query()->withCountWhereHas('comments', null, '>=', 5);
 
-// OR variant — posts with comments OR tags
+// OR variant  posts with comments OR tags
 Post::query()
     ->withCountWhereHas('comments')
     ->orWithCountWhereHas('tags');
@@ -1090,7 +1090,7 @@ Paginate an in-memory collection.
 $items = collect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
 $paginated = $items->paginate(perPage: 5);
-// Page 1: [1, 2, 3, 4, 5] — auto-resolves current page from request
+// Page 1: [1, 2, 3, 4, 5]  auto-resolves current page from request
 
 $paginated = $items->paginate(perPage: 3, page: 2);
 // Page 2: [4, 5, 6]
@@ -1136,25 +1136,25 @@ All success methods accept `array $data = []`. All error methods accept `string 
 
 | Method | Status | Default Message |
 |--------|--------|----------------|
-| `continue()` | 100 | — |
-| `switchingProtocols()` | 101 | — |
-| `processing()` | 102 | — |
-| `earlyHints()` | 103 | — |
+| `continue()` | 100 |  |
+| `switchingProtocols()` | 101 |  |
+| `processing()` | 102 |  |
+| `earlyHints()` | 103 |  |
 
 **2xx Success:**
 
 | Method | Status | Notes |
 |--------|--------|-------|
-| `ok()` | 200 | — |
-| `created()` | 201 | — |
-| `accepted()` | 202 | — |
-| `nonAuthoritativeInformation()` | 203 | — |
+| `ok()` | 200 |  |
+| `created()` | 201 |  |
+| `accepted()` | 202 |  |
+| `nonAuthoritativeInformation()` | 203 |  |
 | `noContent()` | 204 | Returns `null` body |
-| `resetContent()` | 205 | — |
-| `partialContent()` | 206 | — |
-| `multiStatus()` | 207 | — |
-| `alreadyReported()` | 208 | — |
-| `imUsed()` | 226 | — |
+| `resetContent()` | 205 |  |
+| `partialContent()` | 206 |  |
+| `multiStatus()` | 207 |  |
+| `alreadyReported()` | 208 |  |
+| `imUsed()` | 226 |  |
 
 **3xx Redirection:**
 
@@ -1474,7 +1474,7 @@ Route::match(['put', 'patch'], 'posts/{id}', [PostController::class, 'update'])-
 Route::delete('posts/{id}', [PostController::class, 'destroy'])->name('posts.destroy');
 ```
 
-For web controllers, `create` and `edit` form routes aren't registered by `fastApiResource` —
+For web controllers, `create` and `edit` form routes aren't registered by `fastApiResource` 
 add them separately (or use `Route::resource` for the standard verbs).
 
 ---
@@ -1505,10 +1505,10 @@ Pagination::configBool('fast-api.pagination.allow_all', true);       // bool
 ```php
 use Anil\FastApiCrud\Enums\PaginationType;
 
-PaginationType::LengthAware  // 'length-aware' — Standard pagination with total count
-PaginationType::Simple        // 'simple'       — Simple pagination without total
-PaginationType::Cursor        // 'cursor'       — Cursor-based pagination
-PaginationType::None          // 'none'         — No pagination, returns all records
+PaginationType::LengthAware  // 'length-aware'  Standard pagination with total count
+PaginationType::Simple        // 'simple'        Simple pagination without total
+PaginationType::Cursor        // 'cursor'        Cursor-based pagination
+PaginationType::None          // 'none'          No pagination, returns all records
 ```
 
 ### CrudAction

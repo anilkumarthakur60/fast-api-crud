@@ -97,7 +97,7 @@ trait HasCrudOperations
     /**
      * Relationships clients may eager load on demand via the "include" key in
      * the filters JSON (e.g. ?filters={"include":"author,tags"}). Acts as an
-     * allowlist — anything not listed here is ignored. Empty disables it.
+     * allowlist  anything not listed here is ignored. Empty disables it.
      *
      * @var array<int, string>
      */
@@ -134,7 +134,7 @@ trait HasCrudOperations
      *
      * The {column} segment of the updateColumn route is client-controlled, so it
      * is checked against this allowlist before any write. This is deliberately NOT
-     * "any fillable column" — expose each column on purpose. Defaults to ['status']
+     * "any fillable column"  expose each column on purpose. Defaults to ['status']
      * to match the endpoint's advertised purpose (status/flag updates); add more
      * to opt in, or empty the list to disable the endpoint entirely.
      *
@@ -233,7 +233,7 @@ trait HasCrudOperations
     }
 
     // -------------------------------------------------------------------------
-    // Perform methods — execute operations, throw on failure
+    // Perform methods  execute operations, throw on failure
     // -------------------------------------------------------------------------
 
     /**
@@ -480,7 +480,7 @@ trait HasCrudOperations
     }
 
     // -------------------------------------------------------------------------
-    // Lifecycle hooks — override in child controller or define on the model
+    // Lifecycle hooks  override in child controller or define on the model
     // -------------------------------------------------------------------------
 
     protected function beforeCreate(Model $model): void
@@ -616,8 +616,8 @@ trait HasCrudOperations
      *
      * Models declaring $fillable are restricted to that list. Models using
      * $guarded (including the common `$guarded = []`) are restricted to the
-     * actual table columns, so request-only keys — nested payloads, *_ids used
-     * by lifecycle hooks, etc. — are never passed to the insert/update while
+     * actual table columns, so request-only keys  nested payloads, *_ids used
+     * by lifecycle hooks, etc.  are never passed to the insert/update while
      * Eloquent's own mass-assignment guard still applies on save.
      *
      * @param class-string<FormRequest> $requestClass
@@ -842,7 +842,7 @@ trait HasCrudOperations
     /**
      * Determine whether the model uses the SoftDeletes trait.
      *
-     * Memoised per model class — soft-delete usage is fixed at compile time, so
+     * Memoised per model class  soft-delete usage is fixed at compile time, so
      * there is no need to walk the trait tree on every index request.
      */
     protected function modelUsesSoftDeletes(): bool

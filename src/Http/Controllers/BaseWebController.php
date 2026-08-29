@@ -305,7 +305,7 @@ abstract class BaseWebController implements HasMiddleware
     }
 
     // -------------------------------------------------------------------------
-    // Overridable flash messages — override for localization or customization
+    // Overridable flash messages  override for localization or customization
     // -------------------------------------------------------------------------
 
     /**

@@ -30,7 +30,7 @@ use SplObjectStorage;
  *   $clone = $post->replicateWithRelations(except: ['slug', 'published_at']);
  *
  * Child records (HasOne/HasMany/MorphOne/MorphMany) are persisted *through* the
- * parent relation, so their foreign key is set before the row is inserted —
+ * parent relation, so their foreign key is set before the row is inserted 
  * this works even when the foreign key column is NOT NULL. Only relations that
  * are actually loaded on the source model are replicated.
  *
@@ -60,7 +60,7 @@ trait ReplicatesWithRelations
      * Replication with circular-reference tracking.
      *
      * Must be public so a parent model can drive replication of child models of
-     * a different class during recursion. Treat as internal — use
+     * a different class during recursion. Treat as internal  use
      * {@see replicateWithRelations()} as the entry point.
      *
      * @internal
@@ -75,7 +75,7 @@ trait ReplicatesWithRelations
      */
     public function replicateWithRelationsUsing(array $relations, array $except, SplObjectStorage $visited, ?Closure $persist = null): static
     {
-        // Circular reference guard — return the existing clone if we've seen this model.
+        // Circular reference guard  return the existing clone if we've seen this model.
         if ($visited->contains($this)) {
             /** @var static */
             return $visited[$this];
@@ -88,7 +88,7 @@ trait ReplicatesWithRelations
         $replica = $this->replicate($except !== [] ? $except : null);
         $this->reApplyCasts($replica);
 
-        // Persist the replica — through the parent relation (FK set before insert)
+        // Persist the replica  through the parent relation (FK set before insert)
         // when given a persist callback, otherwise as a standalone root record.
         if ($persist !== null) {
             $persist($replica);
@@ -123,7 +123,7 @@ trait ReplicatesWithRelations
                 // Many-to-many: sync the same related records, preserving pivot data.
                 $relationInstance instanceof BelongsToMany => $this->replicateBelongsToMany($replica, $relationName, $relationValue, $relationInstance),
 
-                // "Through" relations are derived, not owned — nothing to replicate.
+                // "Through" relations are derived, not owned  nothing to replicate.
                 default => null,
             };
         }
@@ -136,7 +136,7 @@ trait ReplicatesWithRelations
     // -------------------------------------------------------------------------
 
     /**
-     * BelongsTo / MorphTo — associate with the SAME parent (don't duplicate it).
+     * BelongsTo / MorphTo  associate with the SAME parent (don't duplicate it).
      */
     private function replicateBelongsTo(Model $newModel, string $relationName, mixed $relationValue): void
     {
@@ -153,7 +153,7 @@ trait ReplicatesWithRelations
     }
 
     /**
-     * HasOne / HasMany / MorphOne / MorphMany — deep-replicate each child and
+     * HasOne / HasMany / MorphOne / MorphMany  deep-replicate each child and
      * persist it through the new parent's relation so the foreign key is set
      * before the row is inserted.
      *
@@ -210,7 +210,7 @@ trait ReplicatesWithRelations
     }
 
     /**
-     * BelongsToMany / MorphToMany — sync the same related records with pivot data preserved.
+     * BelongsToMany / MorphToMany  sync the same related records with pivot data preserved.
      *
      * @param BelongsToMany<Model, Model>|MorphToMany<Model, Model> $relationInstance
      */
@@ -266,7 +266,7 @@ trait ReplicatesWithRelations
     /**
      * Re-apply castable attributes to the replicated model.
      *
-     * Only attributes that survived replicate() are touched — this avoids
+     * Only attributes that survived replicate() are touched  this avoids
      * re-introducing the primary key, timestamps, and other unique-id columns,
      * which getCasts() reports (e.g. "id" => "int") but replicate() excludes.
      */
