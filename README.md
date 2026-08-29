@@ -18,6 +18,7 @@ Supports pagination (length-aware, simple, cursor), filtering, sorting, search, 
 - [API Controller](#api-controller-basecontroller)
 - [Web Controller](#web-controller-basewebcontroller)
 - [Scaffolding Command](#scaffolding-command)
+- [AI Assistants (Skills, Agents & MCP)](#ai-assistants-skills-agents--mcp)
 - [Query Parameters](#query-parameters)
 - [Controller Properties](#controller-properties)
 - [Lifecycle Hooks](#lifecycle-hooks)
@@ -551,6 +552,35 @@ php artisan fast-api:make-all Post,Tag,Category --web
 | Update Request | `app/Http/Requests/Post/UpdatePostRequest.php` |
 | Controller | `app/Http/Controllers/PostController.php` |
 | Views (--web) | `resources/views/posts/index.blade.php`, `create.blade.php`, `edit.blade.php`, `show.blade.php` |
+
+---
+
+## AI Assistants (Skills, Agents & MCP)
+
+Let Claude Code, Codex, Cursor, GitHub Copilot and other MCP-capable agents use this
+package correctly out of the box. One command installs a **skill** (how the package
+works), a **subagent** (a fast-api-crud specialist), an instructions block for
+`CLAUDE.md` / `AGENTS.md`, and registers the bundled **MCP server**:
+
+```bash
+php artisan fast-api:install-ai                 # Claude Code + AGENTS.md (default)
+php artisan fast-api:install-ai --target=all    # + Cursor + GitHub Copilot
+```
+
+The MCP server (`php artisan fast-api:mcp`, stdio, zero extra dependencies) gives agents
+live introspection of *your* app:
+
+| Tool | Purpose |
+|---|---|
+| `list_controllers` / `describe_controller` | Controllers extending `BaseController`/`BaseWebController`, their properties, hooks, routes and model |
+| `list_routes` | Routes pointing at fast-api controllers |
+| `model_info` | Fillable, scopes (= filter keys), relations, contracts, hooks, soft deletes |
+| `get_config` / `query_reference` | Effective config and a request-parameter cheat-sheet using your renamed keys |
+| `read_reference` / `search_reference` | Read or full-text search the bundled reference covering **every** feature of the package (controllers, routes, macros, helpers, responders, traits, config…) |
+| `scaffold` | Runs `fast-api:make-all` |
+
+Everything is idempotent (managed marker blocks, merged JSON) and refreshable by re-running
+the command after an upgrade. See the [docs page](docs/guide/ai-assistants.md) for details.
 
 ---
 

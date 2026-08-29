@@ -33,6 +33,7 @@ export default defineConfig({
             { text: 'Getting Started', link: '/guide/getting-started' },
             { text: 'Configuration', link: '/guide/configuration' },
             { text: 'Scaffolding Command', link: '/guide/scaffolding' },
+            { text: 'AI Assistants (Skills, Agents & MCP)', link: '/guide/ai-assistants' },
           ],
         },
         {
