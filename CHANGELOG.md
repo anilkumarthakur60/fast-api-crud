@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [3.1.0]  2026-10-03
 
 ### Added
 - **AI assistant integration** — `php artisan fast-api:install-ai` installs a `fast-api-crud` skill, a Claude Code subagent, a managed instructions block (`CLAUDE.md` / `AGENTS.md` / `.cursor/rules` / `.github/copilot-instructions.md`) and MCP server registration (`.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`). Targets: `claude`, `agents` (default both), `cursor`, `copilot`, `all`. Idempotent: marker blocks are replaced in place and JSON configs are merged.
