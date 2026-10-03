@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fast-api-crud": {
+      "command": "php",
+      "args": ["artisan", "fast-api:mcp"]
+    }
+  }
+}
