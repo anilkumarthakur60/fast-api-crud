@@ -40,7 +40,7 @@ if (! function_exists('parseTimeToSeconds')) {
      */
     function parseTimeToSeconds(string $timeString): int
     {
-        // Compute arithmetically rather than via Carbon::diffInSeconds — the latter
+        // Compute arithmetically rather than via Carbon::diffInSeconds  the latter
         // is signed and directional in Carbon 3 and returned a NEGATIVE value here,
         // contradicting the "total seconds" contract.
         $parts = explode(':', trim($timeString));
